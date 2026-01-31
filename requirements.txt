@@ -1,0 +1,10 @@
+fastapi
+uvicorn[standard]
+sqlmodel
+unidecode
+pandas
+openpyxl
+python-multipart
+python-dotenv
+passlib[bcrypt]
+python-jose[cryptography]

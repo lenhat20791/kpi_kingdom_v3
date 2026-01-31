@@ -1,0 +1,505 @@
+/* --- CẤU HÌNH KHUNG HIỆU ỨNG --- */
+.vfx-container {
+    position: fixed; /* Đổi từ absolute sang fixed để luôn căn theo màn hình */
+    top: 50%;        /* Thêm top/left để căn giữa chuẩn */
+    left: 50%;
+    transform: translate(-50%, -50%);
+    
+    pointer-events: none;
+    z-index: 9999;   /* Tăng lên cao hẳn để đè lên mọi thứ */
+    /* 👇 QUAN TRỌNG: XÓA DÒNG NÀY ĐI */
+    /* overflow: hidden; */ 
+
+    /* Hoặc đổi thành visible (mặc định) để nó hiện ra */
+    overflow: visible;
+    display: flex;   /* Đảm bảo nội dung bên trong được căn chỉnh */
+    justify-content: center;
+    align-items: center;
+}
+
+/* --- KEYFRAMES CHẠY PHIM --- */
+@keyframes play-strip {
+    from { background-position: 0px; }
+    to { background-position: 100%; } 
+}
+
+/* --- CLASS HIỆU ỨNG CỦA BẠN --- */
+.fx-fireball {
+    /* 1. Kích thước hiển thị trên màn hình (Bạn tự chỉnh cho đẹp) */
+    width: 150px; 
+    height: 150px; 
+
+    /* 2. Đường dẫn ảnh (Lưu ý dấu .. để lùi ra khỏi thư mục css) */
+    background-image: url('/assets/vfx/fireball.png');
+    background-size: 1000% 100%; 
+    /* steps(10) vì có 10 hình. 0.8s là tốc độ nổ */
+    animation: play-strip 1.2s steps(10) forwards; 
+}
+/* =======================================================
+   KỸ NĂNG: METEOR (SPRITE SHEET 9 FRAMES)
+   ======================================================= */
+/* 2. THIÊN THẠCH (METEOR) */
+.fx-meteor {
+    /* 👇 Tăng kích thước lên 300px cho to đẹp */
+    width: 300px;
+    height: 300px;
+
+    /* Các phần còn lại giữ nguyên */
+    background-image: url('/assets/vfx/meteor.png');
+    background-size: 900% 100%; 
+    background-repeat: no-repeat;
+    animation: meteor-sprite 1s steps(9) forwards;
+
+    position: absolute;
+    pointer-events: none;
+    z-index: 99999;
+}
+
+/* --- ANIMATION 1: CHUYỂN ĐỘNG HÌNH ẢNH (SPRITE) --- */
+@keyframes meteor-sprite {
+    0% { background-position: 0% 0; }   /* Bắt đầu ở hình 1 (Thiên thạch nhỏ) */
+    100% { background-position: 100% 0; } /* Kết thúc ở hình 9 (Khói) */
+}
+
+/* =======================================================
+   HIỆU ỨNG PHỤ: VỤ NỔ (EXPLOSION)
+   ======================================================= */
+.fx-explode {
+    position: fixed;
+    z-index: 100000; /* Cao hơn cả thiên thạch */
+    pointer-events: none;
+
+    /* Kích thước vụ nổ (Thường to hơn đạn một chút) */
+    width: 200px;
+    height: 200px;
+
+    /* Đường dẫn ảnh */
+    background-image: url('/assets/vfx/explode.png');
+    background-repeat: no-repeat;
+    
+    /* CẤU HÌNH SPRITE: 10 ẢNH NGANG */
+    background-size: 1000% 100%;
+
+    /* Animation: Chạy 1 lần rồi biến mất */
+    animation: explode-run 0.6s steps(10) forwards;
+}
+
+@keyframes explode-run {
+    0% { background-position: 0% 0; }
+    100% { background-position: 100% 0; }
+}
+
+/* =======================================================
+   KỸ NĂNG: CỘT LỬA (FIX LỖI CHẠY NGANG)
+   ======================================================= */
+/* 1. CỘT LỬA (FLAME PILLAR) */
+.fx-flame-pillar {
+    /* Kích thước */
+    width: 150px;
+    height: 300px;
+    
+    /* Ảnh Sprite */
+    background-image: url('/assets/vfx/flame.png');
+    background-repeat: no-repeat;
+    background-size: 1000% 100%; /* 10 khung hình */
+    
+    /* Điểm neo: Ở đáy giữa (để mọc từ đất lên) */
+    transform-origin: bottom center;
+    
+    /* Animation: Chỉ chạy hình ảnh + hiệu ứng mọc lên */
+    animation: 
+        flame-sprite 0.8s steps(10) forwards,
+        flame-erupt 0.8s ease-out forwards;
+        
+    /* 👇 QUAN TRỌNG: Đổi thành absolute và bỏ hết margin/top/left */
+    position: absolute; 
+    pointer-events: none;
+    z-index: 100001; 
+}
+
+/* Chạy hình ảnh */
+@keyframes flame-sprite {
+    0% { background-position: 0% 0; }
+    100% { background-position: 100% 0; }
+}
+
+/* Hiệu ứng mọc từ dưới lên */
+@keyframes flame-erupt {
+    0% { transform: scaleY(0); opacity: 0.6; } /* Mọc từ dưới lên */
+    15% { transform: scaleY(1.1); opacity: 1; } 
+    100% { transform: scaleY(1); opacity: 1; }
+}
+
+/* --- PASSIVE: THÁNH QUANG GIÁNG THUẬT --- */
+.fx-thanh-quang {
+    /* Kích thước 1 khung hình (Ảnh gốc 1536 chia 6 = 256) */
+    width: 256px;
+    height: 256px;
+
+    /* Đường dẫn ảnh */
+    background-image: url('/assets/vfx/thanh_quang.png');
+    background-repeat: no-repeat;
+    
+    /* Ảnh ngang dài gấp 6 lần -> 600% */
+    background-size: 600% 100%; 
+    
+    /* Chạy Animation lặp vô tận (infinite) */
+    animation: anime-thanh-quang 1s steps(6) infinite;
+
+    /* Vị trí: Căn giữa người chơi */
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%); 
+    
+    pointer-events: none; 
+    z-index: 5; /* Nằm đè lên nhân vật */
+    opacity: 0.9; 
+    mix-blend-mode: screen; /* Làm hiệu ứng sáng rực hơn (nếu thích) */
+}
+
+@keyframes anime-thanh-quang {
+    from { background-position: 0 0; }
+    to { background-position: 100% 0; }
+}
+/* =========================================
+   VFX: HỎA THẦN (FIRE AURA) - ĐÃ SỬA LỖI
+   ========================================= */
+.fx-fire-aura {
+    /* 1. Kích thước 1 khung hình (Bạn tự chỉnh cho khớp với ảnh của bạn) */
+    width: 308px; 
+    height: 256px;
+
+    
+    background-image: url('/assets/vfx/hoa_than.png');
+    background-repeat: no-repeat;
+
+    /* 3. CẤU HÌNH SPRITE SHEET (Quan trọng nhất) */
+    /* Nếu ảnh của bạn có 10 khung hình ngang: width = 1000% */
+    /* Nếu ảnh của bạn có 5 khung hình ngang: width = 500% */
+    background-size: 1000% 100%; 
+
+    /* 4. Animation */
+    /* steps(10): Phải khớp số lượng khung hình của ảnh */
+    animation: anime-hoa-than 1.4s steps(10) infinite;
+
+    /* 5. Vị trí: Căn giữa tuyệt đối (Giống Thánh Quang) */
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    
+    pointer-events: none;
+    z-index: 5;
+    mix-blend-mode: screen; /* Làm lửa sáng rực lên trên nền tối */
+}
+
+/* 6. Keyframes cho Hỏa Thần (Chạy từ đầu ảnh đến cuối ảnh) */
+@keyframes anime-hoa-than {
+    from { background-position: 0 0; }
+    to { background-position: 100% 0; }
+}
+/* =========================================
+   VFX: GIAO KÈO VỚI QUỶ (DEAL WITH DEVIL)
+   ========================================= */
+.fx-dealdevil {
+    /* 1. Kích thước 1 khung hình (Cao 256 thì rộng cũng 256) */
+    width: 256px; 
+    height: 256px;
+
+    /* 2. Đường dẫn ảnh */
+    background-image: url('/assets/vfx/dealdevil.png');
+    background-repeat: no-repeat;
+
+    /* 3. Cấu hình Sprite: 6 khung hình -> 600% */
+    background-size: 300% 100%; 
+
+    /* 4. Animation: Chạy lặp lại */
+    animation: anime-dealdevil 2s steps(6) infinite;
+
+    /* 5. Vị trí: Căn giữa người chơi */
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%); /* Căn chuẩn tâm */
+    
+    pointer-events: none;
+    z-index: 6; /* Đè lên cả Hỏa Thần nếu có */
+    mix-blend-mode: hard-light; /* Tạo hiệu ứng ma mị, ám vào người */
+}
+
+@keyframes anime-dealdevil {
+    from { background-position: 0 0; }
+    to { background-position: 100% 0; }
+}
+/* =========================================
+   VFX: HÀO QUANG THIÊN SỨ (FINAL FIX)
+   ========================================= */
+.fx-thiensu {
+    /* 1. Kích thước giống hệt mẫu */
+    width: 256px;
+    height: 256px;
+
+    /* 2. Đường dẫn ảnh (Bạn kiểm tra kỹ tên file nhé) */
+    background-image: url('/assets/vfx/thiensu.png');
+    background-repeat: no-repeat;
+    
+    /* 3. QUAN TRỌNG NHẤT: SỐ KHUNG HÌNH (FRAMES) */
+    /* Nếu ảnh Thiên Sứ cùng kích thước dài như Thánh Quang (6 hình) thì giữ nguyên 600% */
+    background-size: 600% 100%; 
+    
+    /* Animation: Copy y chang, chỉ đổi tên */
+    animation: anime-thiensu 1.5s steps(5) infinite;
+
+    /* 4. Vị trí: Copy y chang */
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%); /* Không scale, giữ nguyên tỉ lệ gốc */
+    
+    pointer-events: none; 
+    z-index: 5; /* Đè lên nhân vật giống mẫu */
+    mix-blend-mode: screen; /* Giữ nguyên chế độ hòa trộn này cho sáng */
+}
+
+@keyframes anime-thiensu {
+    from { background-position: 0 0; }
+    to { background-position: 100% 0; }
+}
+/* =========================================
+   VFX: KIÊN ĐỊNH CHIẾN ĐẤU (Warrior)
+   ========================================= */
+.fx-kiendinh {
+    width: 300px;
+    height: 240px;
+    
+    /* Nhớ tạo file ảnh kiendinh.png nhé */
+    background-image: url('/assets/vfx/kiendinh.png'); 
+    background-repeat: no-repeat;
+    
+    /* Giả sử ảnh này có 5 khung hình -> 500% */
+    background-size: 500% 100%; 
+    animation: anime-kiendinh 0.8s steps(6) infinite; /* Chỉnh steps theo số khung hình ảnh thật */
+
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    
+    /* Logic hiển thị đè lên tất cả như Thánh Quang */
+    transform: translate(-50%, -50%); 
+    z-index: 9999; 
+    pointer-events: none; 
+}
+
+@keyframes anime-kiendinh {
+    from { background-position: 0 0; }
+    to { background-position: 100% 0; }
+}
+/* =========================================
+   ⚡ VFX: CHIẾN Ý BẤT KHUẤT
+   ========================================= */
+/* =========================================
+   ⚡ VFX: CHIẾN Ý BẤT KHUẤT (FIX CĂN GIỮA + KHÔNG CẦN ẢNH)
+   ========================================= */
+/* =========================================
+   ⚡ VFX: CHIẾN Ý BẤT KHUẤT (DÙNG ẢNH chieny.png)
+   ========================================= */
+.fx-chieny {
+    position: absolute;
+    
+    /* 1. CĂN GIỮA TUYỆT ĐỐI */
+    top: 50%;
+    left: 50%;
+    /* Mặc định lùi lại 50% để vào giữa tâm */
+    transform: translate(-50%, -50%); 
+    
+    /* 2. KÍCH THƯỚC KHUNG HIỆU ỨNG */
+    /* Bạn có thể tăng/giảm số này để ảnh to/nhỏ vừa ý */
+    width: 256px; 
+    height: 256px;
+    
+    z-index: 100;  /* Nổi lên trên cùng */
+    pointer-events: none; /* Không chặn click */
+
+    /* 3. CẤU HÌNH ẢNH NỀN */
+    /* 👇 Thay đổi đường dẫn nếu bạn lưu ảnh ở chỗ khác 👇 */
+    background-image: url('/assets/vfx/chieny.png'); 
+    
+    background-size: contain; /* Co giãn ảnh vừa khít khung, không bị méo */
+    background-position: center; /* Ảnh nằm giữa khung */
+    background-repeat: no-repeat; /* Không lặp lại ảnh */
+
+    /* 4. ANIMATION (Giật đùng đùng) */
+    /* Tốc độ 0.1s = cực nhanh tạo cảm giác điện giật */
+    animation: lightning-flash 0.1s infinite alternate;
+}
+
+/* Định nghĩa chuyển động nhấp nháy cho ảnh */
+@keyframes lightning-flash {
+    0% {
+        /* QUAN TRỌNG: Luôn giữ translate(-50%, -50%) để không bị lệch tâm */
+        transform: translate(-50%, -50%) scale(1);
+        opacity: 0.8;
+        filter: brightness(1); /* Độ sáng bình thường */
+    }
+    100% {
+        /* Phóng to nhẹ 10% tạo cảm giác giật */
+        transform: translate(-50%, -50%) scale(1.1); 
+        opacity: 1;
+        /* Làm ảnh sáng rực lên và đổ bóng phát sáng màu xanh điện */
+        filter: brightness(1.8) drop-shadow(0 0 20px #00eaff);
+    }
+}
+    /* =========================================
+   ⚔️ SKILL: THẦN KIẾM THẨM PHÁN (Active) - ĐÃ FIX
+   ========================================= */
+.fx-thankiem {
+    position: absolute;
+    
+    /* 1. Kích thước 1 khung hình */
+    width: 200px;
+    height: 400px; 
+
+    /* 2. Layer & Tương tác */
+    z-index: 9999; /* Số to hẳn để không bị che */
+    pointer-events: none;
+
+    /* 3. Ảnh Sprite Sheet */
+    /* 👇 Tạm thời thêm màu nền đỏ mờ để nết ảnh lỗi thì vẫn thấy cái khung rơi xuống */
+
+    background-image: url('/assets/vfx/thankiem.png'); 
+    background-repeat: no-repeat;
+    
+    /* ⚠️ QUAN TRỌNG: Tổng chiều cao ảnh = height (400) * số frame (6) = 2400px */
+    background-size: 200px 2400px; 
+
+    /* 4. Animation */
+    /* Lưu ý: Dùng transform để chỉnh vị trí rơi, KHÔNG dùng top/left để tránh xung đột JS */
+    animation: 
+        thankiem-sprite 1s steps(6) forwards, 
+        thankiem-drop 1.5s ease-in forwards;
+}
+
+/* 🎬 Chạy từng khung hình (Di chuyển ảnh nền) */
+@keyframes thankiem-sprite {
+    0% { background-position: 0 0; }
+    100% { background-position: 0 -2400px; } /* Khớp với background-size */
+}
+
+/* ⚔️ Hiệu ứng rơi: Từ trời cao -> Cắm sâu xuống đất */
+@keyframes thankiem-drop {
+    0% {
+        opacity: 0;
+        /* Xuất phát từ tít trên cao (-1000px) */
+        transform: translate(-50%, -1000px) scale(3); 
+    }
+    20% {
+        opacity: 1; /* Hiện rõ ngay khi bắt đầu rơi */
+    }
+    100% {
+        /* 👇 ĐIỂM QUAN TRỌNG: Sửa số âm thành số DƯƠNG to đùng */
+        /* 400px = Rơi xuyên qua người quái cắm xuống đất */
+        transform: translate(-50%, 1000px) scale(2); 
+        
+        /* Nếu muốn rơi tụt hẳn khỏi màn hình luôn thì để 1000px */
+        /* transform: translate(-50%, 1000px) scale(3); */
+    }
+}
+/* =========================================
+   🌩️ SKILL MỚI: THỈNH THẦN THIÊN PHẠT
+   ========================================= */
+.fx-thienphat {
+    position: absolute;
+    
+    /* 1. Kích thước hiển thị 1 khung hình */
+    /* Tổng rộng 1536 / 5 frame = khoảng 307px. Lấy chẵn 300px cho đẹp */
+    width: 300px;  
+    height: 256px; /* Chiều cao cố định theo ảnh */
+
+    z-index: 9999;
+    pointer-events: none;
+
+    /* 2. Cấu hình ảnh Sprite Sheet Ngang */
+    background-image: url('/assets/vfx/thienphat.png');
+    background-repeat: no-repeat;
+    
+    /* Ảnh nằm ngang: Set chiều rộng 1536px, chiều cao 256px */
+    background-size: 1536px 256px; 
+
+    /* 3. Animation kép: Chạy hình + Rơi xuống */
+    animation: 
+        thienphat-sprite 1s steps(5) forwards, /* Chạy 5 hình ngang */
+        thienphat-drop 1.2s ease-in forwards;    /* Rơi từ trên xuống */
+}
+
+/* 🎬 Chạy frame theo chiều ngang (Horizontal) */
+@keyframes thienphat-sprite {
+    0% { background-position: 0 0; }
+    100% { background-position: -1536px 0; } /* Dịch sang trái hết chiều dài ảnh */
+}
+
+/* ⚡ Hiệu ứng rơi sấm sét (Thẳng đứng từ trên xuống) */
+@keyframes thienphat-drop {
+    0% {
+        opacity: 0;
+        transform: translate(-50%, -800px) scale(2); /* Tít trên cao */
+    }
+    30% {
+        opacity: 1; /* Hiện rõ khi bắt đầu lao xuống */
+    }
+    100% {
+        /* Cắm xuống đất (offset 200px để tâm ảnh chạm đất) */
+        transform: translate(-50%, 400px) scale(2); 
+    }
+}
+/* =========================================
+   🌋 SKILL MỚI: NÚI LỬA THỊNH NỘ
+   ========================================= */
+/* =========================================
+   🌋 SKILL: NÚI LỬA (FIX TOÁN HỌC & VỊ TRÍ)
+   ========================================= */
+.fx-nuilua {
+    position: absolute;
+    
+    /* 1. Kích thước chuẩn toán học */
+    /* 1500px chia 6 frame = 250px */
+    width: 250px; 
+    /* Chiều cao khớp với ảnh gốc */
+    height: 500px; 
+
+    z-index: 9999;
+    pointer-events: none;
+
+    /* 2. Cấu hình ảnh Sprite Sheet Ngang */
+    background-image: url('/assets/vfx/nuilua.png');
+    background-repeat: no-repeat;
+    
+    /* Tổng kích thước ảnh gốc */
+    background-size: 1500px 500px; 
+
+    /* 3. Animation */
+    animation: 
+        nuilua-sprite 0.5s steps(6) forwards, 
+        nuilua-erupt 1.3s ease-out forwards;
+}
+
+/* 🎬 Chạy frame NGANG (Horizontal) */
+@keyframes nuilua-sprite {
+    0% { background-position: 0 0; }
+    /* Phải bằng đúng chiều rộng background-size (số âm) */
+    100% { background-position: -1500px 0; } 
+}
+
+/* 🌋 Hiệu ứng Phun Trào & Căn vị trí */
+@keyframes nuilua-erupt {
+    0% {
+        opacity: 0.5;
+        /* translate(-50%, -20%): Dịch xuống thấp hơn so với tâm (để chân núi lửa chạm đất) */
+        transform: translate(-50%, -20%) scale(0.5); 
+    }
+    100% {
+        opacity: 1;
+        /* Scale to lên 3.0 để bao trùm quái */
+        transform: translate(-50%, -20%) scale(3.0); 
+    }
+}

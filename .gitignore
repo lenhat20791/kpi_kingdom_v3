@@ -1,0 +1,25 @@
+# Python rác
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Môi trường và Bảo mật
+.env
+.venv
+env/
+venv/
+ENV/
+
+# Dữ liệu Game (Rất quan trọng)
+*.db
+backend/game.db
+data/*.db
+data/*.db-journal
+
+# File tạm của Excel
+~$*.xlsx
+*.log
+
+# Cấu hình của trình soạn thảo
+.vscode/
+.idea/
