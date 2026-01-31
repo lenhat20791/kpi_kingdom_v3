@@ -528,6 +528,30 @@
         // Gọi hàm và set interval
         loadBossLeaderboard();
         setInterval(loadBossLeaderboard, 30000); // 10 giây cập nhật 1 lần
+
+        async function checkMaintenanceLogin() {
+            try {
+                const res = await fetch('/api/data/maintenance-status');
+                const data = await res.json();
+
+                // Nếu đang bảo trì -> Hiện màn hình chặn ngay lập tức
+                if (data.is_maintenance) {
+                    document.body.innerHTML = `
+                        <div style="position:fixed; top:0; left:0; width:100%; height:100%; background:#111827; color:white; display:flex; flex-direction:column; justify-content:center; align-items:center; z-index:9999;">
+                            <i class="fas fa-tools" style="font-size:4rem; color:#f59e0b; margin-bottom:20px;"></i>
+                            <h1 style="font-size:2.5rem; font-weight:bold; color:#f59e0b;">HỆ THỐNG ĐANG BẢO TRÌ</h1>
+                            <p style="font-size:1.2rem; margin-top:10px; color:#d1d5db; max-width:600px; text-align:center;">
+                                ${data.message || "Vui lòng quay lại sau ít phút..."}
+                            </p>
+                        </div>
+                    `;
+                }
+            } catch (err) {
+                console.error("Lỗi check bảo trì:", err);
+            }
+        }
+        // Chạy ngay khi mở trang web
+        checkMaintenanceLogin();
     </script>
 </body>
 </html>

@@ -2,7 +2,7 @@ import os
 import traceback
 import random
 import json
-from fastapi import FastAPI, Depends, HTTPException, status, Query, Body, APIRouter
+from fastapi import FastAPI, Depends, HTTPException, status, Query, Body, APIRouter,Request
 #from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from fastapi.middleware.cors import CORSMiddleware
 from sqlmodel import Session, select, update, func, col 
@@ -10,7 +10,7 @@ from datetime import datetime, timedelta
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import JSONResponse, FileResponse
 from typing import Optional
-from database import create_db_and_tables, engine, Player, get_db, Item, Inventory, Title, TowerProgress, Boss, QuestionBank, BossLog
+from database import create_db_and_tables, engine, Player, get_db, Item, Inventory, Title, TowerProgress, Boss, QuestionBank, BossLog, ArenaMatch, ArenaParticipant, SystemStatus 
 #from auth import verify_password, create_access_token, get_current_user, ACCESS_TOKEN_EXPIRE_MINUTES
 from routes import admin, users, shop, tower, pets, inventory_api, arena_api, auth, skills, market_api
 from pydantic import BaseModel
@@ -351,34 +351,37 @@ def buy_item(data: BuyRequest, db: Session = Depends(get_db)):
 @app.get("/api/public/hall-of-fame")
 def get_hall_of_fame(db: Session = Depends(get_db)):
     try:
-        # 1. Lấy danh sách Danh Hiệu (Bảng Title)
-        # Sắp xếp KPI giảm dần để so sánh từ cao xuống thấp
+        # 1. Lấy danh sách Danh Hiệu
         titles = db.exec(select(Title).order_by(Title.min_kpi.desc())).all()
 
-        # 2. Lấy Top 10 Học sinh (Bảng Player)
-        # Điều kiện: KPI > 0, sắp xếp KPI giảm dần
+        # 2. Lấy Học sinh (Lấy dư ra khoảng 20 người để lọc dần là vừa)
         players = db.exec(
             select(Player)
             .where(Player.kpi > 0)
-            .where(Player.username != "admin")  # 👈 THÊM DÒNG NÀY ĐỂ LOẠI ADMIN
+            .where(Player.username != "admin")
             .order_by(Player.kpi.desc())
-            .limit(10)
+            .limit(20) # 👈 Lấy dư ra, vì có thể top 10 chưa chắc đã đủ điểm danh hiệu
         ).all()
         
         leaderboard = []
         
         for p in players:
-            # 3. Logic: So sánh KPI của học sinh với Bảng Danh Hiệu
-            my_title = "Tân Thủ" # Mặc định nếu chưa đạt mốc nào
-            my_color = "#6b7280" # Màu xám mặc định
+            # 3. Logic: Tìm danh hiệu
+            my_title = None 
+            my_color = None 
             
             for t in titles:
                 if p.kpi >= t.min_kpi:
                     my_title = t.name
                     my_color = t.color
-                    break # Đã tìm thấy danh hiệu cao nhất thỏa mãn -> Dừng lại
+                    break 
             
-            # 4. Đóng gói dữ liệu trả về cho Frontend
+            # 👇 --- [THAY ĐỔI QUAN TRỌNG Ở ĐÂY] --- 👇
+            # Nếu KHÔNG có danh hiệu (vẫn là None) thì BỎ QUA, không thêm vào list
+            if my_title is None:
+                continue 
+
+            # Nếu CÓ danh hiệu thì mới thêm
             leaderboard.append({
                 "username": p.username,
                 "full_name": p.full_name,
@@ -388,11 +391,15 @@ def get_hall_of_fame(db: Session = Depends(get_db)):
                 "avatar": p.class_type if p.class_type else "NOVICE"
             })
             
+            # Chỉ lấy đủ Top 10 người có danh hiệu thì dừng
+            if len(leaderboard) >= 10:
+                break
+            
         return leaderboard
 
     except Exception as e:
         print(f"❌ Lỗi lấy BXH: {e}")
-        return [] # Trả về rỗng nếu lỗi để không sập web
+        return []
     
 # --- API BXH THÁP THÍ LUYỆN (ĐÃ SỬA THEO DB CỦA BẠN) ---
 @app.get("/api/public/tower-ranking")
@@ -920,7 +927,45 @@ def grant_exp_to_user(username: str, amount: int, db: Session = Depends(get_db))
     except Exception as e:
         print(f"Lỗi: {e}")
         return {"success": False, "message": f"Lỗi hệ thống: {str(e)}"}
-    
+
+@app.middleware("http")
+async def check_maintenance_mode(request: Request, call_next):
+    # 1. Danh sách các đường dẫn ĐƯỢC PHÉP truy cập khi bảo trì
+    # (Bao gồm: trang admin, api login, file tĩnh, và chính api kiểm tra bảo trì)
+    allowed_paths = [
+        "/admin",           # Admin vẫn phải vào được để tắt bảo trì
+        "/api/login",       # Cho phép login (để check role admin)
+        "/static",          # Cho phép tải file css/js/ảnh
+        "/docs",            # Cho phép xem tài liệu API
+        "/openapi.json",
+        "/api/data/maintenance-status", # Cho phép lấy trạng thái để hiển thị thông báo
+        "/api/data/maintenance-update"  # Cho phép Admin tắt bảo trì
+    ]
+
+    # 2. Nếu đường dẫn hiện tại nằm trong danh sách cho phép -> Cho qua luôn
+    # (Logic: Nếu path bắt đầu bằng 1 trong các allowed_paths)
+    if any(request.url.path.startswith(path) for path in allowed_paths):
+        return await call_next(request)
+
+    # 3. Kiểm tra trong Database xem có đang bảo trì không
+    # (Mở session thủ công vì Middleware không dùng Depends được)
+    with Session(engine) as session:
+        system_status = session.get(SystemStatus, 1)
+        
+        # Nếu đang bảo trì -> CHẶN LẠI NGAY ⛔
+        if system_status and system_status.is_maintenance:
+            return JSONResponse(
+                status_code=503, # Mã lỗi "Service Unavailable"
+                content={
+                    "detail": "MAINTENANCE_MODE", # Keyword để Frontend bắt
+                    "message": system_status.message or "Hệ thống đang bảo trì. Vui lòng quay lại sau!"
+                }
+            )
+
+    # 4. Nếu không bảo trì -> Cho qua
+    return await call_next(request)
+
+
 # 👇 ĐOẠN CODE KHỞI ĐỘNG SERVER (PHẢI CÓ Ở CUỐI FILE)
 if __name__ == "__main__":
     import uvicorn

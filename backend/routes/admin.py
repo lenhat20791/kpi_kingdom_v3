@@ -15,13 +15,14 @@ sys.path.append(parent_dir)
 from fastapi import Body, APIRouter, HTTPException, Depends, UploadFile, File, Form, Query
 from fastapi.responses import FileResponse
 from sqlmodel import Session, select, delete, func
-from sqlalchemy import func
+from sqlalchemy import func, desc
 from database import (
     get_db, Player, Inventory, Item, 
-    Boss, BossLog, TowerSetting, 
+    Boss, BossLog, TowerSetting, TowerProgress,
     PlayerPet, SystemStatus, generate_username,
     QuestionBank, ArenaMatch, ArenaParticipant,
-    SkillTemplate, Title
+    SkillTemplate, Title, 
+    ScoreLog, ShopHistory, ActiveEffect, PlayerSkill, MarketListing,
 )
 
 from io import BytesIO
@@ -125,94 +126,76 @@ def get_all_players_overview(db: Session = Depends(get_db)): # Dùng Dependency 
 @router.patch("/players/{player_identifier}/stats")
 def update_player_stats(
     player_identifier: str, 
-    kpi_change: int = Query(0), 
+    kpi_change: float = Query(0), # Đổi sang float để nhận điểm lẻ
     tri_thuc_change: int = Query(0),
     chien_tich_change: int = Query(0),
     vinh_du_change: int = Query(0),
     hp_change: int = Query(0),
     db: Session = Depends(get_db)
 ):
-    print(f"DEBUG: Bắt đầu update cho {player_identifier} | KPI: {kpi_change}") # Debug 1
+    print(f"DEBUG: Nhận lệnh update cho {player_identifier}")
     
     try:
-        # ==================================================
-        # TRƯỜNG HỢP 1: CẬP NHẬT TOÀN BỘ LỚP (ALL)
-        # ==================================================
+        # 1. Xác định danh sách học sinh cần cập nhật
         if player_identifier == "ALL":
-            # Kiểm tra xem lấy được danh sách không
-            try:
-                players = db.exec(select(Player)).all()
-                print(f"DEBUG: Tìm thấy {len(players)} học sinh.") # Debug 2
-            except Exception as e:
-                print(f"❌ LỖI TRUY VẤN DB: {e}")
-                raise e
-
-            count = 0
-            for player in players:
-                try:
-                    # 1. Update KPI (An toàn)
-                    if kpi_change != 0: 
-                        old_kpi = player.kpi if player.kpi is not None else 0
-                        player.kpi = old_kpi + kpi_change
-                    
-                    # 2. Update HP (An toàn)
-                    if hp_change != 0:
-                        current_hp = player.hp if player.hp is not None else 0
-                        
-                        # Fix lỗi nếu chưa có class_type
-                        c_type = player.class_type if player.class_type else "NOVICE"
-                        
-                        base_bonus = 300 if c_type == "WARRIOR" else (100 if c_type == "MAGE" else 0)
-                        max_hp = 10 + (player.kpi or 0) + base_bonus
-                        
-                        new_hp = current_hp + hp_change
-                        if new_hp > max_hp: new_hp = max_hp
-                        if new_hp < 0: new_hp = 0
-                        player.hp = new_hp
-
-                    db.add(player)
-                    count += 1
-                except Exception as loop_error:
-                    print(f"❌ LỖI KHI UPDATE HỌC SINH {player.username}: {loop_error}")
-                    # Tiếp tục chạy người khác chứ không dừng
-                    continue
-                
-            db.commit()
-            print(f"DEBUG: Đã commit thành công {count} người.") # Debug 3
-            return {"success": True, "message": f"Đã cập nhật chỉ số cho toàn bộ {count} học sĩ!"}
-
-        # ==================================================
-        # TRƯỜNG HỢP 2: CẬP NHẬT 1 NGƯỜI
-        # ==================================================
+            # CHỈ lấy học sinh, loại bỏ admin để tránh tặng nhầm cho admin
+            players = db.exec(select(Player).where(Player.role != "admin")).all()
+            print(f"DEBUG: Chế độ ALL - Tìm thấy {len(players)} học sinh.")
         else:
             try:
-                player_id = int(player_identifier)
+                p_id = int(player_identifier)
             except ValueError:
                 raise HTTPException(status_code=400, detail="ID không hợp lệ")
-
-            player = db.get(Player, player_id)
+            
+            player = db.get(Player, p_id)
             if not player:
                 raise HTTPException(status_code=404, detail="Không tìm thấy học sĩ")
+            players = [player]
 
-            if kpi_change != 0: 
-                player.kpi = (player.kpi or 0) + kpi_change
+        # 2. Vòng lặp cập nhật (Dùng chung cho cả 1 người hoặc ALL)
+        count = 0
+        for p in players:
+            # --- Cập nhật Tiền tệ (Các dòng bạn bị thiếu đây) ---
+            if kpi_change != 0:
+                p.kpi = (p.kpi or 0.0) + kpi_change
+            
+            if tri_thuc_change != 0:
+                p.tri_thuc = (p.tri_thuc or 0) + tri_thuc_change
+            
+            if chien_tich_change != 0:
+                p.chien_tich = (p.chien_tich or 0) + chien_tich_change
+            
+            if vinh_du_change != 0:
+                p.vinh_du = (p.vinh_du or 0) + vinh_du_change
 
+            # --- Cập nhật HP (Giữ nguyên logic tính Max HP của bạn) ---
             if hp_change != 0:
-                c_type = player.class_type if player.class_type else "NOVICE"
+                c_type = p.class_type if p.class_type else "NOVICE"
+                # Logic tính Max HP dựa trên class và KPI
                 base_bonus = 300 if c_type == "WARRIOR" else (100 if c_type == "MAGE" else 0)
-                max_hp = 10 + (player.kpi or 0) + base_bonus
-                new_hp = (player.hp or 0) + hp_change
+                max_hp = 10 + int(p.kpi or 0) + base_bonus
+                
+                new_hp = (p.hp or 0) + hp_change
+                # Giới hạn HP trong khoảng [0, max_hp]
                 if new_hp > max_hp: new_hp = max_hp
                 if new_hp < 0: new_hp = 0
-                player.hp = new_hp
+                p.hp = new_hp
 
-            db.add(player)
-            db.commit()
-            return {"success": True, "message": f"Đã cập nhật cho {player.full_name}"}
+            db.add(p)
+            count += 1
+
+        # 3. Kết thúc
+        db.commit()
+        print(f"DEBUG: Hoàn tất cập nhật cho {count} người.")
+        
+        return {
+            "success": True, 
+            "message": f"Đã cập nhật chỉ số cho {count} học sĩ thành công!"
+        }
 
     except Exception as e:
-        # IN LỖI RA MÀN HÌNH ĐEN ĐỂ TÔI BIẾT ĐƯỜNG SỬA
-        print("❌❌❌ LỖI NGHIÊM TRỌNG (CRITICAL ERROR):")
+        db.rollback()
+        print("❌❌❌ LỖI NGHIÊM TRỌNG:")
         import traceback
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=f"Lỗi server: {str(e)}")
@@ -294,57 +277,88 @@ def list_item_templates(db: Session = Depends(get_db)):
 # tặng và thu hồi quà cho player
 @router.post("/players/{player_id}/items")
 def give_item_to_player(
-    player_id: int, 
+    player_id: str, # Đổi thành str để nhận "ALL"
     item_id: int, 
-    amount: int = 1, 
-    db: Session = Depends(get_db) # Sử dụng kết nối chuẩn
+    amount: int = Query(1), 
+    db: Session = Depends(get_db)
 ):
-    """
-    Hàm xử lý tặng/thu hồi vật phẩm (Đã cập nhật dùng bảng Item mới).
-    """
     try:
-        # 1. KIỂM TRA VẬT PHẨM TRONG SHOP MỚI (Bảng Item)
-        # Sửa: Dùng bảng Item 
-        game_item = db.get(Item, item_id)
-        
+        game_item = db.get(Item, item_id) # [cite: 165]
         if not game_item:
-            raise HTTPException(status_code=404, detail=f"Vật phẩm ID {item_id} không tồn tại trong Shop!")
-        
-        # 2. KIỂM TRA TÚI ĐỒ NGƯỜI CHƠI
-        statement = select(Inventory).where(
-            Inventory.player_id == player_id, 
-            Inventory.item_id == item_id
-        )
-        inv_item = db.exec(statement).first()
-        
-        if inv_item:
-            # Nếu đã có -> Cộng dồn (hoặc trừ nếu amount âm)
-            inv_item.amount += amount
-            
-            # Nếu số lượng <= 0 -> Xóa khỏi túi
-            if inv_item.amount <= 0:
-                db.delete(inv_item)
-                message = f"Đã thu hồi hết {game_item.name} khỏi túi đồ."
-            else:
-                db.add(inv_item)
-                message = f"Đã cập nhật: {game_item.name} (SL: {inv_item.amount})"
+            raise HTTPException(404, detail="Vật phẩm không tồn tại")
+
+        # Xác định đối tượng
+        if player_id == "ALL":
+            players = db.exec(select(Player).where(Player.role != "admin")).all()
         else:
-            # Nếu chưa có -> Chỉ thêm mới nếu amount dương
-            if amount > 0:
-                new_item = Inventory(player_id=player_id, item_id=item_id, amount=amount)
+            p = db.get(Player, int(player_id))
+            if not p: raise HTTPException(404)
+            players = [p]
+
+        for p in players:
+            statement = select(Inventory).where(
+                Inventory.player_id == p.id, 
+                Inventory.item_id == item_id
+            )
+            inv_item = db.exec(statement).first() # [cite: 166]
+            
+            if inv_item:
+                inv_item.amount += amount # Nếu amount âm sẽ là thu hồi 
+                if inv_item.amount <= 0:
+                    db.delete(inv_item) # Xóa nếu số lượng về 0 
+                else:
+                    db.add(inv_item)
+            elif amount > 0:
+                # Chỉ thêm mới nếu là tặng (số dương) [cite: 169]
+                new_item = Inventory(player_id=p.id, item_id=item_id, amount=amount)
                 db.add(new_item)
-                message = f"Đã tặng mới: {game_item.name} (SL: {amount})"
-            else:
-                return {"success": False, "message": "Học sinh chưa có vật phẩm này để thu hồi!"}
-                
+
         db.commit()
-        return {"success": True, "message": message}
-        
+        return {"success": True, "message": "Thao tác vật phẩm thành công!"}
     except Exception as e:
         db.rollback()
-        raise HTTPException(status_code=500, detail=f"Lỗi xử lý vật phẩm: {str(e)}")
+        raise HTTPException(500, detail=str(e))
 
+# --- tặng và thu hồi tiền tệ ---
 
+@router.patch("/players/{player_id}/stats")
+def update_player_stats(
+    player_id: str, # Để kiểu str để nhận được giá trị "ALL"
+    kpi_change: Optional[float] = Query(0),
+    tri_thuc_change: Optional[int] = Query(0),
+    chien_tich_change: Optional[int] = Query(0),
+    vinh_du_change: Optional[int] = Query(0),
+    db: Session = Depends(get_db)
+):
+    try:
+        # 1. Xác định danh sách người chơi cần tác động
+        if player_id == "ALL":
+            # Tác động lên tất cả học sinh, trừ Admin [cite: 3, 38]
+            statement = select(Player).where(Player.role != "admin")
+            players = db.exec(statement).all()
+        else:
+            # Tác động lên 1 người cụ thể
+            p = db.get(Player, int(player_id))
+            if not p:
+                raise HTTPException(status_code=404, detail="Không tìm thấy người chơi")
+            players = [p]
+
+        # 2. Cập nhật chỉ số cho từng người 
+        for p in players:
+            p.kpi += kpi_change
+            p.tri_thuc += tri_thuc_change
+            p.chien_tich += chien_tich_change
+            p.vinh_du += vinh_du_change
+            db.add(p)
+            
+        db.commit()
+        
+        action = "Cập nhật" if (kpi_change >= 0 and tri_thuc_change >= 0) else "Thu hồi"
+        return {"success": True, "message": f"Đã {action} chỉ số cho {len(players)} người chơi."}
+
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
 # --- BỔ SUNG CÁC MODEL NHẬN DỮ LIỆU ---
 class UpdateTeamRequest(BaseModel):
     team_id: int
@@ -424,7 +438,7 @@ def reset_password(req: ResetPasswordRequest, db: Session = Depends(get_db)):
     return {"success": True, "message": f"Đã reset mật khẩu của {req.username} về {new_pass}"}
 
 
-@router.post("/security/reset-all") # Nếu router có prefix="/admin" thì đường dẫn thực tế là /admin/security/reset-all
+@router.post("/security/reset-all") 
 async def reset_all_passwords_api(db: Session = Depends(get_db)):
     try:
         # Lấy tất cả trừ admin
@@ -643,30 +657,36 @@ def get_all_players_security(db: Session = Depends(get_db)):
 @router.post("/security/reset-season")
 async def reset_season(db: Session = Depends(get_db)):
     try:
-        # 1. Xóa toàn bộ kho đồ (Inventory) trước (vì nó dính khóa ngoại với Player)
-        db.exec(delete(Inventory))
-        
-        # 2. Xóa các hiệu ứng (ActiveEffect) nếu có
-        # session.exec(delete(ActiveEffect)) # Bỏ comment nếu bạn đã tạo bảng này
-        
-        # 3. Xóa nhật ký lôi đài (Sau này có bảng ArenaLog thì thêm vào đây)
-        # session.exec(delete(ArenaLog))
-        
-        # 4. Xóa tất cả Player TRỪ ADMIN
-        # Logic: Xóa những dòng mà username KHÁC 'admin'
-        statement = delete(Player).where(Player.username != "admin")
+        # --- NHÓM 1: XÓA DỮ LIỆU SỞ HỮU & GIAO DỊCH (Xóa trước để tránh lỗi khóa ngoại) ---
+        db.exec(delete(Inventory))      # Xóa túi đồ [cite: 1]
+        db.exec(delete(PlayerSkill))    # Xóa kỹ năng người chơi đã học [cite: 160]
+        db.exec(delete(PlayerPet))      # Xóa thú cưng đang sở hữu [cite: 156]
+        db.exec(delete(MarketListing))  # Xóa các món đang treo bán trên Chợ Đen [cite: 158]
+        db.exec(delete(ShopHistory))    # Xóa lịch sử mua hàng tại Shop [cite: 153]
+
+        # --- NHÓM 2: XÓA LỊCH SỬ HOẠT ĐỘNG & TIẾN TRÌNH ---
+        db.exec(delete(TowerProgress))  # Xóa tầng tháp cao nhất của từng người [cite: 154]
+        db.exec(delete(BossLog))        # Xóa nhật ký sát thương Boss [cite: 149]
+        db.exec(delete(ScoreLog))       # Xóa lịch sử nhập điểm/vi phạm [cite: 168]
+        db.exec(delete(ActiveEffect))   # Xóa các hiệu ứng bùa chú đang kích hoạt [cite: 143]
+
+        # Xóa dữ liệu Lôi đài (Participant trước, Match sau)
+        db.exec(delete(ArenaParticipant)) # [cite: 165]
+        db.exec(delete(ArenaMatch))       # [cite: 162]
+
+        # --- NHÓM 3: XÓA NGƯỜI CHƠI (GIỮ ADMIN) ---
+        # Việc xóa Player sẽ tự động xóa sạch Level, Tiền tệ, KPI vì chúng nằm trong bảng này
+        statement = delete(Player).where(Player.role != "admin") # 
         db.exec(statement)
         
         db.commit()
-        
         return {
             "success": True, 
-            "message": "Đã dọn dẹp sạch sẽ! Server sẵn sàng cho lớp học mới."
+            "message": "Mùa giải đã kết thúc! Toàn bộ học sinh và lịch sử đã được dọn dẹp."
         }
         
     except Exception as e:
-        db.rollback() # Hoàn tác nếu lỗi
-        print(f"Lỗi Reset Season: {e}")
+        db.rollback()
         raise HTTPException(status_code=500, detail=f"Lỗi Server: {str(e)}")
 
 # =================================================================================
@@ -1023,7 +1043,8 @@ def update_maintenance_status(
     
     status.is_maintenance = is_maintenance
     status.message = message
-    status.updated_at = generate_username("now") # Dùng hàm tạo thời gian có sẵn
+    # 👇 SỬA LẠI DÒNG NÀY (Dùng datetime.now() thay vì generate_username)
+    status.updated_at = datetime.now() 
     
     db.add(status)
     db.commit()
@@ -1200,3 +1221,47 @@ def delete_title(title_id: int, db: Session = Depends(get_db)):
     db.delete(title)
     db.commit()
     return {"status": "success", "message": "Đã xóa danh hiệu"}
+
+# Hệ thống quản lý loi đài admin
+
+# 2. Lấy lịch sử trận đấu đã xong (Completed)
+@router.get("/arena/history")
+def get_arena_history(limit: int = 50, db: Session = Depends(get_db)):
+    statement = select(ArenaMatch).where(ArenaMatch.status == "completed").order_by(desc(ArenaMatch.created_at)).limit(limit)
+    matches = db.exec(statement).all()
+    return matches
+
+# 3. Admin Hủy trận đấu (Xóa hoặc đổi status sang cancelled)
+@router.post("/arena/cancel/{match_id}")
+def admin_cancel_match(match_id: int, db: Session = Depends(get_db)):
+    match = db.get(ArenaMatch, match_id)
+    if not match:
+        raise HTTPException(status_code=404, detail="Không tìm thấy trận đấu")
+    
+    # Chuyển trạng thái sang cancelled thay vì xóa để lưu vết
+    match.status = "cancelled"
+    db.add(match)
+    db.commit()
+    return {"success": True, "message": f"Đã hủy trận đấu #{match_id}"}
+@router.get("/arena/data")
+def get_admin_arena_data(db: Session = Depends(get_db)):
+    # Lấy trận đấu đang treo (pending) 
+    pending_matches = db.exec(
+        select(ArenaMatch)
+        .where(ArenaMatch.status == "pending")
+        .order_by(desc(ArenaMatch.created_at))
+    ).all()
+
+    # Lấy lịch sử trận đã xong (completed) 
+    history_matches = db.exec(
+        select(ArenaMatch)
+        .where(ArenaMatch.status == "completed")
+        .order_by(desc(ArenaMatch.created_at))
+        .limit(50)
+    ).all()
+
+    return {
+        "success": True,
+        "pending": pending_matches,
+        "history": history_matches
+    }

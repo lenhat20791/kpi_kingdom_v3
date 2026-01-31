@@ -144,7 +144,7 @@ class BossLog(SQLModel, table=True):
     __tablename__ = "boss_logs"
 
     id: Optional[int] = Field(default=None, primary_key=True)
-    boss_id: int = Field(foreign_key="bosses.id") # Liên kết với Boss nào
+    boss_id: int = Field(foreign_key="bosses.id")
     
     player_name: str                              # Lưu tên HS tại thời điểm đánh
     action: str                                   # "attack_hit" (trúng), "attack_miss" (trượt/sai)
