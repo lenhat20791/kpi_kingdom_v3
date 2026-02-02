@@ -31,7 +31,7 @@ from pydantic import BaseModel
 from typing import List, Dict, Optional
 from passlib.context import CryptContext
 from .auth import get_password_hash, verify_password
-
+from datetime import datetime
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 # Cấu trúc cho từng thẻ phần thưởng
@@ -999,18 +999,29 @@ def update_maintenance_status(
     message: str = Body(...), 
     db: Session = Depends(get_db)
 ):
-    status = db.get(SystemStatus, 1)
-    if not status:
-        status = SystemStatus(id=1)
-    
-    status.is_maintenance = is_maintenance
-    status.message = message
-    # 👇 SỬA LẠI DÒNG NÀY (Dùng datetime.now() thay vì generate_username)
-    status.updated_at = datetime.now() 
-    
-    db.add(status)
-    db.commit()
-    return {"success": True, "message": "Đã cập nhật trạng thái hệ thống!"}
+    try:
+        status = db.get(SystemStatus, 1)
+        
+        # Nếu chưa có thì tạo mới
+        if not status:
+            status = SystemStatus(id=1)
+        
+        # Cập nhật dữ liệu
+        status.is_maintenance = is_maintenance
+        status.message = message
+        
+        # 👇 SỬA ĐÚNG: Chuyển thời gian thành chuỗi "Năm-Tháng-Ngày Giờ:Phút:Giây"
+        status.updated_at = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        
+        db.add(status)
+        db.commit()
+        db.refresh(status) # Refresh để lấy dữ liệu mới nhất
+        
+        return {"success": True, "message": "Đã cập nhật trạng thái hệ thống!"}
+
+    except Exception as e:
+        print(f"❌ Lỗi: {e}")
+        return JSONResponse(status_code=500, content={"message": str(e)})
 
 # 1. API Tạo Pet (Lưu vào bảng Item với config đặc biệt)
 @router.post("/pets/create")

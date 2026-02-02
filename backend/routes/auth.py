@@ -10,7 +10,7 @@ from passlib.context import CryptContext
 from jose import JWTError, jwt
 
 # Import Database
-from database import get_db, Player
+from database import get_db, Player, SystemStatus
 import traceback
 router = APIRouter()
 
@@ -94,11 +94,10 @@ async def login(data: LoginRequest, db: Session = Depends(get_db)):
                 detail="Sai tài khoản hoặc mật khẩu!",
             )
 
-        # 2. Kiểm tra mật khẩu (Đây là đoạn dễ sập nhất nếu DB chưa hash)
+        # 2. Kiểm tra mật khẩu
         try:
             is_valid = verify_password(data.password, user.password_hash)
         except Exception as auth_err:
-            # Nếu hàm verify_password sập, nó sẽ khai báo lỗi ở đây
             raise Exception(f"Lỗi bảo mật (Verify): {str(auth_err)}. Có thể mật khẩu trong DB chưa được mã hóa chuẩn.")
 
         if not is_valid:
@@ -108,13 +107,33 @@ async def login(data: LoginRequest, db: Session = Depends(get_db)):
                 headers={"WWW-Authenticate": "Bearer"},
             )
 
+        # ==================================================================
+        # 🚧🚧🚧 [BỔ SUNG QUAN TRỌNG] CHẶN CỔNG BẢO TRÌ TẠI ĐÂY 🚧🚧🚧
+        # ==================================================================
+        
+        # Logic: Nếu KHÔNG PHẢI Admin -> Phải kiểm tra xem cửa có khóa không
+        if user.role != "admin": 
+            # Lấy trạng thái từ DB (ID luôn là 1)
+            system_status = db.get(SystemStatus, 1)
+            
+            # Nếu có dữ liệu VÀ đang bật cờ is_maintenance = True
+            if system_status and system_status.is_maintenance:
+                # ĐÁ RA NGAY LẬP TỨC
+                raise HTTPException(
+                    status_code=503, # Mã 503: Service Unavailable (Dịch vụ tạm ngừng)
+                    detail=system_status.message or "Hệ thống đang bảo trì nâng cấp!"
+                )
+        
+        # ==================================================================
+        # ✅✅✅ NẾU QUA ĐƯỢC CHỐT TRÊN THÌ MỚI CẤP TOKEN ✅✅✅
+        # ==================================================================
+
         # 3. Tạo Token
         access_token = create_access_token(
-            data={"sub": user.username}, 
+            data={"sub": user.username, "role": user.role}, # Lưu thêm role vào token để tiện dùng
             expires_delta=timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
         )
 
-        # 🔍 DEBUG: Kiểm tra dữ liệu user_info trước khi gửi (Tránh lỗi NoneType)
         return {
             "status": "success", 
             "access_token": access_token, 
@@ -128,17 +147,15 @@ async def login(data: LoginRequest, db: Session = Depends(get_db)):
         }
 
     except HTTPException as http_e:
-        # Giữ nguyên các lỗi 401 đã định nghĩa
         raise http_e
     except Exception as e:
-        # 🔥 ĐÂY LÀ "MÁY QUAY" SOI LỖI 500
         full_error = traceback.format_exc()
         raise HTTPException(
             status_code=500,
             detail={
                 "message": "Server bị lỗi nội bộ rồi!",
                 "error_detail": str(e),
-                "traceback": full_error # Toàn bộ dòng code bị lỗi sẽ hiện ở đây
+                "traceback": full_error
             }
         )
 @router.post("/change-password")

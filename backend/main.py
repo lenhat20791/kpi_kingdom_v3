@@ -928,44 +928,6 @@ def grant_exp_to_user(username: str, amount: int, db: Session = Depends(get_db))
         print(f"Lỗi: {e}")
         return {"success": False, "message": f"Lỗi hệ thống: {str(e)}"}
 
-@app.middleware("http")
-async def check_maintenance_mode(request: Request, call_next):
-    # 1. Danh sách các đường dẫn ĐƯỢC PHÉP truy cập khi bảo trì
-    # (Bao gồm: trang admin, api login, file tĩnh, và chính api kiểm tra bảo trì)
-    allowed_paths = [
-        "/admin",           # Admin vẫn phải vào được để tắt bảo trì
-        "/api/login",       # Cho phép login (để check role admin)
-        "/static",          # Cho phép tải file css/js/ảnh
-        "/docs",            # Cho phép xem tài liệu API
-        "/openapi.json",
-        "/api/data/maintenance-status", # Cho phép lấy trạng thái để hiển thị thông báo
-        "/api/data/maintenance-update"  # Cho phép Admin tắt bảo trì
-    ]
-
-    # 2. Nếu đường dẫn hiện tại nằm trong danh sách cho phép -> Cho qua luôn
-    # (Logic: Nếu path bắt đầu bằng 1 trong các allowed_paths)
-    if any(request.url.path.startswith(path) for path in allowed_paths):
-        return await call_next(request)
-
-    # 3. Kiểm tra trong Database xem có đang bảo trì không
-    # (Mở session thủ công vì Middleware không dùng Depends được)
-    with Session(engine) as session:
-        system_status = session.get(SystemStatus, 1)
-        
-        # Nếu đang bảo trì -> CHẶN LẠI NGAY ⛔
-        if system_status and system_status.is_maintenance:
-            return JSONResponse(
-                status_code=503, # Mã lỗi "Service Unavailable"
-                content={
-                    "detail": "MAINTENANCE_MODE", # Keyword để Frontend bắt
-                    "message": system_status.message or "Hệ thống đang bảo trì. Vui lòng quay lại sau!"
-                }
-            )
-
-    # 4. Nếu không bảo trì -> Cho qua
-    return await call_next(request)
-
-
 # 👇 ĐOẠN CODE KHỞI ĐỘNG SERVER (PHẢI CÓ Ở CUỐI FILE)
 if __name__ == "__main__":
     import uvicorn
