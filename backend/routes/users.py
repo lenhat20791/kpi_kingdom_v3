@@ -1,5 +1,5 @@
 import pytz
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Query
 from fastapi.security import OAuth2PasswordBearer
 from sqlmodel import Session, select
 from jose import JWTError, jwt
@@ -157,36 +157,54 @@ def get_public_player_info(username: str, db: Session = Depends(get_db)):
 # =================================================================
 
 # 1. XỬ LÝ CHỌN CLASS (Khớp Frontend: /player/choose-class)
+# Trong file users.py
 @router.post("/player/choose-class")
 def handle_choose_class(
-    username: str, 
-    class_name: str, 
+    username: str = Query(...), 
+    class_name: str = Query(...), 
     db: Session = Depends(get_db)
 ):
-    # Tìm User
+    # [CAMERA 1]: Kiểm tra xem code có chạy vào đây không
+    print(f"🔥 DEBUG: Đang xử lý chọn Class cho {username} -> {class_name}")
+
     player = db.exec(select(Player).where(Player.username == username)).first()
     if not player:
+        print("❌ DEBUG: Không tìm thấy User!")
         raise HTTPException(status_code=404, detail="Không tìm thấy User")
 
-    # Chỉ chấp nhận WARRIOR và MAGE (Không có Archer)
+    # Logic chọn class
     valid_classes = ["WARRIOR", "MAGE"]
     if class_name not in valid_classes:
-        raise HTTPException(status_code=400, detail="Class không hợp lệ! Chỉ chọn WARRIOR hoặc MAGE.")
+        raise HTTPException(status_code=400, detail="Class không hợp lệ")
 
-    # Update Class
     player.class_type = class_name
-    player.level = 1
     
-    # Hồi đầy máu dựa trên Class Bonus mới chọn
+    # [CAMERA 2]: Kiểm tra chỉ số trước khi cộng
+    print(f"📊 DEBUG: KPI hiện tại: {player.kpi}")
+
+    # Logic cộng chỉ số
     base_hp_bonus = 300 if class_name == "WARRIOR" else 100
+    base_atk_bonus = 5 if class_name == "WARRIOR" else 20 # Thêm atk cho máu lửa
+
     current_kpi = player.kpi if player.kpi else 0
-    # Công thức HP Max = 10 + KPI + Bonus
-    player.hp = int(10 + current_kpi + base_hp_bonus)
     
+    # Tính toán
+    # Tính toán
+    new_hp = int(10 + current_kpi + base_hp_bonus)
+    new_atk = int(10 + (current_kpi / 10) + base_atk_bonus)
+
+    player.hp = new_hp
+    player.hp_max = new_hp  # <--- BẮT BUỘC PHẢI CÓ DÒNG NÀY
+    player.atk = new_atk
+
+    # [CAMERA 3]: Kiểm tra kết quả tính toán
+    print(f"✅ DEBUG: Sau khi tính -> HP: {player.hp}, ATK: {player.atk}")
+
     db.add(player)
     db.commit()
+    db.refresh(player)
     
-    return {"message": f"Đã chuyển chức thành công sang {class_name}"}
+    return {"message": f"Đã chuyển thành {class_name}. Máu: {player.hp}"}
 
 
 # 2. XỬ LÝ DASHBOARD (Khớp Frontend: /api/player/dashboard)

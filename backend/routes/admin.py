@@ -321,44 +321,6 @@ def give_item_to_player(
 
 # --- tặng và thu hồi tiền tệ ---
 
-@router.patch("/players/{player_id}/stats")
-def update_player_stats(
-    player_id: str, # Để kiểu str để nhận được giá trị "ALL"
-    kpi_change: Optional[float] = Query(0),
-    tri_thuc_change: Optional[int] = Query(0),
-    chien_tich_change: Optional[int] = Query(0),
-    vinh_du_change: Optional[int] = Query(0),
-    db: Session = Depends(get_db)
-):
-    try:
-        # 1. Xác định danh sách người chơi cần tác động
-        if player_id == "ALL":
-            # Tác động lên tất cả học sinh, trừ Admin [cite: 3, 38]
-            statement = select(Player).where(Player.role != "admin")
-            players = db.exec(statement).all()
-        else:
-            # Tác động lên 1 người cụ thể
-            p = db.get(Player, int(player_id))
-            if not p:
-                raise HTTPException(status_code=404, detail="Không tìm thấy người chơi")
-            players = [p]
-
-        # 2. Cập nhật chỉ số cho từng người 
-        for p in players:
-            p.kpi += kpi_change
-            p.tri_thuc += tri_thuc_change
-            p.chien_tich += chien_tich_change
-            p.vinh_du += vinh_du_change
-            db.add(p)
-            
-        db.commit()
-        
-        action = "Cập nhật" if (kpi_change >= 0 and tri_thuc_change >= 0) else "Thu hồi"
-        return {"success": True, "message": f"Đã {action} chỉ số cho {len(players)} người chơi."}
-
-    except Exception as e:
-        db.rollback()
-        raise HTTPException(status_code=500, detail=str(e))
 # --- BỔ SUNG CÁC MODEL NHẬN DỮ LIỆU ---
 class UpdateTeamRequest(BaseModel):
     team_id: int

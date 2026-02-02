@@ -1662,11 +1662,14 @@
 
         function renderUI(data) {
             // 1. INFO CƠ BẢN
-            var info = data.info || {};
-            var stats = data.stats || {};
+            var info = data.info || {}; // Chứa thông tin từ bảng Player
+            var stats = data.stats || {}; 
             
-            document.getElementById('hero-name').innerText = info.fullname || "Chưa đặt tên";
-            document.getElementById('mini-name').innerText = info.fullname || "Chưa đặt tên";
+            // [SỬA 1]: Model là full_name, nên gọi info.full_name mới đúng
+            var displayName = info.full_name || info.fullname || "Chưa đặt tên";
+            document.getElementById('hero-name').innerText = displayName;
+            document.getElementById('mini-name').innerText = displayName;
+            
             document.getElementById('hero-level').innerText = info.level || 1;
             
             // Xử lý Class & Avatar
@@ -1674,9 +1677,9 @@
             document.getElementById('hero-class').innerText = classType;
             
             const classConfig = {
-                "WARRIOR": "assets/character/warrior.png",
-                "MAGE":    "assets/character/mage.png", 
-                "NOVICE":  "assets/character/mage.png"
+                "WARRIOR": "/assets/character/warrior.png", // Thêm dấu / cho chắc
+                "MAGE":    "/assets/character/mage.png", 
+                "NOVICE":  "/assets/character/mage.png"
             };
             var avatarUrl = classConfig[classType] || classConfig["NOVICE"];
             
@@ -1686,37 +1689,47 @@
                 imgElement.onerror = function() { this.src = classConfig["NOVICE"]; };
             }
             
-            // --- [1] THANH MÁU (HP) ---
+            // --- [SỬA 2: QUAN TRỌNG NHẤT] THANH MÁU (HP) ---
             var hp = info.hp || 0;
-            var maxHp = stats.max_hp || 100; 
-            var hpPercent = Math.max(0, Math.min((hp / maxHp) * 100, 100));
+            
+            // Trong Model là hp_max -> Nên ở đây PHẢI lấy info.hp_max
+            // Logic: Ưu tiên info.hp_max, nếu không có thì tìm các biến dự phòng
+            var maxHp = info.hp_max || stats.hp_max || 100; 
+
+            // Tính phần trăm
+            var hpPercent = 0;
+            if (maxHp > 0) {
+                hpPercent = Math.max(0, Math.min((hp / maxHp) * 100, 100));
+            }
             
             document.getElementById('hp-text').innerText = hp + "/" + maxHp;
             document.getElementById('hp-bar').style.width = hpPercent + "%";
             
+            // Hiệu ứng máu đỏ
             if (hpPercent < 30) {
                 document.getElementById('hp-bar').className = "bg-red-600 animate-pulse h-2.5 rounded-full transition-all";
             } else {
                 document.getElementById('hp-bar').className = "bg-green-500 h-2.5 rounded-full transition-all";
             }
 
-            // --- [2] THANH TẤN CÔNG (ATK) ---
+            // --- [SỬA 3] THANH TẤN CÔNG (ATK) ---
+            // Model có cột atk, nên lấy info.atk là chuẩn
             var atk = info.atk || 0;
-            var maxAtk = 20000; 
+            var maxAtk = 20000; // Mốc hiển thị cho đẹp
             var atkPercent = Math.min((atk / maxAtk) * 100, 100);
             document.getElementById('atk-text').innerText = atk;
             document.getElementById('atk-bar').style.width = atkPercent + "%";
 
-            // --- [3] (MỚI) THANH KINH NGHIỆM (EXP BAR) ---
-            // Lấy dữ liệu exp từ info (Backend trả về trong info)
+            // --- [SỬA 4] THANH KINH NGHIỆM (EXP) ---
+            // Model có cột exp và next_level_exp
             var currentExp = info.exp || 0;
-            var nextLevelExp = info.next_level_exp || 100;
+            var nextLevelExp = info.next_level_exp || 100; // Mặc định 100 theo Model
+            
             document.getElementById('progress-level-number').innerText = info.level || 1;
-            // Tính toán phần trăm
+            
             var expPercent = 0;
             if (nextLevelExp > 0) {
                 expPercent = (currentExp / nextLevelExp) * 100;
-                // Giới hạn max 100% để không bị tràn
                 if (expPercent > 100) expPercent = 100;
             }
 
@@ -1854,8 +1867,8 @@
             console.log(`⏳ Đang chuyển class: ${className} cho user: ${username}`);
 
             // 3. Gọi Backend (Dùng Query Param chuẩn xác)
-            // URL: /player/choose-class?username=...&class_name=...
-            const url = `/player/choose-class?username=${username}&class_name=${className}`;
+            // Thêm /api/user vào phía trước để nó tìm đúng hàm trong file user.py
+            const url = `/api/user/player/choose-class?username=${username}&class_name=${className}`;
 
             fetch(url, {
                 method: 'POST' 
@@ -5582,7 +5595,7 @@
             bossState.isProcessing = false;
 
             try {
-                const res = await fetch('/api/boss/get-question');
+                const res = await fetch(`/api/boss/get-question?boss_id=${bossData.id}`);
                 if (!res.ok) throw new Error("Server Error");
                 
                 const qData = await res.json();

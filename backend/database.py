@@ -108,6 +108,7 @@ class Question(SQLModel, table=True):
     options_json: str
     correct_answer: str
     difficulty: int = 1
+    Field(default=6)
 # 7. Bảng Quản lý Boss (Lưu cấu hình)
 class Boss(SQLModel, table=True):
     __tablename__ = "bosses" # Quy ước số nhiều
@@ -272,6 +273,7 @@ class QuestionBank(SQLModel, table=True):
     options_json: str                     # Lưu List 4 đáp án dạng JSON string: '["A", "B", "C", "D"]'
     correct_answer: str                   # Đáp án đúng (A, B, C, hoặc D)
     explanation: str = Field(default="")
+    grade: int = Field(default=6, index=True)
 
 class ArenaMatch(SQLModel, table=True):
     """Quản lý thông tin trận đấu"""

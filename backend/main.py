@@ -213,30 +213,7 @@ async def view_admin_dashboard():
             return FileResponse(path)
     return {"error": "File admin.html not found"}
 
-# 1. API CHỌN CLASS (Dùng username thay vì Token)
-@app.post("/player/choose-class")
-def choose_class(
-    class_name: str = Query(...), 
-    username: str = Query(...), # <--- THAY ĐỔI: Nhận thẳng username
-    db: Session = Depends(get_db)
-):
-    # Tìm user
-    user = db.exec(select(Player).where(Player.username == username)).first()
-    if not user:
-        raise HTTPException(status_code=404, detail="Không tìm thấy người chơi")
 
-    # Validate Class
-    valid_classes = ["WARRIOR", "MAGE"]
-    if class_name not in valid_classes:
-        raise HTTPException(status_code=400, detail="Class không hợp lệ")
-
-    # Lưu vào DB
-    user.class_type = class_name
-    db.add(user)
-    db.commit()
-    db.refresh(user)
-    
-    return {"status": "success", "message": f"Bạn đã trở thành {class_name}!"}
 
 @app.get("/index.html")
 async def read_index():
@@ -794,9 +771,32 @@ def attack_boss(req: AttackRequest, db: Session = Depends(get_db)):
 @app.get("/api/boss/get-question")
 def get_boss_question(db: Session = Depends(get_db)):
     try:
-        # 1. Lấy 1 câu hỏi ngẫu nhiên từ QuestionBank
-        statement = select(QuestionBank).order_by(func.random()).limit(1)
+        # 1. Tìm Boss để biết Môn học (subject) và Khối lớp (grade)
+        boss = db.get(Boss, boss_id)
+        if not boss:
+            return JSONResponse(status_code=404, content={"message": "Không tìm thấy Boss!"})
+        # Phân loại độ khó câu hỏi dựa trên sức mạnh của Boss (Ví dụ qua ATK)
+        if boss.atk >= 180:
+            target_diff = "hell"
+        elif boss.atk >= 120:
+            target_diff = "extreme"
+        elif boss.atk >= 60:
+            target_diff = "hard"
+        else:
+            target_diff = "medium"
+        # 2. Lấy câu hỏi KHỚP với Môn học và Khối lớp của Boss từ QuestionBank
+        statement = select(QuestionBank).where(
+            QuestionBank.subject == boss.subject,
+            QuestionBank.grade == boss.grade,
+            QuestionBank.difficulty == target_diff  # Bạn có thể tùy biến mức độ khó ở đây
+        ).order_by(func.random()).limit(1)
+        
         q = db.exec(statement).first()
+        
+        if not q:
+            # Nếu không tìm thấy câu đúng yêu cầu, lấy 1 câu ngẫu nhiên bất kỳ để game ko bị treo
+            statement = select(QuestionBank).order_by(func.random()).limit(1)
+            q = db.exec(statement).first()
         
         if not q:
             return JSONResponse(status_code=404, content={"message": "Kho câu hỏi trống!"})
