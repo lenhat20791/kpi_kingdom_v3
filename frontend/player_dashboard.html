@@ -2114,6 +2114,7 @@
                     const qty = item.amount || item.quantity || 1;
                     const img = item.image_url || item.image || 'https://placehold.co/64';
                     // 🔥 FIX CRASH: Luôn ép kiểu về Chuỗi (String) trước khi dùng
+                    const desc = String(item.description || "Không có mô tả.");
                     const name = String(item.name || "Vật phẩm");
                     const useId = item.item_id || item.id;
 
@@ -2131,20 +2132,28 @@
                     const safeName = String(name).replace(/'/g, "\\'");
                     const safeImg = String(img).replace(/'/g, "\\'");
 
+                    // HTML MỚI: ĐÃ THÊM PHẦN MÔ TẢ
                     return `
-                        <div class="bg-gray-800 border border-gray-600 p-2 rounded-xl shadow-lg hover:border-amber-400 transition duration-300 relative group">
+                        <div class="bg-gray-800 border border-gray-600 p-2 rounded-xl shadow-lg hover:border-amber-400 transition duration-300 relative group flex flex-col justify-between">
                             <span class="absolute -top-2 -right-2 bg-red-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow border border-white/20 z-10">x${qty}</span>
                             
-                            <div class="h-14 w-full flex items-center justify-center mb-2 bg-gray-900/50 rounded-lg p-1">
-                                <img src="${img}" class="h-full object-contain drop-shadow-md" onerror="this.src='https://placehold.co/64?text=Error'">
+                            <div>
+                                <div class="h-14 w-full flex items-center justify-center mb-2 bg-gray-900/50 rounded-lg p-1">
+                                    <img src="${img}" class="h-full object-contain drop-shadow-md" onerror="this.src='https://placehold.co/64?text=Error'">
+                                </div>
+
+                                <div class="text-center">
+                                    <h4 class="font-bold text-gray-200 text-xs truncate mb-1" title="${name}">${name}</h4>
+                                    
+                                    <p class="text-[9px] text-gray-400 italic mb-2 whitespace-normal break-words leading-tight">
+                                        ${desc}
+                                    </p>
+                                </div>
                             </div>
 
-                            <div class="text-center">
-                                <h4 class="font-bold text-gray-200 text-xs truncate mb-2" title="${name}">${name}</h4>
-                                <div class="flex gap-1">
-                                    ${actionBtn}
-                                    <button onclick="openSellPopup(${useId}, '${safeName}', '${safeImg}', ${qty})" class="flex-1 py-1.5 bg-amber-600 hover:bg-amber-500 text-white text-[10px] font-bold rounded shadow flex items-center justify-center gap-1">💰</button>
-                                </div>
+                            <div class="flex gap-1 mt-auto">
+                                ${actionBtn}
+                                <button onclick="openSellPopup(${useId}, '${safeName}', '${safeImg}', ${qty})" class="flex-1 py-1.5 bg-amber-600 hover:bg-amber-500 text-white text-[10px] font-bold rounded shadow flex items-center justify-center gap-1">💰</button>
                             </div>
                         </div>
                     `;
