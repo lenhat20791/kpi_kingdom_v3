@@ -1012,8 +1012,18 @@
                         </div>
 
                         <div class="flex justify-between items-center mb-4 text-blue-200 text-xs md:text-sm font-bold tracking-wider px-2 uppercase">
-                            <span><i class="fas fa-scroll mr-2 text-amber-500"></i>Câu hỏi <span id="combat-q-index" class="text-white text-lg mx-1">1</span></span>
-                            <span class="text-amber-400"><i class="fas fa-hourglass-half mr-2"></i><span id="combat-timer-text">Turn</span></span>
+                            <span class="flex items-center">
+                                <i class="fas fa-scroll mr-2 text-amber-500"></i>
+                                Câu hỏi: 
+                                <span id="combat-q-index" class="text-white text-lg mx-2 tracking-tighter">
+                                    1/10
+                                </span>
+                            </span>
+
+                            <span class="text-amber-400 flex items-center">
+                                <i class="fas fa-hourglass-half mr-2"></i>
+                                <span id="combat-timer-text">Lượt Đấu</span>
+                            </span>
                         </div>
 
                         <div class="relative flex-1 w-full max-w-5xl mx-auto flex flex-col">
@@ -3623,9 +3633,13 @@
             if(pDamage) pDamage.innerText = "";
             if(mDamage) mDamage.innerText = "";
 
-            // Reset số câu hỏi về 1/5
+            // Reset số câu hỏi về 1/10
             const qIndex = document.getElementById('combat-q-index');
-            if (qIndex) qIndex.innerText = "1/5";
+            if (qIndex) {
+                // ta lấy số lượng câu hỏi thực tế từ towerState
+                const totalQ = (towerState.questions && towerState.questions.length) ? towerState.questions.length : 10;
+                qIndex.innerText = `1/${totalQ}`;
+            }
             
             // Reset thanh thời gian
             const timerBar = document.getElementById('combat-timer-bar');
@@ -3666,6 +3680,7 @@
             }
 
             // 4. Kiểm tra chỉ số câu hỏi
+            
             const qIndex = towerState.currentQIndex;
             
             // Nếu vượt quá số lượng câu hỏi -> Tức là đã thắng (Logic dự phòng)
@@ -3673,7 +3688,7 @@
                 endTowerCombat(true); 
                 return;
             }
-
+            
             const currentQ = towerState.questions[qIndex];
             console.log(`📝 Đang hiện câu hỏi số: ${qIndex + 1} / ${towerState.questions.length}`);
 
@@ -3837,7 +3852,7 @@
                     // Alert sẽ chặn lại, người dùng bấm OK xong mới chạy dòng dưới
                     alert("☠️ THẤT BẠI!\nQuái vật quá mạnh.\n(Trang web sẽ tải lại để hồi phục trạng thái)");
                     
-                    // 👇 LỆNH QUAN TRỌNG NHẤT: Reload lại trang để reset về câu 1/5
+                    // 👇 LỆNH QUAN TRỌNG NHẤT: Reload lại trang để reset về câu 1
                     window.location.reload(); 
                 }
             })

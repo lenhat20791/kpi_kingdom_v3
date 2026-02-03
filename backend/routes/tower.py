@@ -1,9 +1,10 @@
+import random
+import json
+import unicodedata
 from fastapi import APIRouter, Depends, HTTPException, Body
 from sqlmodel import Session, select
 from sqlalchemy import func
 from typing import List, Optional
-import random
-import json
 from pydantic import BaseModel
 from routes.auth import get_current_user
 from game_logic.level import add_exp_to_player
@@ -43,7 +44,7 @@ def get_monster_stats_by_floor(floor: int) -> dict:
     final_hp = int(base_hp * multiplier)
     
     # 3. Sát thương (ATK)
-    monster_atk = 50 + (floor // 5) 
+    monster_atk = 50 + (floor // 1) 
 
     # --- CẬP NHẬT MỚI: ẢNH NGẪU NHIÊN 1-10 ---
     # Random từ 1 đến 10 bất kể tầng nào
@@ -66,103 +67,120 @@ class StartCombatRequest(BaseModel):
 # --- 2. API BẮT ĐẦU leo tháp(POST /start) ---
 @router.post("/start") 
 async def start_floor_combat(
-    req: StartCombatRequest, # ✅ Khớp với class ở trên
+    req: StartCombatRequest, 
     current_user: Player = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     floor = req.floor
-    """Bắt đầu leo tháp: Trả về Quái & Câu hỏi"""
-    
-    # 1. KIỂM TRA TIẾN ĐỘ (Chống nhảy cóc)
+    """Phiên bản sửa lỗi Tiếng Việt & Logic tìm đáp án"""
+
+    # 1. KIỂM TRA TIẾN ĐỘ
     progress = db.exec(select(TowerProgress).where(TowerProgress.player_id == current_user.id)).first()
-    
-    # Nếu chưa chơi bao giờ, tạo mới luôn
     if not progress:
         progress = TowerProgress(player_id=current_user.id, current_floor=1, max_floor=1)
         db.add(progress)
         db.commit()
     
     current_floor_allowed = progress.current_floor
-    
-    # Nếu đòi đánh tầng cao hơn tầng hiện tại -> Chặn
     if floor > current_floor_allowed:
-         raise HTTPException(status_code=400, detail=f"Bạn chưa mở khóa tầng {floor}! Hãy vượt qua tầng {current_floor_allowed} trước.")
+         raise HTTPException(status_code=400, detail=f"Chưa mở tầng {floor}!")
 
-    # 2. LẤY CÂU HỎI (FIX: TÌM KIẾM KHÔNG PHÂN BIỆT HOA THƯỜNG)
+    # 2. LẤY CÂU HỎI
     target_diff = get_difficulty_by_floor(floor)
-    
-    # Dùng func.lower để 'Medium' hay 'medium' đều tìm được
-    statement = (
-        select(QuestionBank)
-        .where(func.lower(QuestionBank.difficulty) == target_diff.lower())
-        .order_by(func.random())
-        .limit(5)
-    )
+    statement = select(QuestionBank).where(func.lower(QuestionBank.difficulty) == target_diff.lower()).order_by(func.random()).limit(10)
     questions_db = db.exec(statement).all()
 
-    # Fallback: Nếu không tìm thấy câu đúng độ khó, lấy ngẫu nhiên 5 câu bất kỳ
     if not questions_db:
-        print(f"⚠️ Không tìm thấy câu hỏi độ khó '{target_diff}'. Đang lấy ngẫu nhiên...")
-        fallback_stmt = select(QuestionBank).order_by(func.random()).limit(5)
-        # ✅ LƯU Ý: Phải gán vào biến questions_db
+        fallback_stmt = select(QuestionBank).order_by(func.random()).limit(10)
         questions_db = db.exec(fallback_stmt).all()
 
-    # Nếu kho rỗng hoàn toàn
     if not questions_db:
-         raise HTTPException(status_code=404, detail="Hệ thống chưa có dữ liệu câu hỏi trong QuestionBank!")
+         raise HTTPException(status_code=404, detail="Kho câu hỏi rỗng!")
 
-    # XỬ LÝ DỮ LIỆU: Thêm trường 'explain' tự động cho Frontend
+    # =========================================================
+    # 3. LOGIC TÌM ĐÁP ÁN ĐÚNG (FIX UNICODE TIẾNG VIỆT)
+    # =========================================================
+    
+    def clean_text(s):
+        if not s: return ""
+        # 1. Chuyển thành chuỗi
+        s = str(s)
+        # 2. Chuẩn hóa Unicode (NFC) để sửa lỗi font tiếng Việt (á vs a + sắc)
+        s = unicodedata.normalize('NFC', s)
+        # 3. Chữ thường + Xóa khoảng trắng thừa + Xóa dấu chấm cuối câu
+        return s.strip().lower().rstrip('.')
+
     formatted_questions = []
+    
     for q in questions_db:
         try:
-            # a. Giải nén mảng options từ chuỗi JSON
-            # VD: '["Đáp án A", "Đáp án B",...]' -> ["Đáp án A", "Đáp án B"]
             options_list = json.loads(q.options_json)
-            
-            # Đảm bảo có đủ 4 đáp án (nếu thiếu thì điền rỗng)
-            while len(options_list) < 4:
-                options_list.append("")
+            while len(options_list) < 4: options_list.append("")
 
             val_a = options_list[0]
             val_b = options_list[1]
             val_c = options_list[2]
             val_d = options_list[3]
 
-            # b. Tìm xem đáp án nào là đúng (Map về 'a', 'b', 'c', 'd')
-            correct_char = "a" # Mặc định
+            # Làm sạch đáp án đúng từ DB
+            raw_correct = str(q.correct_answer).strip()
+            target_ans = clean_text(raw_correct)
             
-            # So sánh nội dung đáp án đúng với từng option
-            if q.correct_answer == val_a: correct_char = "a"
-            elif q.correct_answer == val_b: correct_char = "b"
-            elif q.correct_answer == val_c: correct_char = "c"
-            elif q.correct_answer == val_d: correct_char = "d"
+            # --- CHIẾN THUẬT SO SÁNH 3 LỚP ---
+            final_char = None # Không đặt mặc định là 'a' vội để dễ debug
+
+            # Lớp 1: Kiểm tra xem DB có lưu thẳng là "a", "b", "c", "d" không?
+            if raw_correct.lower() in ['a', 'b', 'c', 'd', 'a.', 'b.', 'c.', 'd.']:
+                final_char = raw_correct.lower().replace('.', '')
             
-            # c. Tạo object trả về
-            q_final = {
+            # Lớp 2: So sánh nội dung (Text vs Text) - Chính xác 100%
+            elif target_ans == clean_text(val_a): final_char = "a"
+            elif target_ans == clean_text(val_b): final_char = "b"
+            elif target_ans == clean_text(val_c): final_char = "c"
+            elif target_ans == clean_text(val_d): final_char = "d"
+
+            # Lớp 3: So sánh tương đối (Chứa trong nhau) - Dùng khi dữ liệu DB thiếu/thừa từ
+            else:
+                # Kiểm tra: Đáp án DB nằm trong Option (VD: DB="So sánh", Option="B. So sánh")
+                if target_ans in clean_text(val_a): final_char = "a"
+                elif target_ans in clean_text(val_b): final_char = "b"
+                elif target_ans in clean_text(val_c): final_char = "c"
+                elif target_ans in clean_text(val_d): final_char = "d"
+                # Kiểm tra ngược lại: Option nằm trong DB (VD: DB="Biện pháp so sánh", Option="So sánh")
+                elif clean_text(val_a) in target_ans: final_char = "a"
+                elif clean_text(val_b) in target_ans: final_char = "b"
+                elif clean_text(val_c) in target_ans: final_char = "c"
+                elif clean_text(val_d) in target_ans: final_char = "d"
+
+            # CỨU CÁNH CUỐI CÙNG: Nếu vẫn không tìm thấy -> Buộc phải gán A và in Log lỗi
+            if final_char is None:
+                print(f"❌ LỖI DATA ID {q.id}: Không khớp đáp án nào!")
+                print(f"   - DB Correct: '{q.correct_answer}' (Clean: {target_ans})")
+                print(f"   - Option A: '{val_a}' (Clean: {clean_text(val_a)})")
+                print(f"   - Option B: '{val_b}' (Clean: {clean_text(val_b)})")
+                final_char = "a" # Fallback để game không crash
+
+            formatted_questions.append({
                 "id": q.id,
                 "content": q.content,
                 "option_a": val_a,
                 "option_b": val_b,
                 "option_c": val_c,
                 "option_d": val_d,
-                "correct_ans": correct_char, # Frontend cần 'a', 'b'..
-                "explain": q.explanation if hasattr(q, "explanation") else f"Đáp án đúng là: {correct_char.upper()}"
-            }
-            formatted_questions.append(q_final)
+                "correct_ans": final_char, 
+                "explain": q.explanation if hasattr(q, "explanation") else f"Đáp án đúng: {final_char.upper()}"
+            })
 
         except Exception as e:
             print(f"Lỗi parse câu hỏi ID {q.id}: {e}")
             continue
 
-    # 4. LẤY QUÁI
-    monster = get_monster_stats_by_floor(floor)
-
     return {
         "floor": floor,
         "difficulty": target_diff,
-        "monster": monster,
+        "monster": get_monster_stats_by_floor(floor),
         "questions": formatted_questions
-    }   
+    }
 
 @router.post("/complete-floor")
 async def complete_floor(
