@@ -190,106 +190,145 @@ async def complete_floor(
 ):
     """Xử lý kết quả trận đấu: Tính quà & Mở tầng mới"""
     
-    # 1. KIỂM TRA HỢP LỆ
+    # 1. TÌM HOẶC TẠO TIẾN ĐỘ CHO NGƯỜI MỚI
     progress = db.exec(select(TowerProgress).where(TowerProgress.player_id == current_user.id)).first()
-    
     if not progress:
         progress = TowerProgress(player_id=current_user.id, current_floor=1, max_floor=1)
         db.add(progress)
         db.commit()
         db.refresh(progress)
 
-    # Chỉ xử lý nếu đánh đúng tầng hiện tại (Hoặc tầng cũ để farm, nhưng ko mở tầng mới)
-    if req.floor > progress.current_floor:
+    # Biến an toàn (Khởi tạo trước để tránh lỗi UnboundLocalError)
+    new_floor_val = progress.current_floor 
+    is_new_record = False
+    received_rewards = []
+
+    # Ép kiểu dữ liệu ngay từ đầu để so sánh chuẩn xác
+    client_floor = int(req.floor)
+    server_floor = int(progress.current_floor)
+
+    # Check gian lận
+    if client_floor > server_floor:
          return {"status": "cheat", "message": "Gian lận! Tầng chưa mở."}
 
+    # ---------------------------------------------------------
+    # 2. XỬ LÝ KHI THUA (LOSE)
+    # ---------------------------------------------------------
     if not req.is_win:
-        return {"status": "failed", "message": "Thất bại. Hãy cố gắng lần sau!"}
-
-    # 2. TÍNH QUÀ THƯỞNG (Dựa trên TowerSetting)
-    # Đọc cấu hình từ DB
-    setting_record = db.exec(select(TowerSetting).where(TowerSetting.id == 1)).first()
-    
-    received_rewards = []
-    
-    # Nếu có cấu hình quà
-    if setting_record and setting_record.config_data:
+        consolation_msg = "Thất bại. Hãy cố gắng lần sau!"
+        earned_exp = 0
+        
+        # Logic tính quà an ủi (Giữ nguyên code của bạn)
         try:
+            setting_record = db.exec(select(TowerSetting).where(TowerSetting.id == 1)).first()
+            if setting_record and setting_record.config_data:
+                config = json.loads(setting_record.config_data)
+                difficulty = get_difficulty_by_floor(client_floor)
+                reward_pool = config.get("rewards", {}).get(difficulty, [])
+                
+                total_config_exp = sum(int(item.get("amount", 0)) for item in reward_pool if item.get("type", "").lower() == "exp")
+                
+                if total_config_exp > 0:
+                    earned_exp = total_config_exp // 3
+                    if earned_exp > 0:
+                        add_exp_to_player(current_user, earned_exp)
+                        db.add(current_user)
+                        db.commit()
+                        consolation_msg = f"Thất bại! Nhận +{earned_exp} EXP an ủi."
+        except Exception as e:
+            print(f"Lỗi tính quà an ủi: {e}")
+
+        return {
+            "status": "failed", 
+            "message": consolation_msg,
+            "rewards_text": [f"+{earned_exp} EXP (An ủi)"] if earned_exp > 0 else []
+        }
+
+    # ---------------------------------------------------------
+    # 3. XỬ LÝ KHI THẮNG (WIN) - TÍNH QUÀ
+    # ---------------------------------------------------------
+    try:
+        setting_record = db.exec(select(TowerSetting).where(TowerSetting.id == 1)).first()
+        if setting_record and setting_record.config_data:
             config = json.loads(setting_record.config_data)
-            difficulty = get_difficulty_by_floor(req.floor)
+            difficulty = get_difficulty_by_floor(client_floor)
             reward_pool = config.get("rewards", {}).get(difficulty, [])
             
-            # Quay số RNG
             for item in reward_pool:
-                rate = int(item.get("rate", 0))
-                roll = random.randint(1, 100)
-                
-                if roll <= rate:
+                if random.randint(1, 100) <= int(item.get("rate", 0)):
                     item_type = item.get("type", "").lower()
                     name_code = item.get("name")
                     qty = int(item.get("amount", 0))
 
-                    # A. Cộng EXP/Tiền tệ
                     if item_type == "exp":
                         add_exp_to_player(current_user, qty)
                         received_rewards.append(f"+{qty} EXP")
-                        
                     elif item_type == "currency":
                         if name_code == "kpi": current_user.kpi += qty
                         elif name_code == "tri_thuc": current_user.tri_thuc += qty
                         elif name_code == "chien_tich": current_user.chien_tich += qty
                         elif name_code == "vinh_du": current_user.vinh_du += qty
                         received_rewards.append(f"+{qty} {name_code.upper()}")
-
-                    # B. Cộng Vật Phẩm
                     elif item_type == "item":
-                        # Cần tìm item_id từ bảng Item (Giả sử name lưu ID)
-                        # Nếu name lưu tên text thì phải query tìm ID. Ở đây giả định admin lưu ID.
                         try:
                             item_id = int(name_code)
+                            inv_item = db.exec(select(PlayerItem).where(
+                                PlayerItem.player_id == current_user.id,
+                                PlayerItem.item_id == item_id
+                            )).first()
+                            
+                            if inv_item: inv_item.quantity += qty
+                            else: db.add(PlayerItem(player_id=current_user.id, item_id=item_id, quantity=qty))
+                            
+                            # Lấy tên item để hiển thị
                             game_item = db.get(Item, item_id)
-                            if game_item:
-                                # Kiểm tra túi
-                                inv_item = db.exec(select(PlayerItem).where(
-                                    PlayerItem.player_id == current_user.id,
-                                    PlayerItem.item_id == item_id
-                                )).first()
-                                
-                                if inv_item:
-                                    inv_item.quantity += qty
-                                else:
-                                    # Thêm mới vào túi
-                                    new_inv = PlayerItem(player_id=current_user.id, item_id=item_id, quantity=qty)
-                                    db.add(new_inv)
-                                    
-                                received_rewards.append(f"+{qty} {game_item.name}")
-                        except:
-                            pass # Bỏ qua nếu lỗi ID item
-        except Exception as e:
-            print(f"Lỗi chia quà: {e}")
+                            item_name = game_item.name if game_item else "Vật phẩm"
+                            received_rewards.append(f"+{qty} {item_name}")
+                        except: pass
+    except Exception as e:
+        print(f"Lỗi chia quà: {e}")
 
-    # Nếu không có quà cấu hình -> Thưởng mặc định an ủi
-    if not received_rewards:
-        base_gold = 10 * req.floor
-        current_user.chien_tich += base_gold
-        received_rewards.append(f"+{base_gold} Chiến Tích (Mặc định)")
+    # ---------------------------------------------------------
+    # 4. LOGIC TĂNG TẦNG & ĐỒNG BỘ DỮ LIỆU (FIXED DEADLOCK)
+    # ---------------------------------------------------------
+    
+    print(f"🔍 DEBUG: Client={client_floor} | Server={server_floor}")
 
-    # 3. CẬP NHẬT TIẾN ĐỘ (MỞ KHÓA TẦNG MỚI)
-    is_new_record = False
-    if req.floor == progress.current_floor:
+    # A. Nếu đánh đúng tầng hiện tại -> Lên cấp
+    if client_floor == server_floor:
         progress.current_floor += 1
         if progress.current_floor > progress.max_floor:
             progress.max_floor = progress.current_floor
         is_new_record = True
-        db.add(progress)
+        print(f"🚀 UP TẦNG: {server_floor} -> {progress.current_floor}")
 
-    # 4. LƯU TẤT CẢ (Atomic Commit)
-    db.add(current_user)
-    db.commit()
+    # B. 🔥 BẮT BUỘC ĐỒNG BỘ SANG BẢNG PLAYER (DÙ LÀ FARM HAY LEO THÁP)
+    # Đây là dòng quan trọng nhất để sửa lỗi cái nút không nhảy số
+    if current_user.tower_floor < progress.current_floor:
+        print(f"🔧 AUTO-FIX: Player {current_user.tower_floor} -> {progress.current_floor}")
+        current_user.tower_floor = progress.current_floor
+        db.add(current_user)
+
+    # Cập nhật giá trị trả về
+    new_floor_val = progress.current_floor
+
+    # 5. LƯU TẤT CẢ VÀO DB
+    try:
+        db.add(progress)
+        db.add(current_user) # Lưu tiền, exp, và tower_floor
+        db.commit()
+        
+        db.refresh(progress)
+        db.refresh(current_user)
+        
+    except Exception as e:
+        print(f"❌ LỖI DATABASE: {e}")
+        db.rollback()
+        return {"status": "error", "message": "Lỗi lưu dữ liệu"}
 
     return {
         "status": "success",
-        "new_floor": progress.current_floor,
+        "new_floor": new_floor_val, 
         "is_new_record": is_new_record,
         "rewards_text": received_rewards
     }

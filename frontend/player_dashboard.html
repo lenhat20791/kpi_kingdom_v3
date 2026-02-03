@@ -1667,7 +1667,7 @@
                 window.location.href = '/index.html';
                 return;
             }
-            fetch(`/api/player/dashboard?username=${username}`)
+            return fetch(`/api/player/dashboard?username=${username}`)
                 .then(function(response) {
                     if (!response.ok) throw new Error("Lỗi Server: " + response.statusText);
                     return response.json();
@@ -1701,6 +1701,10 @@
                     }
 
                     renderUI(data);
+                    if (typeof resetTowerUI === 'function') {
+                        console.log("🏰 Đang làm mới số tầng trên nút bấm...");
+                        resetTowerUI(); 
+                    }
                 })
             .catch(function(error) {
                 // 1. Log lỗi ra console để lập trình viên biết
@@ -3460,8 +3464,16 @@
             // 4. Số tầng
             const currentFloor = info.tower_floor || 1;
             const floorDisplay = document.getElementById('lobby-current-floor');
-            if(floorDisplay) floorDisplay.innerText = currentFloor;
-        }        
+            if(floorDisplay) {
+                floorDisplay.innerText = currentFloor;
+                console.log(`📍 UI hiển thị tầng: ${currentFloor}`);
+            }
+
+            if (typeof towerState !== 'undefined') {
+                towerState.floor = currentFloor;
+                console.log(`⚔️ State sẵn sàng cho tầng: ${towerState.floor}`);
+            }
+        }     
 
         // ============================================================
         // 2. BẮT ĐẦU CHIẾN ĐẤU (FIX 422 & 401)
@@ -3800,7 +3812,9 @@
                 console.warn("🚫 Đang gửi kết quả lên Server, vui lòng chờ...");
                 return;
             }
-            
+            // 👇👇👇 THÊM DÒNG NÀY ĐỂ KIỂM TRA 👇👇👇
+            console.log(`🔍 DEBUG CLIENT: towerState.floor = ${towerState.floor}`);
+            // ☝️☝️☝️ NẾU NÓ IN RA 1 MÀ BẠN ĐANG ĐÁNH TẦNG 2 -> THÌ BẠN CẦN +1 Ở DƯỚI
             towerState.isProcessingEnd = true;
 
             // 🛡️ 2. DỪNG ĐỒNG HỒ
@@ -3838,21 +3852,42 @@
                 console.log("✅ Kết quả Server trả về:", data);
 
                 if (isWin) {
-                    // --- TRƯỜNG HỢP THẮNG (GIỮ NGUYÊN) ---
+                    // --- A. NẾU THẮNG ---
                     const rewardMsg = data.rewards_text ? data.rewards_text.join('\n') : "Phần thưởng đã được chuyển vào túi!";
+                    
+                    // 1. Thông báo chiến thắng
                     alert(`🎉 CHIẾN THẮNG!\n\n${rewardMsg}`);
-                    
-                    // Cập nhật lại Level/EXP/Tiền
-                    if(window.loadDashboardData) window.loadDashboardData();
 
-                    // Quay về Sảnh (Reset mềm)
+                    if (data.new_floor) {
+                        console.log("🆙 Server báo tầng mới là:", data.new_floor);
+                        
+                        // Cập nhật biến toàn cục
+                        if (typeof towerState !== 'undefined') towerState.floor = data.new_floor;
+
+                        // Cập nhật giao diện nút ĐỎ
+                        const lobbyFloorSpan = document.getElementById('lobby-current-floor');
+                        if (lobbyFloorSpan) {
+                            lobbyFloorSpan.innerText = data.new_floor; // Nhảy số ngay!
+                        }
+                        
+                        // Cập nhật cả nút Start (nếu dùng ID này)
+                        const startBtn = document.getElementById('tower-start-btn');
+                        if (startBtn) {
+                            startBtn.innerHTML = `<span class="mr-2 text-2xl">⚔️</span> <span class="text-xl tracking-wider">TIẾN VÀO TẦNG ${data.new_floor}</span>`;
+                        }
+                    }
+
+                    // 3. Quay về sảnh
                     resetTowerUI(); 
-                } else {
-                    // --- TRƯỜNG HỢP THUA (SỬA LẠI: RELOAD TRANG) ---
-                    // Alert sẽ chặn lại, người dùng bấm OK xong mới chạy dòng dưới
-                    alert("☠️ THẤT BẠI!\nQuái vật quá mạnh.\n(Trang web sẽ tải lại để hồi phục trạng thái)");
                     
-                    // 👇 LỆNH QUAN TRỌNG NHẤT: Reload lại trang để reset về câu 1
+                    // 4. Đồng bộ ngầm (để cập nhật tiền, exp...)
+                    if (window.loadDashboardData) window.loadDashboardData();
+
+                } else {
+                    // --- B. NẾU THUA ---
+                    alert("☠️ THẤT BẠI!\nQuái vật quá mạnh.\n(Hệ thống sẽ nạp lại trạng thái)");
+                    
+                    // Đối với trường hợp thua, reload là cách sạch nhất để reset máu/mana
                     window.location.reload(); 
                 }
             })

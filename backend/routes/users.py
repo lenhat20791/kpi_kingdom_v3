@@ -290,7 +290,7 @@ def handle_get_dashboard(username: str, db: Session = Depends(get_db)):
             "hp": current_hp,
             "hp_max": final_max_hp,
             "atk": final_atk,  # ✅ Đã thêm dòng này!
-            
+            "tower_floor": current_user.tower_floor,
             "kpi": kpi,
             "revive_at": current_user.revive_at, 
             "exp": current_user.exp,
