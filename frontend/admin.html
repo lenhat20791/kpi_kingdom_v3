@@ -264,6 +264,11 @@
                 <i class="fa-solid fa-ghost w-6 text-center"></i> Chợ đen
             </button>
 
+            <button onclick="switchTab('notifications')" data-tab="notifications" 
+                class="nav-item w-full text-left px-6 py-3 transition border-l-4 hover:bg-gray-700 hover:text-white hover:border-yellow-500 text-gray-400 border-transparent">
+                <i class="fa-solid fa-bullhorn w-6 text-center"></i> Quản Lý Thông Báo
+            </button>
+
             <button onclick="switchTab('shop')" data-tab="shop" 
                 class="nav-item w-full text-left px-6 py-3 transition border-l-4 border-transparent text-gray-300 hover:bg-gray-700 hover:text-white hover:border-pink-500">
                 <i class="fa-solid fa-store w-6 text-center"></i> Tiệm tạp hóa
@@ -1555,6 +1560,45 @@
                 </div>
             </div>
         </div>
+
+        <div id="tab-notifications" class="tab-content hidden p-6">
+            <h2 class="text-2xl font-bold text-white mb-6 border-b border-gray-600 pb-2">📢 Cấu Hình Thông Báo Hệ Thống</h2>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                
+                <div class="bg-gray-800 p-4 rounded-lg shadow-lg border border-gray-700">
+                    <h3 class="text-xl font-bold text-yellow-400 mb-4"><i class="fas fa-scroll mr-2"></i>Chạy Chữ (Header)</h3>
+                    
+                    <div class="flex gap-2 mb-4">
+                        <input type="text" id="marquee-input" placeholder="Nhập nội dung chạy chữ..." 
+                            class="flex-1 bg-gray-700 text-white px-3 py-2 rounded border border-gray-600 focus:border-yellow-500 outline-none">
+                        
+                        <button onclick="addNotification('marquee')" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded transition font-bold whitespace-nowrap">
+                            <i class="fas fa-plus"></i> Thêm
+                        </button>
+                    </div>
+
+                    <div id="marquee-list" class="space-y-2 max-h-[400px] overflow-y-auto pr-2">
+                        </div>
+                </div>
+
+                <div class="bg-gray-800 p-4 rounded-lg shadow-lg border border-gray-700">
+                    <h3 class="text-xl font-bold text-pink-400 mb-4"><i class="fas fa-window-restore mr-2"></i>Popup (Giữa màn hình)</h3>
+                    
+                    <div class="flex flex-col gap-2 mb-4">
+                        <textarea id="popup-input" rows="3" placeholder="Nhập nội dung Popup (Hỗ trợ HTML cơ bản)..." 
+                            class="w-full bg-gray-700 text-white px-3 py-2 rounded border border-gray-600 focus:border-pink-500 outline-none"></textarea>
+                        
+                        <button onclick="addNotification('popup')" class="bg-pink-600 hover:bg-pink-700 text-white px-4 py-2 rounded transition w-full font-bold">
+                            <i class="fas fa-plus mr-2"></i> Thêm Popup Mới
+                        </button>
+                    </div>
+
+                    <div id="popup-list" class="space-y-2 max-h-[400px] overflow-y-auto pr-2">
+                        </div>
+                </div>
+            </div>
+        </div>
     </main>
 
     <script>
@@ -1642,6 +1686,9 @@
                     break;
                 case 'skills': // Tên tabId mà bạn đã đặt cho nút bấm và div nội dung
                     if (typeof loadAdminSkills === 'function') loadAdminSkills();
+                    break;
+                case 'notifications': 
+                    if (typeof loadNotifications === 'function') loadNotifications();
                     break;
                 default:
                     console.log("Tab này chưa có hàm load dữ liệu riêng.");
@@ -5062,6 +5109,113 @@
             } catch (err) {
                 alert("Lỗi khi hủy trận!");
             }
+        }
+
+
+        // Hàm quản lý thông báo 
+        // 1. Hàm tải danh sách thông báo từ Server
+        // 1. Hàm tải danh sách thông báo (PHIÊN BẢN CÓ NÚT XÓA RÕ RÀNG)
+        async function loadNotifications() {
+            console.log("🔄 Đang tải danh sách thông báo...");
+            try {
+                const res = await fetch('/api/noti/all');
+                if (!res.ok) {
+                    console.error("Lỗi API:", res.status);
+                    return;
+                }
+                const data = await res.json();
+                
+                const marqueeList = document.getElementById('marquee-list');
+                const popupList = document.getElementById('popup-list');
+                
+                // Xóa danh sách cũ
+                marqueeList.innerHTML = ''; 
+                popupList.innerHTML = '';
+
+                if (data.length === 0) {
+                    const emptyMsg = '<div class="text-gray-500 text-sm italic p-2 text-center">Chưa có thông báo nào.</div>';
+                    marqueeList.innerHTML = emptyMsg;
+                    popupList.innerHTML = emptyMsg;
+                }
+
+                data.forEach(n => {
+                    // Style cho trạng thái Active
+                    const isActiveClass = n.is_active 
+                        ? 'border-green-500 bg-gray-700/50' 
+                        : 'border-red-500 bg-gray-800 opacity-60';
+                    
+                    // Nút Bật/Tắt: Thay đổi màu và chữ dựa trên trạng thái
+                    const toggleBtnHtml = n.is_active
+                        ? `<button onclick="toggleNoti(${n.id})" class="px-3 py-1 bg-green-900/30 hover:bg-green-800 text-green-400 border border-green-700 rounded text-xs font-bold transition">BẬT</button>`
+                        : `<button onclick="toggleNoti(${n.id})" class="px-3 py-1 bg-gray-700 hover:bg-gray-600 text-gray-400 border border-gray-500 rounded text-xs font-bold transition">TẮT</button>`;
+
+                    const html = `
+                        <div class="flex justify-between items-center p-3 rounded mb-2 border-l-4 ${isActiveClass} shadow-sm hover:bg-gray-700 transition group">
+                            <div class="flex-1 mr-3">
+                                <div class="text-xs text-gray-400 mb-1">${new Date(n.created_at).toLocaleString()}</div>
+                                <div class="text-gray-200 font-medium break-all text-sm">${n.content}</div>
+                            </div>
+
+                            <div class="flex items-center gap-2 shrink-0">
+                                ${toggleBtnHtml}
+                                
+                                <button onclick="deleteNoti(${n.id})" class="px-3 py-1 bg-red-900/20 hover:bg-red-900 text-red-400 border border-red-800 rounded text-xs font-bold transition flex items-center">
+                                    <span class="mr-1">XÓA</span> 
+                                    <i class="fas fa-trash text-[10px]"></i>
+                                </button>
+                            </div>
+                        </div>
+                    `;
+
+                    if (n.type === 'marquee') marqueeList.insertAdjacentHTML('beforeend', html);
+                    else popupList.insertAdjacentHTML('beforeend', html);
+                });
+
+            } catch (error) {
+                console.error("❌ Lỗi tải thông báo:", error);
+            }
+        }
+
+        // 2. Hàm Thêm Mới
+        async function addNotification(type) {
+            const inputId = type === 'marquee' ? 'marquee-input' : 'popup-input';
+            const input = document.getElementById(inputId);
+            const content = input.value.trim();
+            
+            if (!content) return alert("Vui lòng nhập nội dung!");
+
+            try {
+                const res = await fetch('/api/noti/create', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ type, content, is_active: true })
+                });
+
+                if (res.ok) {
+                    // Reset ô nhập và tải lại danh sách ngay lập tức
+                    input.value = '';
+                    await loadNotifications(); 
+                    alert("✅ Thêm thành công!");
+                } else {
+                    alert("❌ Lỗi server: " + res.status);
+                }
+            } catch (e) {
+                console.error(e);
+                alert("Lỗi kết nối!");
+            }
+        }
+
+        // 3. Hàm Xóa
+        async function deleteNoti(id) {
+            if(!confirm("Bạn chắc chắn muốn xóa thông báo này?")) return;
+            await fetch(`/api/noti/delete/${id}`, { method: 'DELETE' });
+            loadNotifications(); // Reload lại sau khi xóa
+        }
+
+        // 4. Hàm Bật/Tắt
+        async function toggleNoti(id) {
+            await fetch(`/api/noti/toggle/${id}`, { method: 'PUT' });
+            loadNotifications(); // Reload lại sau khi đổi trạng thái
         }
 
 

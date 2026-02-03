@@ -115,16 +115,31 @@
             border: 2px solid #ffd700;
             box-shadow: 0 0 30px rgba(255, 215, 0, 0.7);
         }
+        /* bng thông báo*/
+        @keyframes marquee {
+            0% { transform: translateX(100%); }
+            100% { transform: translateX(-100%); }
+        }
+        .animate-marquee {
+            animation: marquee 20s linear infinite;
+        }
+        .system-tag {
+            color: #ff4444; /* Màu đỏ */
+            font-weight: bold;
+            text-shadow: 0 0 5px rgba(255, 0, 0, 0.5);
+        }
     </style>
 </head>
 <body class="min-h-screen flex flex-col">
 
-    <header class="w-full h-12 flex items-center marquee-container fixed top-0 z-50 backdrop-blur-sm shadow-md">
-        <div class="px-4 font-bold text-yellow-400 whitespace-nowrap flex items-center">
-            <i class="fas fa-scroll mr-2 text-lg"></i> <span class="fantasy-font">THÔNG BÁO:</span>
+    <header class="w-full h-12 flex items-center marquee-container fixed top-0 z-50 backdrop-blur-sm shadow-md bg-black/30">
+        <div class="px-4 font-bold text-yellow-400 whitespace-nowrap flex items-center border-r border-yellow-600/50 pr-4">
+            <i class="fas fa-scroll mr-2 text-lg animate-pulse"></i> 
+            <span class="fantasy-font tracking-wider">THÔNG BÁO:</span>
         </div>
-        <marquee class="text-sm text-yellow-100 font-mono py-2" scrollamount="6">
-            Chào mừng các Sĩ Tử gia nhập KPI Kingdom! --- Hãy hoàn thành nhiệm vụ để thăng cấp --- Vinh quang thuộc về người chăm chỉ! --- Sự kiện Đua Top Mùa 1 đang diễn ra sôi nổi!
+        
+        <marquee id="system-marquee-content" class="text-sm text-yellow-100 font-mono py-2 flex-1" scrollamount="6" onmouseover="this.stop();" onmouseout="this.start();">
+            Server đang tải dữ liệu thông báo...
         </marquee>
     </header>
 
@@ -552,6 +567,160 @@
         }
         // Chạy ngay khi mở trang web
         checkMaintenanceLogin();
+
+        // khu vực gọi bảng thông báo từ admin
+        document.addEventListener("DOMContentLoaded", async () => {
+            // Gọi hàm tải thông báo ngay khi web load xong
+            await loadSystemNotifications();
+        });
+
+        async function loadSystemNotifications() {
+            try {
+                // 1. Gọi API lấy thông báo hệ thống
+                const res = await fetch('/api/noti/public');
+                const notisData = res.ok ? await res.json() : [];
+
+                // -----------------------------------------------------
+                // A. XỬ LÝ CHẠY CHỮ (MARQUEE) - LOGIC MỚI MAX 5
+                // -----------------------------------------------------
+                
+                // Bước 1: Chuẩn hóa danh sách Thông báo Hệ thống
+                let systemMsgs = notisData
+                    .filter(n => n.type === 'marquee')
+                    .map(n => ({
+                        content: n.content,
+                        source: 'SYSTEM', // Đánh dấu nguồn
+                        time: new Date(n.created_at).getTime(),
+                        color: 'text-yellow-100' // Màu chữ mặc định
+                    }));
+
+                // Bước 2: (Chờ tính năng Chat) Giả lập Chat Thế Giới 
+                // Sau này bạn gọi API chat ở đây rồi gộp vào mảng worldMsgs
+                let worldMsgs = []; 
+                // Ví dụ: worldMsgs = [{ content: "Hello anh em!", source: "Hùng Ca", time: Date.now(), color: "text-green-300" }];
+
+                // Bước 3: GỘP 2 NGUỒN LẠI
+                let allMessages = [...systemMsgs, ...worldMsgs];
+
+                // Bước 4: SẮP XẾP & CẮT LẤY 5 TIN MỚI NHẤT
+                // Sắp xếp thời gian giảm dần (Mới nhất -> Cũ nhất)
+                allMessages.sort((a, b) => b.time - a.time);
+                
+                // Cắt lấy 5 tin đầu tiên
+                const top5Messages = allMessages.slice(0, 5);
+
+                // Bước 5: HIỂN THỊ
+                const marqueeEl = document.getElementById('system-marquee-content');
+                if (marqueeEl) {
+                    if (top5Messages.length > 0) {
+                        const htmlContent = top5Messages.map(msg => {
+                            // Tạo prefix: [HỆ THỐNG] hoặc [TÊN PLAYER]
+                            const prefix = msg.source === 'SYSTEM' 
+                                ? '<span class="text-red-400 font-bold">[HỆ THỐNG]</span>' 
+                                : `<span class="text-blue-400 font-bold">[${msg.source}]</span>`;
+                            
+                            return `${prefix} <span class="${msg.color}">${msg.content}</span>`;
+                        }).join(' &nbsp;&nbsp;&nbsp;✦&nbsp;&nbsp;&nbsp; '); // Ngăn cách bằng dấu sao
+                        
+                        marqueeEl.innerHTML = htmlContent;
+                    } else {
+                        marqueeEl.innerHTML = '<span class="text-gray-400">Chào mừng đến với KPI Kingdom!</span>';
+                    }
+                }
+
+                // -----------------------------------------------------
+                // B. XỬ LÝ POPUP (Giữ nguyên logic cũ)
+                // -----------------------------------------------------
+                const popupList = notisData.filter(n => n.type === 'popup');
+                if (popupList.length > 0) {
+                    checkAndShowPopup(popupList[0]); // Popup mới nhất (do Backend đã sort)
+                }
+
+            } catch (error) {
+                console.error("Lỗi tải thông báo:", error);
+            }
+        }
+
+        // Hàm kiểm tra và hiện Popup
+        function checkAndShowPopup(popupData) {
+            // Kiểm tra xem người dùng đã tích "Không hiện lại" chưa
+            // Key lưu trong localStorage ví dụ: hide_popup_12 (12 là ID thông báo)
+            const storageKey = `hide_popup_${popupData.id}`;
+            const hiddenUntil = localStorage.getItem(storageKey);
+            const now = new Date().getTime();
+
+            // Nếu có hạn chặn và chưa hết hạn -> KHÔNG HIỆN
+            if (hiddenUntil && now < parseInt(hiddenUntil)) {
+                console.log("Popup đã bị chặn hiển thị bởi người dùng.");
+                return;
+            }
+
+            // Nếu được phép hiện -> Bật Modal lên
+            const modal = document.getElementById('sys-notification-modal');
+            const content = document.getElementById('sys-noti-content');
+            
+            if (modal && content) {
+                // Gán ID hiện tại vào modal để lát nữa nút đóng biết đường mà lưu chặn
+                modal.dataset.popupId = popupData.id; 
+                
+                content.innerHTML = popupData.content; // Hỗ trợ HTML (in đậm, màu sắc...)
+                modal.classList.remove('hidden');
+            }
+        }
+        // đóng popup thông báo
+        function closeSysNoti() {
+            const modal = document.getElementById('sys-notification-modal');
+            const checkbox = document.getElementById('sys-noti-check');
+            const popupId = modal.dataset.popupId; // Lấy ID từ dataset gán lúc nãy
+
+            // Nếu người dùng tích vào ô "Không hiện lại"
+            if (checkbox && checkbox.checked && popupId) {
+                const oneDay = 24 * 60 * 60 * 1000; // 24 giờ tính bằng mili giây
+                const expiryTime = new Date().getTime() + oneDay;
+                
+                // Lưu vào LocalStorage: key="hide_popup_ID", value="thời điểm hết hạn"
+                localStorage.setItem(`hide_popup_${popupId}`, expiryTime);
+                console.log(`Đã chặn popup ID ${popupId} trong 24h.`);
+            }
+
+            // Ẩn modal
+            if (modal) modal.classList.add('hidden');
+        }
     </script>
+        <div id="sys-notification-modal" class="fixed inset-0 bg-black bg-opacity-80 z-[100] hidden flex items-center justify-center backdrop-blur-sm transition-opacity duration-300">
+        
+        <div class="bg-gray-800 border-2 border-yellow-500 rounded-xl shadow-[0_0_30px_rgba(234,179,8,0.3)] w-11/12 md:w-1/2 lg:w-1/3 max-h-[80vh] flex flex-col relative transform scale-95 transition-all duration-300">
+            
+            <div class="bg-gradient-to-r from-yellow-700 to-yellow-600 p-4 rounded-t-lg flex justify-between items-center border-b border-yellow-500">
+                <h3 class="text-white font-bold text-lg uppercase tracking-wider flex items-center">
+                    <i class="fas fa-envelope-open-text mr-2 animate-bounce"></i>
+                    Thông Báo Từ BQT
+                </h3>
+                <button onclick="closeSysNoti()" class="text-yellow-200 hover:text-white transition">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+
+            <div id="sys-noti-content" class="p-6 text-gray-200 overflow-y-auto text-base leading-relaxed min-h-[100px] break-words">
+                Đang tải nội dung...
+            </div>
+
+            <div class="p-4 border-t border-gray-700 bg-gray-900 rounded-b-lg flex flex-col md:flex-row justify-between items-center gap-4">
+                
+                <label class="flex items-center space-x-2 cursor-pointer text-gray-400 hover:text-white select-none group">
+                    <div class="relative">
+                        <input type="checkbox" id="sys-noti-check" class="peer sr-only">
+                        <div class="w-5 h-5 border-2 border-gray-500 rounded peer-checked:bg-yellow-500 peer-checked:border-yellow-500 transition"></div>
+                        <i class="fas fa-check text-black absolute top-0.5 left-0.5 opacity-0 peer-checked:opacity-100 text-xs"></i>
+                    </div>
+                    <span class="group-hover:text-yellow-400 transition text-sm">Không hiện lại trong 24h</span>
+                </label>
+
+                <button onclick="closeSysNoti()" class="bg-yellow-600 hover:bg-yellow-500 text-white font-bold py-2 px-6 rounded shadow-lg transform active:scale-95 transition w-full md:w-auto flex items-center justify-center">
+                    <i class="fas fa-check-circle mr-2"></i> ĐÃ ĐỌC
+                </button>
+            </div>
+        </div>
+    </div>
 </body>
 </html>

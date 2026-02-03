@@ -1,6 +1,6 @@
 import os
 import json
-from sqlmodel import SQLModel, Field, create_engine, Session, select, Column, TEXT
+from sqlmodel import SQLModel, Field, create_engine, Session, select, Column, Text, TEXT
 from typing import Optional
 from unidecode import unidecode 
 from datetime import datetime, timezone
@@ -327,4 +327,11 @@ class ScoreLog(SQLModel, table=True):
 if __name__ == "__main__":
     create_db_and_tables()
     print(f"✅ Đã khởi tạo thành công Database tại: {DB_PATH}")
+#thông báo admin
+class Notification(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    type: str  # 'marquee' (chạy chữ) hoặc 'popup' (bảng nổi)
+    content: str = Field(sa_column=Column(Text)) # Nội dung (HTML hoặc Text)
+    is_active: bool = Field(default=True) # Đang bật hay tắt
+    created_at: datetime = Field(default_factory=datetime.now)
 
