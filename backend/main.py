@@ -230,7 +230,7 @@ def get_shop_items(db: Session = Depends(get_db)):
     try:
         # 1. TRUY VẤN
         # Lấy tất cả item mà is_hidden = False (hoặc None)
-        statement = select(Item).where(Item.is_hidden == False)
+        statement = select(Item).where((Item.is_hidden == False) | (Item.is_hidden == 0) | (Item.is_hidden == None))
         results = db.exec(statement).all()
         
         shop_items = []

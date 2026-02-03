@@ -119,10 +119,7 @@ def read_my_inventory(
             "item_id": item.id,
             "name": item.name,
             "quantity": inv.quantity,
-            "description": item.description, # Nếu bảng Item có cột này
-            # Lưu ý: Bảng Item dùng config JSON, nên nếu muốn lấy category/rarity
-            # có thể cần parse JSON hoặc lấy trường mặc định nếu có.
-            # Tạm thời map các trường cơ bản:
+            "description": item.description, 
             "image_url": item.image_url,
             "currency_type": item.currency_type
         })

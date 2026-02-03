@@ -5029,7 +5029,7 @@
 
             try {
                 // 👇 QUAN TRỌNG 1: Trỏ đúng vào API trong shop.py
-                const response = await fetch('/admin/shop/items'); 
+                const response = await fetch('/api/shop/items'); 
                 
                 // Backend trả về thẳng 1 mảng (List), không phải object status
                 const data = await response.json(); 
