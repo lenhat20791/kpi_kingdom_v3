@@ -2079,85 +2079,79 @@
             }
         }
 
-        // HÀM VẼ TÚI ĐỒ (Phiên bản "Bất Tử" - Chấp mọi loại HTML)
+        // HÀM VẼ TÚI ĐỒ (PHIÊN BẢN BẤT TỬ - FIX CRASH 100%)
         function renderBag(items) {
-            // 1. Thử tìm cái rổ tên 'bag-grid' (HTML xịn)
-            let container = document.getElementById('bag-grid');
-            
-            // 2. Nếu không thấy, thử tìm cái rổ tên 'inventory-grid' (HTML cũ)
-            if (!container) {
-                container = document.getElementById('inventory-grid');
-            }
+            console.log("🎨 [RenderBag] Đang nhận dữ liệu:", items);
 
-            // 3. Nếu vẫn không thấy -> Báo động đỏ
+            // 1. Tìm khung chứa (Hỗ trợ cả 2 tên ID)
+            let container = document.getElementById('bag-grid') || document.getElementById('inventory-grid');
+            
             if (!container) {
-                console.error("❌ LỖI NGHIÊM TRỌNG: Không tìm thấy thẻ HTML nào để hiển thị túi đồ!");
+                console.error("❌ LỖI: Không tìm thấy thẻ HTML hiển thị túi đồ (bag-grid/inventory-grid)");
                 return;
             }
 
-            console.log("✅ Đã tìm thấy khung chứa đồ. Đang vẽ", items.length, "món...");
+            // 2. 🔥 FIX CRASH: Kiểm tra xem items có phải là Mảng không
+            if (!Array.isArray(items)) {
+                console.warn("⚠️ Cảnh báo: Dữ liệu items không phải là mảng. Reset về rỗng.");
+                items = []; 
+            }
 
-            // 4. Xóa sạch cũ
             container.innerHTML = '';
 
-            // 5. Kiểm tra túi rỗng
-            if (!items || items.length === 0) {
-                container.innerHTML = `<div class="col-span-full text-center text-gray-400 italic py-10">Túi trống trơn. Hãy mua gì đó đi!</div>`;
+            // 3. Xử lý khi túi rỗng
+            if (items.length === 0) {
+                container.innerHTML = `<div class="col-span-full text-center text-gray-500 italic py-10">Túi trống trơn.</div>`;
                 return;
             }
 
-            // 6. Vẽ từng món
+            // 4. Vẽ từng món (Có bọc bảo vệ lỗi từng item)
             container.innerHTML = items.map(item => {
-                // Lấy dữ liệu an toàn
-                const qty = item.amount || item.quantity || 1;
-                const img = item.image_url || item.image || 'https://placehold.co/100';
-                const name = item.name || "Vật phẩm";
-                
-                // ID để dùng item
-                const useId = item.item_id || item.id; 
+                if (!item) return ''; // Bỏ qua item bị null
 
-                // --- A. LOGIC NÚT HÀNH ĐỘNG (Dùng/Trang bị/Khóa) ---
-                let actionBtn = '';
-                if (item.is_usable) {
-                    // Nút Dùng (Xanh lá)
-                    actionBtn = `<button onclick="useItem(${useId})" class="flex-1 py-1.5 bg-green-600 hover:bg-green-500 text-white text-[10px] font-bold rounded shadow transition flex items-center justify-center gap-1">⚡ Dùng</button>`;
-                } else if (item.is_equippable) {
-                    // Nút Trang bị (Xanh dương)
-                    actionBtn = `<button onclick="equipItem(${useId})" class="flex-1 py-1.5 bg-blue-600 hover:bg-blue-500 text-white text-[10px] font-bold rounded shadow transition flex items-center justify-center gap-1">🛡️ Đồ</button>`;
-                } else {
-                    // Nút Khóa (Xám)
-                    actionBtn = `<span class="flex-1 py-1.5 bg-gray-700 text-gray-500 text-[10px] font-bold rounded border border-gray-600 flex items-center justify-center cursor-not-allowed">🔒 Khóa</span>`;
-                }
+                try {
+                    // Lấy dữ liệu (Fallback an toàn)
+                    const qty = item.amount || item.quantity || 1;
+                    const img = item.image_url || item.image || 'https://placehold.co/64';
+                    // 🔥 FIX CRASH: Luôn ép kiểu về Chuỗi (String) trước khi dùng
+                    const name = String(item.name || "Vật phẩm");
+                    const useId = item.item_id || item.id;
 
-                // --- B. LOGIC NÚT BÁN (Màu Vàng Cam) ---
-                // Lưu ý: truyền item.item_id (hoặc useId), tên, ảnh, và số lượng tối đa vào hàm openSellPopup
-                // Sử dụng replace để tránh lỗi nếu tên có dấu nháy đơn
-                const safeName = name.replace(/'/g, "\\'"); 
-                const safeImg = img.replace(/'/g, "\\'");
-                
-                const sellBtn = `<button onclick="openSellPopup(${useId}, '${safeName}', '${safeImg}', ${qty})" class="flex-1 py-1.5 bg-amber-600 hover:bg-amber-500 text-white text-[10px] font-bold rounded shadow transition flex items-center justify-center gap-1">💰 Bán</button>`;
+                    // Logic nút bấm
+                    let actionBtn = '';
+                    if (item.is_usable) {
+                        actionBtn = `<button onclick="useItem(${useId})" class="flex-1 py-1.5 bg-green-600 hover:bg-green-500 text-white text-[10px] font-bold rounded shadow flex items-center justify-center gap-1">⚡ Dùng</button>`;
+                    } else if (item.is_equippable) {
+                        actionBtn = `<button onclick="equipItem(${useId})" class="flex-1 py-1.5 bg-blue-600 hover:bg-blue-500 text-white text-[10px] font-bold rounded shadow flex items-center justify-center gap-1">🛡️ Đồ</button>`;
+                    } else {
+                        actionBtn = `<span class="flex-1 py-1.5 bg-gray-700 text-gray-500 text-[10px] font-bold rounded border border-gray-600 flex items-center justify-center cursor-not-allowed">🔒 Khóa</span>`;
+                    }
 
-                // HTML hiển thị (Card đẹp)
-                return `
-                    <div class="bg-gray-800 border border-gray-600 p-3 rounded-xl shadow-lg hover:shadow-xl hover:border-amber-400 transition duration-300 relative group">
-                        <span class="absolute -top-2 -right-2 bg-red-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow border border-white/20 z-10">
-                            x${qty}
-                        </span>
+                    // 🔥 FIX CRASH: Ép kiểu String() trước khi replace
+                    const safeName = String(name).replace(/'/g, "\\'");
+                    const safeImg = String(img).replace(/'/g, "\\'");
 
-                        <div class="h-16 w-full flex items-center justify-center mb-2 bg-gray-900/50 rounded-lg p-1">
-                            <img src="${img}" class="h-full object-contain drop-shadow-md hover:scale-110 transition" onerror="this.src='https://placehold.co/64?text=Item'">
-                        </div>
-
-                        <div class="text-center">
-                            <h4 class="font-bold text-gray-200 text-xs truncate mb-2" title="${name}">${name}</h4>
+                    return `
+                        <div class="bg-gray-800 border border-gray-600 p-2 rounded-xl shadow-lg hover:border-amber-400 transition duration-300 relative group">
+                            <span class="absolute -top-2 -right-2 bg-red-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow border border-white/20 z-10">x${qty}</span>
                             
-                            <div class="flex gap-2">
-                                ${actionBtn}
-                                ${sellBtn}
+                            <div class="h-14 w-full flex items-center justify-center mb-2 bg-gray-900/50 rounded-lg p-1">
+                                <img src="${img}" class="h-full object-contain drop-shadow-md" onerror="this.src='https://placehold.co/64?text=Error'">
+                            </div>
+
+                            <div class="text-center">
+                                <h4 class="font-bold text-gray-200 text-xs truncate mb-2" title="${name}">${name}</h4>
+                                <div class="flex gap-1">
+                                    ${actionBtn}
+                                    <button onclick="openSellPopup(${useId}, '${safeName}', '${safeImg}', ${qty})" class="flex-1 py-1.5 bg-amber-600 hover:bg-amber-500 text-white text-[10px] font-bold rounded shadow flex items-center justify-center gap-1">💰</button>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                `;
+                    `;
+                } catch (err) {
+                    console.error("❌ Lỗi hiển thị item này:", item, err);
+                    return ''; // Nếu item này lỗi thì bỏ qua, không làm chết cả trang
+                }
             }).join('');
         }
         

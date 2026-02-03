@@ -1,26 +1,19 @@
 @echo off
-title KPI Kingdom V3 - Hệ thống Quản trị
-cls
+TITLE KPI Kingdom Server
+COLOR 0A
 
-echo ======================================================
-echo    DANG KHOI DONG VUONG QUOC KPI KINGDOM V3...
-echo ======================================================
+:: Di chuyển đến thư mục chứa file bat này (để đảm bảo đúng đường dẫn)
+cd /d "%~dp0"
 
-:: 1. Di chuyen vao thu muc backend
-cd /d %~dp0backend
+ECHO ==========================================
+ECHO      DANG KHOI DONG SERVER KPI KINGDOM
+ECHO ==========================================
+ECHO.
 
-:: 2. Mo trang Admin tren trinh duyet (cho 3 giay de server kip load)
-echo [*] Dang mo trinh duyet...
-start "" "http://127.0.0.1:8000/player_dashboard"
-
-:: 3. Chay Server FastAPI
-echo [*] Dang khoi chay Server tai cong 8000...
-echo [!] Nhan Ctrl+C de dung he thong.
-echo ------------------------------------------------------
-
-:: Neu ban co dung moi truong ao (venv), hay bo dau :: o dong duoi day:
-:: call venv\Scripts\activate
-
+:: Chạy server
 python main.py
 
+:: Giữ màn hình không bị tắt nếu server crash
+ECHO.
+ECHO Server da dung hoac gap loi.
 pause
