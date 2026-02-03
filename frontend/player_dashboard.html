@@ -357,12 +357,57 @@
             background: linear-gradient(to bottom, #ef5350, #d32f2f); 
             box-shadow: 0 3px 0 #b71c1c;
         }
+        /* 1. NÚT ĐIỀU KHIỂN */
+        .toggle-btn {
+            position: fixed;
+            top: 15px; /* Cách đỉnh 15px */
+            left: 15px; /* Cách trái 15px */
+            z-index: 9999; /* Luôn nổi trên cùng */
+            
+            padding: 8px 16px;
+            background-color: #b45f06; /* Màu cam giống theme của bạn */
+            color: white;
+            border: 2px solid #fff;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            transition: all 0.3s ease;
+        }
+
+        .toggle-btn:hover {
+            background-color: #8c4a04;
+            transform: scale(1.05);
+        }
+
+        /* 2. SIDEBAR CUSTOM (Ghi đè lên Tailwind khi cần) */
+        .sidebar-custom {
+            transition: all 0.3s ease-in-out !important; /* Hiệu ứng trượt mượt */
+            position: relative; /* Mặc định để nó nằm trong dòng chảy flex */
+            left: 0;
+        }
+
+        /* KHI ẨN: Dùng fixed để trượt hẳn ra ngoài màn hình */
+        .sidebar-custom.hidden-sidebar {
+            position: fixed !important;
+            left: -300px !important; /* Đẩy khuất sang trái */
+            height: 100vh;
+            z-index: 9000;
+        }
+
+        /* 3. NỘI DUNG CHÍNH */
+        /* Khi menu ẩn thì nội dung cần bung ra */
+        #main-content {
+            transition: all 0.3s ease;
+        }
     </style>
 </head>
 
 <body class="font-body text-ink antialiased h-screen flex overflow-hidden">
-
-    <aside class="w-64 bg-amber-50 shadow-xl hidden md:flex flex-col border-r border-amber-200">
+    <button id="toggle-btn" class="toggle-btn" onclick="toggleSidebar()">
+        Ẩn Menu
+    </button>
+    <aside id="sidebar" class="sidebar-custom w-64 bg-amber-50 shadow-xl hidden md:flex flex-col border-r border-amber-200">
         <div class="p-6 border-b border-amber-200 text-center">
             <h1 class="text-2xl font-bold text-amber-800 font-cinzel">
                 <i class="fas fa-shield-alt text-amber-600"></i> KPI KINGDOM
@@ -450,7 +495,7 @@
         </div>
     </aside>
 
-        <main class="flex-1 flex flex-col h-full overflow-y-auto relative bg-gray-50">
+        <main id="main-content" class="flex-1 flex flex-col h-full overflow-y-auto relative bg-gray-50">
 
             <div id="main-view-dashboard" class="flex flex-col h-full w-full animate-fade-in">
                 
@@ -875,7 +920,7 @@
                         </h1>
                         <p class="text-gray-300 italic mb-8 text-lg">"Chỉ những kẻ mạnh nhất mới chạm tới đỉnh tháp"</p>
 
-                        <div class="bg-black/40 backdrop-blur-md border border-yellow-600/50 rounded-xl p-6 mb-8 max-w-lg mx-auto">
+                        <div class="bg-black/40 backdrop-blur-md border border-yellow-600/50 rounded-xl p-6 mb-8 max-w-lg mx-auto" style="display: none;">
                             <h3 class="text-yellow-200 font-bold uppercase tracking-widest border-b border-yellow-600/30 pb-2 mb-4">
                                 🏆 Bảng Phong Thần (Top 5)
                             </h3>
@@ -3733,27 +3778,23 @@
             }
         }
 
-        // 5. KẾT THÚC TRẬN ĐẤU (PHIÊN BẢN AN TOÀN)
+        // 5. KẾT THÚC TRẬN ĐẤU
         function endTowerCombat(isWin) {
-            // 🛡️ 1. CHỐNG SPAM / GỌI KÉP (QUAN TRỌNG NHẤT)
-            // Nếu đang xử lý kết thúc rồi thì chặn luôn, không cho chạy lần 2
+            // 🛡️ 1. CHỐNG SPAM
             if (towerState.isProcessingEnd) {
                 console.warn("🚫 Đang gửi kết quả lên Server, vui lòng chờ...");
                 return;
             }
             
-            // Đánh dấu là đang xử lý
             towerState.isProcessingEnd = true;
 
-            // 🛡️ 2. DỪNG ĐỒNG HỒ NGAY LẬP TỨC
-            // Để tránh việc đang gửi API mà đồng hồ vẫn đếm ngược -> gây lỗi logic
+            // 🛡️ 2. DỪNG ĐỒNG HỒ
             if (towerState.timer) clearInterval(towerState.timer);
 
             console.log(`📡 Đang gửi kết quả: ${isWin ? 'THẮNG' : 'THUA'}...`);
 
             const token = localStorage.getItem('access_token');
 
-            // Gọi API
             fetch('/api/tower/complete-floor', { 
                 method: 'POST',
                 headers: { 
@@ -3766,56 +3807,58 @@
                 })
             })
             .then(res => {
-                // Kiểm tra Token hết hạn
                 if (res.status === 401) {
                     alert("Phiên đăng nhập đã hết hạn! Vui lòng đăng nhập lại.");
                     window.location.href = '/index.html';
                     return null; 
                 }
-
-                // Kiểm tra lỗi Server
                 if (!res.ok) {
                     return res.json().then(err => { throw new Error(err.detail || "Lỗi xử lý kết quả!"); });
                 }
-
                 return res.json();
             })
             .then(data => {
-                if (!data) return; // Đã bị chặn bởi lỗi 401
+                if (!data) return;
 
                 console.log("✅ Kết quả Server trả về:", data);
 
                 if (isWin) {
+                    // --- TRƯỜNG HỢP THẮNG (GIỮ NGUYÊN) ---
                     const rewardMsg = data.rewards_text ? data.rewards_text.join('\n') : "Phần thưởng đã được chuyển vào túi!";
                     alert(`🎉 CHIẾN THẮNG!\n\n${rewardMsg}`);
-                } else {
-                    alert("☠️ THẤT BẠI!\nHãy rèn luyện thêm và thử lại nhé.");
-                }
-                
-                // Cập nhật lại Level/EXP/Tiền
-                if(window.loadDashboardData) window.loadDashboardData();
+                    
+                    // Cập nhật lại Level/EXP/Tiền
+                    if(window.loadDashboardData) window.loadDashboardData();
 
-                // Quay về Sảnh
-                resetTowerUI(); 
+                    // Quay về Sảnh (Reset mềm)
+                    resetTowerUI(); 
+                } else {
+                    // --- TRƯỜNG HỢP THUA (SỬA LẠI: RELOAD TRANG) ---
+                    // Alert sẽ chặn lại, người dùng bấm OK xong mới chạy dòng dưới
+                    alert("☠️ THẤT BẠI!\nQuái vật quá mạnh.\n(Trang web sẽ tải lại để hồi phục trạng thái)");
+                    
+                    // 👇 LỆNH QUAN TRỌNG NHẤT: Reload lại trang để reset về câu 1/5
+                    window.location.reload(); 
+                }
             })
             .catch(err => {
                 console.error("❌ Lỗi lưu kết quả:", err);
                 
                 if (isWin) {
                     alert("Đã chiến thắng nhưng mất kết nối Server (Có thể chưa nhận được quà).");
+                    resetTowerUI();
                 } else {
                     alert("Thất bại! (Lỗi kết nối)");
+                    // Nếu lỗi mạng khi thua, cũng nên reload cho chắc
+                    window.location.reload();
                 }
-                resetTowerUI();
             })
             .finally(() => {
-                // Mở khóa (Dù thành công hay thất bại cũng phải mở ra để chơi trận sau)
-                // Tuy nhiên vì ta gọi resetTowerUI() nên biến này sẽ được reset ở đó.
-                // Dòng này để phòng hờ thôi.
+                // Nếu đã gọi reload() thì dòng này không còn ý nghĩa (vì trang web tắt rồi), 
+                // nhưng cứ để đó cũng không sao.
                 towerState.isProcessingEnd = false;
             });
         }
-
         // 6. HELPER FUNCTIONS (Giữ nguyên, chỉ đảm bảo có đủ ID)
         function updateHealthBars() {
             // --- PLAYER (ID: combat-player-hp-bar) ---
@@ -6785,6 +6828,33 @@
         // Chạy kiểm tra mỗi 30 giây (để nếu đang chơi mà Admin bật bảo trì thì bị kick ra luôn)
         checkMaintenanceIngame();
         setInterval(checkMaintenanceIngame, 30000);
+
+        // nút ẩn menu sidebar
+        function toggleSidebar() {
+        const sidebar = document.getElementById('sidebar');
+        const btn = document.getElementById('toggle-btn');
+        
+        // Bật/Tắt class ẩn
+        sidebar.classList.toggle('hidden-sidebar');
+        
+        // Tailwind có class 'hidden' và 'md:flex' gây xung đột
+        // Nên ta cần xử lý thêm: Nếu đang ẩn -> Xóa class 'hidden' và 'md:flex' của Tailwind đi để CSS custom hoạt động
+        if (sidebar.classList.contains('hidden-sidebar')) {
+            // Đang ẨN
+            btn.innerText = "Hiện Menu";
+            btn.style.backgroundColor = "#28a745"; // Màu xanh
+            
+            // Tạm thời xóa class flex của tailwind để tránh xung đột layout
+            sidebar.classList.remove('md:flex', 'flex'); 
+        } else {
+            // Đang HIỆN
+            btn.innerText = "Ẩn Menu";
+            btn.style.backgroundColor = "#b45f06"; // Màu cam
+            
+            // Trả lại class cho Tailwind
+            sidebar.classList.add('md:flex', 'flex');
+        }
+    }
 
 
         // 2. Thiết lập vòng lặp thông minh (Smart Polling)

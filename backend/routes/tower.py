@@ -32,7 +32,7 @@ def get_difficulty_by_floor(floor: int) -> str:
 def get_monster_stats_by_floor(floor: int) -> dict:
     """Tính chỉ số Quái vật (HP/ATK) theo công thức lũy tiến"""
     # 1. HP cơ bản (Giữ nguyên công thức của bạn)
-    base_hp = 100 + (floor * 15)
+    base_hp = 50 + (floor * 15)
     
     # 2. Hệ số nhân (Multiplier) theo bậc
     if floor <= 10: multiplier = 1.0
