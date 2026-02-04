@@ -5038,8 +5038,8 @@
                 const data = await response.json(); 
 
                 // 👇 QUAN TRỌNG 2: Kiểm tra nếu là mảng thì vẽ luôn
-                if (Array.isArray(data)) {
-                    renderShopShelves(data);
+                if (data.items && Array.isArray(data.items)) {
+                    renderShopShelves(data.items); // Truyền đúng mảng items vào hàm vẽ
                 } else {
                     console.error("Dữ liệu lạ:", data);
                     container.innerHTML = '<div class="col-span-full text-center text-red-300">Lỗi dữ liệu từ Server</div>';
