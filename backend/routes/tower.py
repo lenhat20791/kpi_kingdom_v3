@@ -245,7 +245,7 @@ async def complete_floor(
         }
 
     # ---------------------------------------------------------
-    # 3. XỬ LÝ KHI THẮNG (WIN) - TÍNH QUÀ
+    # 3. XỬ LÝ KHI THẮNG (WIN) - TÍNH QUÀ (ĐÃ FIX LỖI NHẬN DIỆN TÊN)
     # ---------------------------------------------------------
     try:
         setting_record = db.exec(select(TowerSetting).where(TowerSetting.id == 1)).first()
@@ -255,36 +255,75 @@ async def complete_floor(
             reward_pool = config.get("rewards", {}).get(difficulty, [])
             
             for item in reward_pool:
+                # Random tỉ lệ rơi
                 if random.randint(1, 100) <= int(item.get("rate", 0)):
-                    item_type = item.get("type", "").lower()
-                    name_code = item.get("name")
+                    item_type = str(item.get("type", "")).strip().lower()
+                    
+                    # 🔥 Lấy tên gốc từ DB ("Điểm KPI (Chính)", "Tri Thức (Xanh)")
+                    raw_name = str(item.get("name", "")).strip() 
                     qty = int(item.get("amount", 0))
 
+                    if qty <= 0: continue
+
+                    # --- 1. XỬ LÝ EXP ---
                     if item_type == "exp":
                         add_exp_to_player(current_user, qty)
                         received_rewards.append(f"+{qty} EXP")
+                    
+                    # --- 2. XỬ LÝ TIỀN TỆ (ĐÃ NÂNG CẤP NHẬN DIỆN) ---
                     elif item_type == "currency":
-                        if name_code == "kpi": current_user.kpi += qty
-                        elif name_code == "tri_thuc": current_user.tri_thuc += qty
-                        elif name_code == "chien_tich": current_user.chien_tich += qty
-                        elif name_code == "vinh_du": current_user.vinh_du += qty
-                        received_rewards.append(f"+{qty} {name_code.upper()}")
+                        is_added = False
+                        
+                        # Chuyển về chữ thường để so sánh tìm từ khóa
+                        name_lower = raw_name.lower()
+                        
+                        # 🔥 LOGIC MAP TÊN HIỂN THỊ -> TÊN BIẾN TRONG DB
+                        if "kpi" in name_lower:
+                            current_user.kpi = float(current_user.kpi or 0.0) + float(qty)
+                            received_rewards.append(f"+{qty} KPI")
+                            is_added = True
+                            
+                        elif "tri th" in name_lower or "tri_thuc" in name_lower: # Bắt dính "Tri Thức (Xanh)"
+                            current_user.tri_thuc = int(current_user.tri_thuc or 0) + qty
+                            received_rewards.append(f"+{qty} Tri Thức")
+                            is_added = True
+                            
+                        elif "chien tich" in name_lower or "chiến tích" in name_lower:
+                            current_user.chien_tich = int(current_user.chien_tich or 0) + qty
+                            received_rewards.append(f"+{qty} Chiến Tích")
+                            is_added = True
+                            
+                        elif "vinh du" in name_lower or "vinh dự" in name_lower:
+                            current_user.vinh_du = int(current_user.vinh_du or 0) + qty
+                            received_rewards.append(f"+{qty} Vinh Dự")
+                            is_added = True
+                        
+                        # Nếu cộng thành công thì lưu ngay
+                        if is_added:
+                            db.add(current_user)
+                    
+                    # --- 3. XỬ LÝ VẬT PHẨM ---
                     elif item_type == "item":
                         try:
-                            item_id = int(name_code)
-                            inv_item = db.exec(select(PlayerItem).where(
-                                PlayerItem.player_id == current_user.id,
-                                PlayerItem.item_id == item_id
-                            )).first()
-                            
-                            if inv_item: inv_item.quantity += qty
-                            else: db.add(PlayerItem(player_id=current_user.id, item_id=item_id, quantity=qty))
-                            
-                            # Lấy tên item để hiển thị
-                            game_item = db.get(Item, item_id)
-                            item_name = game_item.name if game_item else "Vật phẩm"
-                            received_rewards.append(f"+{qty} {item_name}")
+                            # Nếu tên là số (ID) thì dùng luôn, nếu không thì bỏ qua
+                            if raw_name.isdigit():
+                                item_id = int(raw_name)
+                                inv_item = db.exec(select(PlayerItem).where(
+                                    PlayerItem.player_id == current_user.id,
+                                    PlayerItem.item_id == item_id
+                                )).first()
+                                
+                                if inv_item: 
+                                    inv_item.quantity += qty
+                                    db.add(inv_item)
+                                else: 
+                                    db.add(PlayerItem(player_id=current_user.id, item_id=item_id, quantity=qty))
+                                
+                                game_item = db.get(Item, item_id)
+                                item_name = game_item.name if game_item else f"Item {item_id}"
+                                received_rewards.append(f"+{qty} {item_name}")
                         except: pass
+
     except Exception as e:
         print(f"Lỗi chia quà: {e}")
 
