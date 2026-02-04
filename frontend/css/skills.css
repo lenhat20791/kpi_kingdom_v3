@@ -163,137 +163,243 @@
     to { background-position: 100% 0; }
 }
 /* =========================================
-   VFX: HỎA THẦN (FIRE AURA) - ĐÃ SỬA LỖI
+   VFX: HỎA THẦN (FIRE AURA) - FIXED EMBERS
    ========================================= */
 .fx-fire-aura {
-    /* 1. Kích thước 1 khung hình (Bạn tự chỉnh cho khớp với ảnh của bạn) */
-    width: 308px; 
-    height: 256px;
-
-    
-    background-image: url('/assets/vfx/hoa_than.png');
-    background-repeat: no-repeat;
-
-    /* 3. CẤU HÌNH SPRITE SHEET (Quan trọng nhất) */
-    /* Nếu ảnh của bạn có 10 khung hình ngang: width = 1000% */
-    /* Nếu ảnh của bạn có 5 khung hình ngang: width = 500% */
-    background-size: 1000% 100%; 
-
-    /* 4. Animation */
-    /* steps(10): Phải khớp số lượng khung hình của ảnh */
-    animation: anime-hoa-than 1.4s steps(10) infinite;
-
-    /* 5. Vị trí: Căn giữa tuyệt đối (Giống Thánh Quang) */
     position: absolute;
-    left: 50%;
     top: 50%;
-    transform: translate(-50%, -50%);
-    
+    left: 50%;
+    transform: translate(-50%, -50%); 
+    width: 416px; 
+    height: 416px;
+    z-index: 9999; 
     pointer-events: none;
-    z-index: 5;
-    mix-blend-mode: screen; /* Làm lửa sáng rực lên trên nền tối */
+    mix-blend-mode: screen;
+    background-image: url('/assets/vfx/hoa_than.png'); 
+    background-size: contain; 
+    background-position: center; 
+    background-repeat: no-repeat;
+    animation: fire-flicker 0.4s infinite alternate;
 }
 
-/* 6. Keyframes cho Hỏa Thần (Chạy từ đầu ảnh đến cuối ảnh) */
-@keyframes anime-hoa-than {
-    from { background-position: 0 0; }
-    to { background-position: 100% 0; }
+/* LỚP TÀN LỬA RƠI DÀY (KHÔNG XOAY) */
+.fx-fire-aura::after {
+    content: '';
+    position: absolute;
+    top: -50px; /* Bắt đầu từ phía trên */
+    left: 15%;
+    width: 6px; 
+    height: 6px;
+    border-radius: 50%;
+    
+    /* Danh sách hạt lửa dày đặc */
+    box-shadow: 
+        10px 10px #ff5e00, 40px 60px #ff8c00, 90px 20px #ff4500,
+        130px 50px #ffae00, 170px 90px #ff5e00, 210px 30px #ff8c00,
+        250px 80px #ff4500, 290px 10px #ffae00, 330px 60px #ff5e00,
+        20px 140px #ff8c00, 80px 170px #ff4500, 150px 130px #ffae00,
+        230px 150px #ff5e00, 50px 190px #ff8c00, 120px 210px #ff4500,
+        270px 200px #ffae00, 30px 240px #ff5e00, 190px 250px #ff8c00,
+        100px -20px #ff4500, 250px -40px #ffae00;
+
+    opacity: 0;
+    /* Rơi lượn sóng nhưng KHÔNG xoay */
+    animation: embers-falling-smooth 3s linear infinite;
+}
+
+/* Animation nhấp nháy (Giữ nguyên) */
+@keyframes fire-flicker {
+    0% { transform: translate(-50%, -50%) scale(1); filter: brightness(1.1) drop-shadow(0 0 10px #ff4500); }
+    100% { transform: translate(-50%, -50%) scale(1.05); filter: brightness(1.4) drop-shadow(0 0 30px #ff8c00) drop-shadow(0 0 15px #ff0000); }
+}
+
+/* Hiệu ứng rơi mượt mà, lả tả bất quy tắc */
+@keyframes embers-falling-smooth {
+    0% {
+        /* Bắt đầu: dịch chuyển ngang ngẫu nhiên nhẹ */
+        transform: translateY(0) translateX(0);
+        opacity: 0;
+    }
+    15% {
+        opacity: 1;
+    }
+    40% {
+        /* Lượn sóng sang phải */
+        transform: translateY(150px) translateX(25px);
+    }
+    70% {
+        /* Lượn sóng sang trái */
+        transform: translateY(300px) translateX(-20px);
+        opacity: 0.8;
+    }
+    100% {
+        /* Kết thúc: rơi hẳn xuống và mờ dần */
+        transform: translateY(450px) translateX(10px);
+        opacity: 0;
+    }
 }
 /* =========================================
-   VFX: GIAO KÈO VỚI QUỶ (DEAL WITH DEVIL)
+   VFX: DEAL DEVIL - TÍM XANH MA MỊ (FIXED)
    ========================================= */
 .fx-dealdevil {
-    /* 1. Kích thước 1 khung hình (Cao 256 thì rộng cũng 256) */
-    width: 256px; 
-    height: 256px;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%); 
+    width: 426px; 
+    height: 426px;
+    z-index: 9999; 
+    pointer-events: none;
+    mix-blend-mode: hard-light; 
 
-    /* 2. Đường dẫn ảnh */
-    background-image: url('/assets/vfx/dealdevil.png');
+    background-image: url('/assets/vfx/dealdevils.png'); 
+    background-size: contain; 
+    background-position: center; 
     background-repeat: no-repeat;
 
-    /* 3. Cấu hình Sprite: 6 khung hình -> 600% */
-    background-size: 300% 100%; 
-
-    /* 4. Animation: Chạy lặp lại */
-    animation: anime-dealdevil 2s steps(6) infinite;
-
-    /* 5. Vị trí: Căn giữa người chơi */
-    position: absolute;
-    left: 50%;
-    top: 50%;
-    transform: translate(-50%, -50%); /* Căn chuẩn tâm */
-    
-    pointer-events: none;
-    z-index: 6; /* Đè lên cả Hỏa Thần nếu có */
-    mix-blend-mode: hard-light; /* Tạo hiệu ứng ma mị, ám vào người */
+    animation: devil-dark-glow 0.5s infinite alternate;
 }
 
-@keyframes anime-dealdevil {
-    from { background-position: 0 0; }
-    to { background-position: 100% 0; }
+/* HIỆU ỨNG KHÓI TÍM XANH NHẠT */
+.fx-dealdevil::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 120%; /* Làm khói lan rộng hơn một chút */
+    height: 120%;
+    
+    /* 1. ĐỔI MÀU SANG TÍM XANH NHẠT (Cyan-Purple Mix) */
+    background: radial-gradient(circle, rgba(138, 43, 226, 0.4) 0%, rgba(0, 255, 255, 0.2) 50%, transparent 75%);
+    
+    transform: translate(-50%, -50%);
+    filter: blur(45px); /* Tăng độ mờ để khói trông mềm mại hơn */
+    
+    /* 2. GIẢM ĐỘ TRONG SUỐT (Nhẹ nhàng hơn) */
+    opacity: 0.5; 
+    
+    z-index: -1;
+    animation: smoke-ghost 3.5s ease-out infinite;
+}
+
+/* Animation hào quang chính */
+@keyframes devil-dark-glow {
+    0% {
+        filter: brightness(0.8) contrast(1.1) drop-shadow(0 0 10px rgba(138, 43, 226, 0.5));
+        opacity: 0.8;
+    }
+    100% {
+        filter: brightness(1.4) contrast(1.4) 
+                drop-shadow(0 0 25px #8a2be2) /* Màu tím xanh nhẹ */
+                drop-shadow(0 0 15px #00ffff); /* Ánh xanh nhạt */
+        opacity: 1;
+    }
+}
+
+/* Hiệu ứng khói bốc lên lờ đờ */
+@keyframes smoke-ghost {
+    0% {
+        transform: translate(-50%, -30%) scale(0.8);
+        opacity: 0;
+    }
+    30% {
+        opacity: 0.5; /* Đạt đỉnh độ trong suốt nhanh rồi tan dần */
+    }
+    100% {
+        transform: translate(-50%, -100%) scale(1.5); /* Bốc cao lên trên */
+        opacity: 0;
+    }
 }
 /* =========================================
    VFX: HÀO QUANG THIÊN SỨ (FINAL FIX)
    ========================================= */
-.fx-thiensu { 
-    /* 1. Kích thước giống hệt mẫu */
-    width: 256px;
-    height: 256px;
-
-    /* 2. Đường dẫn ảnh (Bạn kiểm tra kỹ tên file nhé) */
-    background-image: url('/assets/vfx/thiensu.png');
-    background-repeat: no-repeat;
-    
-    /* 3. QUAN TRỌNG NHẤT: SỐ KHUNG HÌNH (FRAMES) */
-    /* Nếu ảnh Thiên Sứ cùng kích thước dài như Thánh Quang (6 hình) thì giữ nguyên 600% */
-    background-size: 600% 100%; 
-    
-    /* Animation: Copy y chang, chỉ đổi tên */
-    animation: anime-thiensu 1.5s steps(5) infinite;
-
-    /* 4. Vị trí: Copy y chang */
+.fx-thiensu {
     position: absolute;
-    left: 50%;
-    top: 50%;
-    transform: translate(-50%, -50%); /* Không scale, giữ nguyên tỉ lệ gốc */
     
-    pointer-events: none; 
-    z-index: 5; /* Đè lên nhân vật giống mẫu */
-    mix-blend-mode: screen; /* Giữ nguyên chế độ hòa trộn này cho sáng */
+    /* 1. CĂN GIỮA TUYỆT ĐỐI */
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%); 
+    
+    /* 2. KÍCH THƯỚC (Giữ 416px để bao phủ như Kiên Định hoặc 256px tùy bạn, ở đây tôi để 416px cho uy lực) */
+    width: 416px; 
+    height: 416px;
+    
+    z-index: 9999; 
+    pointer-events: none;
+    mix-blend-mode: screen; /* Giữ chế độ này để các phần đen của ảnh biến mất, chỉ còn ánh sáng */
+
+    /* 3. CẤU HÌNH ẢNH TĨNH */
+    background-image: url('/assets/vfx/thiensu.png'); 
+    background-size: contain; 
+    background-position: center; 
+    background-repeat: no-repeat;
+
+    /* 4. ANIMATION ÁNH SÁNG THẦN THÁNH */
+    /* Nhịp 0.1s cực nhanh tạo cảm giác hào quang rung động liên tục */
+    animation: thiensu-holy-glow 0.3s infinite alternate;
 }
 
-@keyframes anime-thiensu {
-    from { background-position: 0 0; }
-    to { background-position: 100% 0; }
+/* Định nghĩa hiệu ứng hào quang thần thánh rực rỡ */
+@keyframes thiensu-holy-glow {
+    0% {
+        transform: translate(-50%, -50%) scale(1);
+        filter: brightness(1.2) drop-shadow(0 0 10px #fff);
+        opacity: 0.8;
+    }
+    100% {
+        transform: translate(-50%, -50%) scale(1.1);
+        /* Phóng to nhẹ và tỏa hào quang vàng kim rực rỡ */
+        filter: brightness(2) 
+                drop-shadow(0 0 20px #ffd700) 
+                drop-shadow(0 0 40px #fff); 
+        opacity: 1;
+    }
 }
 /* =========================================
    VFX: KIÊN ĐỊNH CHIẾN ĐẤU (Warrior)
    ========================================= */
 .fx-kiendinh {
-    width: 300px;
-    height: 240px;
-    
-    /* Nhớ tạo file ảnh kiendinh.png nhé */
-    background-image: url('/assets/vfx/kiendinh.png'); 
-    background-repeat: no-repeat;
-    
-    /* Giả sử ảnh này có 5 khung hình -> 500% */
-    background-size: 500% 100%; 
-    animation: anime-kiendinh 0.8s steps(6) infinite; /* Chỉnh steps theo số khung hình ảnh thật */
-
     position: absolute;
-    left: 50%;
-    top: 50%;
     
-    /* Logic hiển thị đè lên tất cả như Thánh Quang */
+    /* 1. CĂN GIỮA TUYỆT ĐỐI */
+    top: 50%;
+    left: 50%;
     transform: translate(-50%, -50%); 
+    
+    /* 2. KÍCH THƯỚC THEO YÊU CẦU (416x416) */
+    width: 416px; 
+    height: 416px;
+    
     z-index: 9999; 
-    pointer-events: none; 
+    pointer-events: none;
+
+    /* 3. CẤU HÌNH ẢNH TĨNH */
+    background-image: url('/assets/vfx/kiendinh.png'); 
+    background-size: contain; 
+    background-position: center; 
+    background-repeat: no-repeat;
+
+    /* 4. ANIMATION ÁNH SÁNG ĐEN LẤP LÁNH */
+    /* Kết hợp giật nhẹ và hiệu ứng đổi màu tối */
+    animation: kiendinh-dark-glitter 0.15s infinite alternate;
 }
 
-@keyframes anime-kiendinh {
-    from { background-position: 0 0; }
-    to { background-position: 100% 0; }
+/* Định nghĩa hiệu ứng ánh sáng đen rực rỡ */
+@keyframes kiendinh-dark-glitter {
+    0% {
+        transform: translate(-50%, -50%) scale(1);
+        filter: brightness(0.8) contrast(1.2) drop-shadow(0 0 5px #000);
+        opacity: 0.9;
+    }
+    100% {
+        transform: translate(-50%, -50%) scale(1.05);
+        /* Tạo quầng sáng đen lấp lánh bằng cách kết hợp shadow đen và tím đậm/xám */
+        filter: brightness(1.2) contrast(1.5) 
+                drop-shadow(0 0 25px #000) 
+                drop-shadow(0 0 10px #2b0040); 
+        opacity: 1;
+    }
 }
 
 /* =========================================

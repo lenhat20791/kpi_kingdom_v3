@@ -1319,6 +1319,12 @@
                                 <label class="block text-xs font-bold text-gray-400 uppercase mb-1">Tên Kỹ Năng</label>
                                 <input type="text" id="edit-skill-name" class="w-full bg-gray-900 border border-gray-700 rounded p-2 text-white focus:border-blue-500 outline-none">
                             </div>
+                            <div class="col-span-2">
+                                <label class="block text-xs font-bold text-gray-400 uppercase mb-1">Mô tả kỹ năng</label>
+                                <textarea id="skill-description" 
+                                        class="w-full bg-gray-900 border border-gray-700 rounded p-2 text-white text-sm focus:border-blue-500 outline-none h-24 resize-none" 
+                                        placeholder="Nhập chi tiết hiệu ứng kỹ năng (ví dụ: Tăng 20% sát thương chí mạng...)"></textarea>
+                            </div>
                             <div>
                                 <label class="block text-xs font-bold text-yellow-500 uppercase mb-1">Dành cho Class</label>
                                 <select id="edit-skill-class" class="w-full bg-gray-900 border border-gray-700 rounded p-2 text-white focus:border-yellow-500 outline-none">
@@ -4608,6 +4614,7 @@
             document.getElementById('skill-editor-form').dataset.currentSkillId = skill.skill_id;
 
             document.getElementById('edit-skill-name').value = skill.name || "";
+            document.getElementById('edit-skill-description').value = skill.description || "";
             document.getElementById('edit-skill-type').value = skill.skill_type || "ACTIVE";
             document.getElementById('edit-skill-min-level').value = skill.min_level || 1;
             document.getElementById('edit-skill-prereq').value = skill.prerequisite_id || '';
@@ -4798,7 +4805,7 @@
             const payload = {
                 skill_id: currentID || name.toUpperCase().replace(/\s+/g, '_'),
                 name: name,
-                description: getSafeVal('skill-desc'),
+                description: getSafeVal('skill-description'),
                 class_type: getSafeVal('skill-class'),
                 
                 skill_type: skillType, 
