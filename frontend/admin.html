@@ -842,30 +842,53 @@
             </div>
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 <div class="bg-gray-800 rounded-2xl border border-gray-700 overflow-hidden flex flex-col">
-                    <div class="p-3 bg-blue-600/20 border-b border-blue-500/30 text-center">
+                    <div class="p-3 bg-blue-600/20 border-b border-blue-500/30 flex justify-between items-center">
                         <h5 class="text-blue-400 font-bold text-xs">MEDIUM (1-10)</h5>
+                        <button onclick="clearPool('Medium')" 
+                                class="flex items-center gap-1 bg-red-900/50 hover:bg-red-600 border border-red-500/50 text-red-200 hover:text-white px-2 py-1 rounded shadow transition-all" 
+                                title="Xóa sạch Medium">
+                            <i class="fas fa-trash"></i> 
+                            <span class="text-[10px] font-bold">XÓA</span>
+                        </button>
                     </div>
-                    <div id="pool-Medium" class="p-3 space-y-2 flex-grow min-h-[200px]">
-                        </div>
+                    <div id="pool-Medium" class="p-3 space-y-2 flex-grow min-h-[200px]"></div>
                 </div>
 
                 <div class="bg-gray-800 rounded-2xl border border-gray-700 overflow-hidden flex flex-col">
-                    <div class="p-3 bg-green-600/20 border-b border-green-500/30 text-center">
+                    <div class="p-3 bg-green-600/20 border-b border-green-500/30 flex justify-between items-center">
                         <h5 class="text-green-400 font-bold text-xs">HARD (11-20)</h5>
+                        <button onclick="clearPool('Hard')" 
+                                class="flex items-center gap-1 bg-red-900/50 hover:bg-red-600 border border-red-500/50 text-red-200 hover:text-white px-2 py-1 rounded shadow transition-all"
+                                title="Xóa sạch Hard">
+                            <i class="fas fa-trash"></i>
+                            <span class="text-[10px] font-bold">XÓA</span>
+                        </button>
                     </div>
                     <div id="pool-Hard" class="p-3 space-y-2 flex-grow min-h-[200px]"></div>
                 </div>
 
                 <div class="bg-gray-800 rounded-2xl border border-gray-700 overflow-hidden flex flex-col">
-                    <div class="p-3 bg-orange-600/20 border-b border-orange-500/30 text-center">
+                    <div class="p-3 bg-orange-600/20 border-b border-orange-500/30 flex justify-between items-center">
                         <h5 class="text-orange-400 font-bold text-xs">EXTREME (21-60)</h5>
+                        <button onclick="clearPool('Extreme')" 
+                                class="flex items-center gap-1 bg-red-900/50 hover:bg-red-600 border border-red-500/50 text-red-200 hover:text-white px-2 py-1 rounded shadow transition-all"
+                                title="Xóa sạch Extreme">
+                            <i class="fas fa-trash"></i>
+                            <span class="text-[10px] font-bold">XÓA</span>
+                        </button>
                     </div>
                     <div id="pool-Extreme" class="p-3 space-y-2 flex-grow min-h-[200px]"></div>
                 </div>
 
                 <div class="bg-gray-800 rounded-2xl border border-gray-700 overflow-hidden flex flex-col">
-                    <div class="p-3 bg-red-600/20 border-b border-red-500/30 text-center">
+                    <div class="p-3 bg-red-600/20 border-b border-red-500/30 flex justify-between items-center">
                         <h5 class="text-red-500 font-bold text-xs">HELL (61-100)</h5>
+                        <button onclick="clearPool('Hell')" 
+                                class="flex items-center gap-1 bg-red-900/50 hover:bg-red-600 border border-red-500/50 text-red-200 hover:text-white px-2 py-1 rounded shadow transition-all"
+                                title="Xóa sạch Hell">
+                            <i class="fas fa-trash"></i>
+                            <span class="text-[10px] font-bold">XÓA</span>
+                        </button>
                     </div>
                     <div id="pool-Hell" class="p-3 space-y-2 flex-grow min-h-[200px]"></div>
                 </div>
@@ -3668,14 +3691,14 @@
                 console.error("Lỗi kết nối:", e);
             }
         }
-        //29 hàm Hiển thị danh sách câu hỏi
+        // 29. Hàm Hiển thị danh sách câu hỏi (Đã Fix lỗi nút ẩn)
         async function loadTowerQuestions() {
             const tbody = document.getElementById('tower-question-list');
             if (!tbody) return;
 
             try {
-                // Gọi đến API thống kê (Endpoint bạn đã tạo ở Backend)
-                const response = await fetch('/admin/tower/stats'); 
+                // Gọi API thống kê
+                const response = await fetch('/admin/tower/stats');
                 
                 if (!response.ok) {
                     const errorData = await response.json();
@@ -3684,8 +3707,6 @@
                 }
 
                 const stats = await response.json();
-
-                // Vì stats là Object { "Toán": {...}, "Lý": {...} }, ta dùng Object.entries để duyệt
                 const entries = Object.entries(stats);
 
                 tbody.innerHTML = ''; 
@@ -3696,30 +3717,34 @@
 
                 // Duyệt qua từng môn học
                 entries.forEach(([subject, data]) => {
-                    // Gom nhóm chi tiết độ khó (Ví dụ: Easy: 5 | Hard: 2)
+                    // Gom nhóm chi tiết độ khó
                     const difficultyDetail = Object.entries(data.details)
-                        .map(([diff, count]) => `<span class="text-gray-400">${diff}:</span> <span class="text-white font-bold">${count}</span>`)
-                        .join(' <span class="text-gray-600 mx-2">|</span> ');
+                        .map(([diff, count]) => `<span class="text-gray-400 text-[10px]">${diff}:</span> <span class="text-white font-bold text-xs">${count}</span>`)
+                        .join(' <span class="text-gray-700 mx-1">|</span> ');
 
                     tbody.innerHTML += `
-                        <tr class="hover:bg-gray-700/30 transition border-b border-gray-700/50">
+                        <tr class="hover:bg-gray-800/50 transition border-b border-gray-700/50 group">
                             <td class="px-4 py-4">
-                                <span class="px-3 py-1 rounded bg-blue-900/50 text-blue-400 text-xs font-bold border border-blue-800 uppercase">
+                                <span class="px-3 py-1 rounded bg-blue-900/30 text-blue-400 text-xs font-bold border border-blue-800 uppercase tracking-wide">
                                     ${subject}
                                 </span>
                             </td>
                             <td class="px-4 py-4 text-center">
-                                <div class="flex items-center justify-center text-[11px]">
+                                <div class="flex items-center justify-center bg-gray-900/50 rounded py-1 px-2 border border-gray-800">
                                     ${difficultyDetail}
                                 </div>
                             </td>
                             <td class="px-4 py-4 text-center">
-                                <span class="text-green-400 text-lg font-mono font-bold">${data.total}</span>
-                                <span class="text-[10px] text-gray-500 block">câu hỏi</span>
+                                <div class="flex flex-col">
+                                    <span class="text-green-400 text-lg font-mono font-bold">${data.total}</span>
+                                    <span class="text-[9px] text-gray-500 uppercase tracking-widest">Câu hỏi</span>
+                                </div>
                             </td>
                             <td class="px-4 py-4 text-right">
-                                <button onclick="deleteSubjectGroup('${subject}')" class="text-red-500 hover:text-red-300 transition p-2">
-                                    <i class="fas fa-trash-alt"></i>
+                                <button onclick="deleteSubjectGroup('${subject}')" 
+                                        class="inline-flex items-center justify-center space-x-1 bg-red-500/10 hover:bg-red-500 text-red-500 hover:text-white border border-red-500/50 px-3 py-1.5 rounded transition duration-200 group-hover:shadow-lg hover:shadow-red-900/50">
+                                    <i class="fas fa-trash-alt text-xs"></i>
+                                    <span class="text-xs font-bold uppercase">Xóa</span>
                                 </button>
                             </td>
                         </tr>
@@ -3814,7 +3839,6 @@
         }
 
         //32 Hàm chuyển đổi giao diện dựa trên loại phần thưởng (Phiên bản dùng chung dữ liệu Shop)
-        // Thay thế hàm toggleRewardInputs cũ
         async function toggleRewardInputs() {
             const type = document.getElementById('reward-type').value;
             const subSelect = document.getElementById('reward-sub-type');
@@ -3901,10 +3925,11 @@
         }
 
         //34 Hàm Lưu Cấu Hình Tháp
+
         async function saveTowerFullConfig() {
             // 1. Thu thập dữ liệu hình ảnh
-            const monsterPool = document.getElementById('monster-pool').value.trim();
-            const bgPool = document.getElementById('bg-pool').value.trim();
+            const monsterPool = document.getElementById('monster-pool')?.value.trim() || "";
+            const bgPool = document.getElementById('bg-pool')?.value.trim() || "";
 
             // 2. Thu thập dữ liệu phần thưởng từ 4 cột
             const difficulties = ['Medium', 'Hard', 'Extreme', 'Hell'];
@@ -3912,24 +3937,34 @@
 
             difficulties.forEach(diff => {
                 const pool = document.getElementById(`pool-${diff}`);
+                // Lấy tất cả các thẻ có id bắt đầu bằng reward-
                 const cards = pool.querySelectorAll('[id^="reward-"]');
                 
                 rewardConfig[diff] = Array.from(cards).map(card => {
-                    // Lấy dữ liệu từ nội dung text của card (hoặc bạn có thể dùng dataset nếu đã thêm)
+                    // 👇 LOGIC CŨ CỦA BẠN (Dùng innerText)
+                    
+                    // 1. Lấy Type (EXP/ITEM...) từ dòng chữ viết hoa
                     const type = card.querySelector('.uppercase').innerText.toLowerCase();
+                    
+                    // 2. Lấy Info (VD: "Kiếm Thần: 10")
                     const info = card.querySelector('.text-xs').innerText;
+                    
+                    // 3. Lấy Rate (VD: "Tỷ lệ: 50%")
                     const rateInfo = card.querySelector('.italic').innerText;
 
                     return {
                         type: type,
-                        name: info.split(':')[0].trim(),
+                        // Cắt chuỗi tại dấu hai chấm (:) để lấy tên vật phẩm phía trước
+                        name: info.split(':')[0].trim(), 
+                        // Lấy số lượng từ thẻ màu vàng
                         amount: parseInt(card.querySelector('.text-yellow-400').innerText),
+                        // Lấy số từ dòng tỷ lệ (xóa hết chữ, chỉ giữ số)
                         rate: parseInt(rateInfo.replace(/\D/g, ''))
                     };
                 });
             });
 
-            // 3. Đóng gói dữ liệu tổng thể
+            // 3. Đóng gói và gửi đi
             const finalData = {
                 monster_pool: monsterPool,
                 bg_pool: bgPool,
@@ -3944,12 +3979,13 @@
                 });
 
                 if (response.ok) {
-                    alert("✅ Đã lưu toàn bộ cấu hình Tháp Thí Luyện thành công!");
+                    console.log("✅ Đã lưu cấu hình thành công!");
+                    alert("Đã lưu cấu hình!"); // Bỏ comment nếu muốn hiện thông báo
                 } else {
                     alert("❌ Lỗi khi lưu cấu hình.");
                 }
             } catch (e) {
-                console.error("Lỗi:", e);
+                console.error("Lỗi save:", e);
                 alert("❌ Lỗi kết nối Server.");
             }
         }
@@ -4020,6 +4056,19 @@
                 </button>
             `;
             container.appendChild(card);
+        }
+
+        // Hàm xóa sạch phần thưởng trong một độ khó của tháp
+        async function clearPool(difficulty) {
+            if (confirm(`⚠️ CẢNH BÁO: Bạn có chắc muốn XÓA SẠCH phần thưởng của bậc ${difficulty}?`)) {
+                const pool = document.getElementById(`pool-${difficulty}`);
+                if (pool) {
+                    pool.innerHTML = ''; // Xóa giao diện
+                    
+                    // 👇 QUAN TRỌNG: Gọi hàm lưu ngay lập tức để đồng bộ với Server
+                    await saveTowerFullConfig(); 
+                }
+            }
         }
 
         //37 --- LOGIC TAB DỮ LIỆU ---
@@ -4601,83 +4650,92 @@
 
         // 3. Đổ dữ liệu vào Form
         // HÀM MỞ FORM SỬA (Đã Fix lỗi null dòng scaling)
-        // HÀM MỞ FORM SỬA (Đã Fix lỗi hiển thị Passive 0.15)
         function selectSkillForEdit(skill) {
             console.log(`📝 Đang sửa skill: ${skill.name}`);
 
-            // 1. Ẩn màn hình chờ, hiện Form
-            document.getElementById('skill-editor-empty').classList.add('hidden');
-            document.getElementById('skill-editor-form').classList.remove('hidden');
+            // 1. HELPER: Hàm điền dữ liệu an toàn (Tự tìm ID hoặc edit-ID)
+            const setSafeVal = (idSuffix, value) => {
+                // Thử tìm id thường (vd: skill-mult) hoặc id có edit- (vd: edit-skill-mult)
+                const el = document.getElementById(idSuffix) || document.getElementById('edit-' + idSuffix);
+                if (el) {
+                    el.value = (value === undefined || value === null) ? '' : value;
+                } else {
+                    // console.warn(`⚠️ Không tìm thấy ô nhập liệu cho: ${idSuffix}`);
+                }
+            };
 
-            // 2. Điền thông tin cơ bản
-            document.getElementById('display-skill-id').innerText = `ID: ${skill.skill_id}`;
-            document.getElementById('skill-editor-form').dataset.currentSkillId = skill.skill_id;
+            // 2. Ẩn màn hình chờ, hiện Form
+            const emptyScreen = document.getElementById('skill-editor-empty');
+            const formScreen = document.getElementById('skill-editor-form');
+            if (emptyScreen) emptyScreen.classList.add('hidden');
+            if (formScreen) {
+                formScreen.classList.remove('hidden');
+                // Lưu ID skill đang sửa vào dataset
+                formScreen.dataset.currentSkillId = skill.skill_id;
+            }
 
-            document.getElementById('edit-skill-name').value = skill.name || "";
-            document.getElementById('edit-skill-description').value = skill.description || "";
-            document.getElementById('edit-skill-type').value = skill.skill_type || "ACTIVE";
-            document.getElementById('edit-skill-min-level').value = skill.min_level || 1;
-            document.getElementById('edit-skill-prereq').value = skill.prerequisite_id || '';
-            document.getElementById('edit-skill-class').value = skill.class_type || "WARRIOR";
+            // 3. Điền thông tin cơ bản
+            const displayId = document.getElementById('display-skill-id');
+            if (displayId) displayId.innerText = `ID: ${skill.skill_id}`;
 
-            // 3. XỬ LÝ CONFIG (QUAN TRỌNG)
+            // Dùng hàm setSafeVal thay vì document.getElementById(...).value cứng nhắc
+            setSafeVal('skill-name', skill.name);
+            setSafeVal('skill-description', skill.description); // <--- Dòng này hay gây lỗi nhất nếu thiếu ô mô tả
+            setSafeVal('skill-type', skill.skill_type || "ACTIVE");
+            setSafeVal('skill-min-level', skill.min_level || 1);
+            setSafeVal('skill-prereq', skill.prerequisite_id || '');
+            setSafeVal('skill-class', skill.class_type || "WARRIOR");
+
+            // 4. XỬ LÝ CONFIG (JSON)
             let c = skill.config_data || skill.config || {};
-            if (typeof c === 'string') { try { c = JSON.parse(c); } catch(e) { c = {}; } }
+            if (typeof c === 'string') { 
+                try { c = JSON.parse(c); } catch(e) { c = {}; } 
+            }
 
-            // --- A. LOAD ĐIỀU KIỆN & NGƯỠNG (Logic cũ của bạn) ---
-            const condSelect = document.getElementById('edit-passive-condition') || document.getElementById('passive-condition');
-            if (condSelect) condSelect.value = c.condition || 'always';
+            // --- A. LOAD ĐIỀU KIỆN & NGƯỠNG ---
+            setSafeVal('passive-condition', c.condition || 'always');
+            
+            // Xử lý ngưỡng (0.5 -> 50)
+            const threshVal = (c.threshold || 0) * 100;
+            setSafeVal('passive-threshold', threshVal);
 
-            const threshInput = document.getElementById('edit-passive-threshold') || document.getElementById('passive-threshold');
-            if (threshInput) threshInput.value = (c.threshold || 0) * 100; // 0.5 -> 50%
-
-            // --- B. LOAD SỨC MẠNH GỐC (Logic cũ của bạn) ---
-            let displayMult = c.base_mult; 
+            // --- B. LOAD SỨC MẠNH GỐC ---
+            let displayMult = c.base_mult;
             if (skill.skill_type === 'PASSIVE') {
                 displayMult = (c.value !== undefined) ? c.value : 0;
             } else {
                 if (displayMult === undefined || displayMult === null) displayMult = 1.0;
             }
-            document.getElementById('edit-skill-mult').value = displayMult;
-            
-            // Các chỉ số phụ
-            document.getElementById('edit-skill-vfx').value = c.vfx_class || '';
-            document.getElementById('edit-skill-currency').value = c.currency || 'TRI_THUC';
-            const costInput = document.getElementById('edit-skill-cost');
-            if (costInput) costInput.value = c.base_cost !== undefined ? c.base_cost : 100;
+            setSafeVal('skill-mult', displayMult); // <--- Fix lỗi dòng 4666 tiềm năng
+
+            // --- C. CÁC CHỈ SỐ PHỤ ---
+            setSafeVal('skill-vfx', c.vfx_class || '');
+            setSafeVal('skill-currency', c.currency || 'TRI_THUC');
+            setSafeVal('skill-cost', c.base_cost !== undefined ? c.base_cost : 100);
 
             // ============================================================
-            // 👇👇👇 PHẦN BỔ SUNG MỚI: LOAD DỮ LIỆU HỒI MÁU 👇👇👇
+            // 👇 LOAD DỮ LIỆU HỒI MÁU (SAFE MODE) 👇
             // ============================================================
             
-            // Lưu ý: ID này phải khớp với HTML bạn mới thêm (passive-effect-type)
-            const effectTypeEl = document.getElementById('passive-effect-type');
-            const healPctEl = document.getElementById('passive-heal-percent');
-            const healFlatEl = document.getElementById('passive-heal-flat');
+            // Reset trước
+            setSafeVal('passive-effect-type', 'none');
+            setSafeVal('passive-heal-percent', '');
+            setSafeVal('passive-heal-flat', '');
 
-            if (effectTypeEl) {
-                // 1. Mặc định reset về rỗng trước
-                effectTypeEl.value = 'none';
-                if (healPctEl) healPctEl.value = '';
-                if (healFlatEl) healFlatEl.value = '';
+            if (skill.skill_type === 'PASSIVE') {
+                const hasHealData = (c.effect_type === 'heal') || 
+                                    (c.heal_percent && c.heal_percent > 0) || 
+                                    (c.heal_flat && c.heal_flat > 0);
 
-                // 2. Nếu là PASSIVE -> Check config -> Điền số liệu vào
-                if (skill.skill_type === 'PASSIVE') {
-                    const hasHealData = (c.effect_type === 'heal') || 
-                                        (c.heal_percent && c.heal_percent > 0) || 
-                                        (c.heal_flat && c.heal_flat > 0);
-
-                    if (hasHealData) {
-                        effectTypeEl.value = 'heal'; 
-                        // Điền thẳng giá trị, không cần quan tâm input đang ẩn hay hiện
-                        if (healPctEl) healPctEl.value = c.heal_percent || 0;
-                        if (healFlatEl) healFlatEl.value = c.heal_flat || 0;
-                    }
+                if (hasHealData) {
+                    setSafeVal('passive-effect-type', 'heal');
+                    setSafeVal('passive-heal-percent', c.heal_percent || 0);
+                    setSafeVal('passive-heal-flat', c.heal_flat || 0);
                 }
             }
             // ============================================================
 
-            console.log(`📝 Đang sửa: ${skill.name} | Loaded Config:`, c);
+            console.log(`📝 Đang sửa: ${skill.name} (Chế độ Safe Mode)`);
         }
 
         // --- HÀM MỞ FORM TẠO MỚI (Đã cập nhật: Bỏ Scaling) ---

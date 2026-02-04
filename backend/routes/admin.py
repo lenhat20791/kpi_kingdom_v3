@@ -6,6 +6,7 @@ import os
 import io
 import random 
 import traceback
+import time
 
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
 
@@ -1108,45 +1109,82 @@ def get_all_skills(db: Session = Depends(get_db)):
         result.append(item)
     return result
 
-
+import json
+import time
 
 @router.post("/save-skill")
 def save_skill(req: SkillSchema, db: Session = Depends(get_db)):
     try:
-        print(f"DEBUG: Đang lưu skill {req.name} | Config Data Len: {len(req.config_data) if req.config_data else 0}")
-        
-        # 1. Tìm skill trong DB
-        skill = db.exec(select(SkillTemplate).where(SkillTemplate.skill_id == req.skill_id)).first()
-        
-        # 2. XỬ LÝ CONFIG DATA (QUAN TRỌNG NHẤT)
-        # JS đã gửi lên 1 chuỗi JSON hoàn chỉnh chứa (condition, heal, vfx...), ta lấy dùng luôn!
-        final_config_json = req.config_data
-        
-        # 3. Lưu vào DB
+        print(f"DEBUG: Đang lưu skill {req.name}")
+
+        # 1. XỬ LÝ ID (Logic cũ)
+        current_id = req.skill_id
+        if not current_id or current_id == "NEW_SKILL":
+             current_id = f"skill_{int(time.time())}"
+
+        # 2. XỬ LÝ JSON CONFIG (QUAN TRỌNG NHẤT) 🛠️
+        # Frontend gửi lên 2 phần riêng biệt:
+        # - req.config_data: Chứa logic Passive/Active (đang là chuỗi JSON)
+        # - req.base_mult, req.base_cost...: Các chỉ số rời
+        # => TA PHẢI GỘP CHÚNG LẠI THÀNH 1 DICT
+
+        # A. Parse config_data hiện tại ra dict
+        try:
+            final_config_dict = json.loads(req.config_data) if req.config_data else {}
+        except:
+            final_config_dict = {}
+
+        # B. Nhét thêm các chỉ số sức mạnh vào dict này
+        # (Để hàm selectSkillForEdit ở JS có thể đọc được c.base_mult, c.base_cost...)
+        final_config_dict["base_mult"] = req.base_mult
+        final_config_dict["base_cost"] = req.base_cost
+        final_config_dict["vfx_class"] = req.vfx_class
+        final_config_dict["vfx_target"] = req.vfx_target
+        final_config_dict["currency"] = req.currency
+
+        # C. Ép ngược lại thành chuỗi JSON để lưu vào DB
+        final_config_json_string = json.dumps(final_config_dict, ensure_ascii=False)
+
+
+        # 3. LƯU VÀO DB
+        skill = db.exec(select(SkillTemplate).where(SkillTemplate.skill_id == current_id)).first()
+
         if not skill:
+            # --- TẠO MỚI ---
             skill = SkillTemplate(
-                skill_id=req.skill_id,
+                skill_id=current_id,
                 name=req.name,
                 description=req.description,
                 class_type=req.class_type,
                 skill_type=req.skill_type,
                 min_level=req.min_level,
                 prerequisite_id=req.prerequisite_id if req.prerequisite_id else None,
-                config_data=final_config_json # <--- Lưu chuỗi JSON chuẩn từ JS
+                
+                # 👇 QUAN TRỌNG: Lưu chuỗi JSON đã gộp tất cả chỉ số
+                config_data=final_config_json_string 
             )
             db.add(skill)
         else:
+            # --- CẬP NHẬT ---
             skill.name = req.name
             skill.description = req.description
             skill.class_type = req.class_type
             skill.skill_type = req.skill_type
             skill.min_level = req.min_level
             skill.prerequisite_id = req.prerequisite_id if req.prerequisite_id else None
-            skill.config_data = final_config_json # <--- Lưu chuỗi JSON chuẩn từ JS
+            
+            # 👇 Cập nhật JSON mới
+            skill.config_data = final_config_json_string
+            
             db.add(skill)
             
         db.commit()
-        return {"status": "success", "message": f"Đã lưu kỹ năng {req.name}"}
+        
+        return {
+            "status": "success", 
+            "message": f"Đã lưu kỹ năng {req.name}",
+            "real_id": current_id
+        }
 
     except Exception as e:
             print("❌ LỖI LƯU SKILL:", str(e))
