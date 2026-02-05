@@ -1,6 +1,9 @@
 import random
 import json
+import os
+import sys
 import unicodedata
+from game_logic import item_processor
 from fastapi import APIRouter, Depends, HTTPException, Body
 from sqlmodel import Session, select
 from sqlalchemy import func
@@ -12,6 +15,9 @@ from game_logic.level import add_exp_to_player
 # Lưu ý: Import Inventory as PlayerItem để code ngữ nghĩa hơn (giống pets.py)
 from database import get_db, Player, QuestionBank, TowerProgress, TowerSetting, Item, Inventory as PlayerItem
 
+current_dir = os.path.dirname(os.path.abspath(__file__)) # Đang ở backend/routes
+parent_dir = os.path.dirname(current_dir)              # Ra ngoài thư mục cha (backend)
+sys.path.append(parent_dir)
 router = APIRouter()
 
 # --- MODEL DỮ LIỆU (SCHEMA) ---
@@ -323,6 +329,20 @@ async def complete_floor(
                                 item_name = game_item.name if game_item else f"Item {item_id}"
                                 received_rewards.append(f"+{qty} {item_name}")
                         except: pass
+                    # --- 4. XỬ LÝ CHARM (MỚI) ---
+                    elif item_type == "charm":
+                        try:
+                            # Lấy mã độ hiếm từ tên (VD: RANDOM_CHARM_MAGIC -> MAGIC)
+                            # Lưu ý: Code này giả định Admin lưu mã charm vào trường "name"
+                            rarity = raw_name.replace("RANDOM_CHARM_", "")
+                            
+                            # Gọi hàm tạo Charm
+                            new_charm = item_processor.generate_charm(db, current_user.id, rarity)
+                            
+                            if new_charm:
+                                received_rewards.append(f"Trang bị: {new_charm.name}")
+                        except Exception as e:
+                            print(f"❌ Lỗi tạo Charm: {e}")
 
     except Exception as e:
         print(f"Lỗi chia quà: {e}")

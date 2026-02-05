@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlmodel import Session, select
-from database import get_db, MarketListing, Player, Inventory, Item
+from database import get_db, MarketListing, Player, Inventory, Item, PlayerItem
 from pydantic import BaseModel
 from typing import List, Optional
 from datetime import datetime
@@ -22,7 +22,12 @@ class BuyRequest(BaseModel):
 class CancelRequest(BaseModel):
     buyer_username: str
     listing_id: int
-
+# Model nhận dữ liệu cho Charm (Cập nhật thêm currency)
+class CharmActionRequest(BaseModel):
+    username: str
+    charm_id: int
+    price: int = 0
+    currency: str = "tri_thuc" # Mặc định là Tri Thức
 # =======================================================
 # 1. API LẤY DANH SÁCH (Sửa để khớp với Model của bạn)
 # =======================================================
@@ -171,3 +176,62 @@ def cancel_market(req: CancelRequest, db: Session = Depends(get_db)):
     
     db.commit()
     return {"status": "success", "message": "Đã hủy bán, vật phẩm đã về kho!"}
+
+# =======================================================
+# 5. [BỔ SUNG] API XỬ LÝ RIÊNG CHO CHARM (TRANG BỊ)
+# =======================================================
+
+
+
+# --- API 5.1: VỨT BỎ CHARM ---
+@router.post("/discard-charm")
+async def discard_charm_api(req: CharmActionRequest, db: Session = Depends(get_db)):
+    player = db.exec(select(Player).where(Player.username == req.username)).first()
+    if not player: raise HTTPException(404, "User not found")
+
+    # Tìm Charm trong bảng PlayerItem (Không phải Inventory)
+    charm = db.exec(select(PlayerItem).where(PlayerItem.id == req.charm_id, PlayerItem.player_id == player.id)).first()
+    
+    if not charm: raise HTTPException(404, "Trang bị không tồn tại!")
+    if charm.is_equipped: raise HTTPException(400, "Phải tháo trang bị ra trước khi vứt!")
+
+    # Xóa vĩnh viễn
+    db.delete(charm)
+    db.commit()
+    return {"status": "success", "message": f"Đã vứt bỏ {charm.name}!"}
+
+# --- API 5.2: TREO BÁN CHARM (ĐÃ CẬP NHẬT CHỌN TIỀN) ---
+# Đường dẫn: /api/market/sell-charm
+@router.post("/sell-charm")
+async def sell_charm_api(req: CharmActionRequest, db: Session = Depends(get_db)):
+    player = db.exec(select(Player).where(Player.username == req.username)).first()
+    if not player: raise HTTPException(404, "User not found")
+
+    charm = db.exec(select(PlayerItem).where(PlayerItem.id == req.charm_id, PlayerItem.player_id == player.id)).first()
+    
+    if not charm: raise HTTPException(404, "Trang bị không tồn tại!")
+    if charm.is_equipped: raise HTTPException(400, "Đang mặc không thể bán!")
+    if req.price <= 0: raise HTTPException(400, "Giá bán phải lớn hơn 0!")
+
+    # Validate loại tiền (Chỉ cho phép 2 loại này)
+    if req.currency not in ["tri_thuc", "kpi_point"]:
+        raise HTTPException(400, "Loại tiền tệ không hợp lệ!")
+
+    stats_desc = f"Cấp: +{charm.enhance_level} | Hệ: {charm.rarity}"
+    
+    # Tạo Listing mới
+    listing = MarketListing(
+        seller_id=player.id,
+        item_id=999999, # ID giả định cho Charm
+        amount=1,
+        price=req.price,
+        currency=req.currency, # 👈 LẤY LOẠI TIỀN TỪ REQUEST
+        created_at=str(datetime.now()),
+        description=f"{charm.name} ({stats_desc}) - {player.username}",
+    )
+    
+    db.add(listing)
+    db.delete(charm) 
+    db.commit()
+    
+    return {"status": "success", "message": f"Đã treo bán với giá {req.price} {req.currency}!"}

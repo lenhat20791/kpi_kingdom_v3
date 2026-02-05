@@ -77,7 +77,9 @@ class Player(SQLModel, table=True):
     # --- 6. HỆ THỐNG THÁP & TRANG BỊ ---
     tower_floor: int = Field(default=1)       # Tầng tháp cao nhất
     revive_at: Optional[datetime] = Field(default=None) # Thời điểm hồi sinh
-    
+    #điểm bonus từ item
+    item_atk_bonus: int = Field(default=0)
+    item_hp_bonus: int = Field(default=0)
     # Slot trang bị (Charm/Items)
     equip_slot_1: Optional[int] = Field(default=None)
     equip_slot_2: Optional[int] = Field(default=None)
@@ -324,6 +326,37 @@ class ScoreLog(SQLModel, table=True):
     created_at: datetime = Field(default_factory=datetime.utcnow) # Thời gian ghi nhận
     sender_id: int 
     target_id: int
+
+# --- BỔ SUNG CHO HỆ THỐNG CHARM & CƯỜNG HÓA ---
+
+# 17. Bảng lưu trữ Charm độc bản của người chơi
+class PlayerItem(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    player_id: int = Field(foreign_key="player.id", index=True) # Link với bảng Player
+    
+    # Thông tin định danh
+    name: str       # Tên vật phẩm (VD: Charm Ma Thuật)
+    image_url: str  # Đường dẫn ảnh (VD: /assets/items/charm_01.png)
+    rarity: str     # MAGIC / EPIC / LEGEND
+    
+    # Chỉ số sức mạnh (Lưu JSON: {"atk": 10, "hp": 50})
+    stats_data: str = Field(default="{}")
+    
+    # Cường hóa
+    enhance_level: int = Field(default=0) # Cấp cộng (+0 đến +10)
+    
+    # Trạng thái kho đồ
+    is_equipped: bool = Field(default=False) # True = Đang mặc
+    slot_index: int = Field(default=0)       # 0 = Trong túi, 1-4 = Slot trên người
+    
+    created_at: datetime = Field(default_factory=datetime.now)
+
+# 18. Bảng cấu hình hệ thống (Admin Setup)
+# Dùng để lưu các config như: Tỷ lệ rơi, Range chỉ số, Tỷ lệ cường hóa...
+class SystemConfig(SQLModel, table=True):
+    key: str = Field(primary_key=True) # VD: "charm_setup", "forge_setup"
+    value: str = Field(sa_column=Column(TEXT)) # Chuỗi JSON chứa toàn bộ config
+
 if __name__ == "__main__":
     create_db_and_tables()
     print(f"✅ Đã khởi tạo thành công Database tại: {DB_PATH}")

@@ -45,23 +45,26 @@ def add_exp_to_player(player, amount: int):
 
         # --- C. TĂNG CHỈ SỐ (THEO YÊU CẦU: 5% và 2%) ---
         
+        # 1. Tách Item ra để lấy Base Stats
+        base_atk = player.atk - (player.item_atk_bonus or 0)
+        base_hp = player.hp_max - (player.item_hp_bonus or 0)
+
+        # 2. Nhân % vào Base Stats (Dùng hàm safe_increase của bạn )
         if user_class == "MAGE":
-            # MAGE: +5% ATK, +2% HP
-            player.atk = safe_increase(player.atk, 1.05)
-            player.hp_max = safe_increase(player.hp_max, 1.02)
-            
+            base_atk = safe_increase(base_atk, 1.05)
+            base_hp = safe_increase(base_hp, 1.02)
         elif user_class == "WARRIOR":
-            # WARRIOR: +5% HP, +2% ATK
-            player.hp_max = safe_increase(player.hp_max, 1.05)
-            player.atk = safe_increase(player.atk, 1.02)
-            
+            base_hp = safe_increase(base_hp, 1.05)
+            base_atk = safe_increase(base_atk, 1.02)
         else:
-            # NOVICE hoặc Class khác: Tăng đều nhẹ (2%)
-            player.hp_max = safe_increase(player.hp_max, 1.02)
-            player.atk = safe_increase(player.atk, 1.02)
+            base_hp = safe_increase(base_hp, 1.02)
+            base_atk = safe_increase(base_atk, 1.02)
 
-        # --- D. HỒI MÁU ---
-        # Lên cấp là hồi đầy máu
+        # 3. Cộng lại Item Bonus vào để ra chỉ số tổng mới
+        player.atk = base_atk + (player.item_atk_bonus or 0)
+        player.hp_max = base_hp + (player.item_hp_bonus or 0)
+        
+        # Hồi máu
         player.hp = player.hp_max
-
+        
     return is_leveled_up

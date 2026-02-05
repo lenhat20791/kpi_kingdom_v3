@@ -22,7 +22,7 @@ from database import (
     Boss, BossLog, TowerSetting, TowerProgress,
     PlayerPet, SystemStatus, generate_username,
     QuestionBank, ArenaMatch, ArenaParticipant,
-    SkillTemplate, Title, 
+    SkillTemplate, Title, SystemConfig,
     ScoreLog, ShopHistory, ActiveEffect, PlayerSkill, MarketListing,
 )
 
@@ -78,6 +78,31 @@ class TowerCompleteRequest(BaseModel):
     player_id: int
     floor: int
     is_win: bool # True = Thắng, False = Thua
+# class cho CHARMS
+# Schema cho 1 cấp độ hiếm (VD: Magic)
+class RarityConfig(BaseModel):
+    lines: int
+    atk_range: List[int] # [min, max]
+    hp_range: List[int]  # [min, max]
+
+# Schema tổng cho bảng Setup Charm
+class CharmSetupPayload(BaseModel):
+    MAGIC: RarityConfig
+    EPIC: RarityConfig
+    LEGEND: RarityConfig
+
+# Schema cho bảng Setup Lò Rèn
+class ForgeGroupConfig(BaseModel):
+    min: int
+    max: int
+    rate: int
+    stone: int
+    bonus_pct: int
+
+class ForgeSetupPayload(BaseModel):
+    group_1: ForgeGroupConfig
+    group_2: ForgeGroupConfig
+    group_3: ForgeGroupConfig
 
 @router.get("/players/overview")
 def get_all_players_overview(db: Session = Depends(get_db)): # Dùng Dependency Injection
@@ -1109,8 +1134,6 @@ def get_all_skills(db: Session = Depends(get_db)):
         result.append(item)
     return result
 
-import json
-import time
 
 @router.post("/save-skill")
 def save_skill(req: SkillSchema, db: Session = Depends(get_db)):
@@ -1276,3 +1299,56 @@ def get_admin_arena_data(db: Session = Depends(get_db)):
         "pending": pending_matches,
         "history": history_matches
     }
+
+@router.get("/get-system-config") 
+def get_system_config(db: Session = Depends(get_db)):
+    # Lấy Config Charm
+    charm_record = db.exec(select(SystemConfig).where(SystemConfig.key == "charm_setup")).first()
+    charm_data = json.loads(charm_record.value) if charm_record else None
+
+    # Lấy Config Forge
+    forge_record = db.exec(select(SystemConfig).where(SystemConfig.key == "forge_setup")).first()
+    forge_data = json.loads(forge_record.value) if forge_record else None
+
+    return {
+        "charm_setup": charm_data,
+        "forge_setup": forge_data
+    }
+
+# 3. API Lưu cấu hình hệ thống tạo charm
+
+@router.post("/save-system-config")
+def save_system_config(
+    charm_data: Optional[CharmSetupPayload] = None, 
+    forge_data: Optional[ForgeSetupPayload] = None, 
+    db: Session = Depends(get_db)
+):
+    try:
+        # Lưu cấu hình Charm
+        if charm_data:
+            charm_json = charm_data.json()
+            record = db.exec(select(SystemConfig).where(SystemConfig.key == "charm_setup")).first()
+            if not record:
+                record = SystemConfig(key="charm_setup", value=charm_json)
+                db.add(record)
+            else:
+                record.value = charm_json
+                db.add(record)
+
+        # Lưu cấu hình Forge
+        if forge_data:
+            forge_json = forge_data.json()
+            record = db.exec(select(SystemConfig).where(SystemConfig.key == "forge_setup")).first()
+            if not record:
+                record = SystemConfig(key="forge_setup", value=forge_json)
+                db.add(record)
+            else:
+                record.value = forge_json
+                db.add(record)
+
+        db.commit()
+        return {"status": "success", "message": "Đã cập nhật cấu hình hệ thống!"}
+
+    except Exception as e:
+        print("Lỗi lưu config:", e)
+        raise HTTPException(status_code=500, detail=str(e))

@@ -1500,7 +1500,11 @@
         // 3. Logic Chợ & Kho đồ
         let currentSellItemId = null;
         let maxSellAmount = 0;
-
+        // 3. Logic lò rèn
+        let currentForgeItem = null; // Biến lưu món đồ đang chọn để rèn
+        let globalForgeConfig = null;   // Lưu cấu hình tỷ lệ/giá từ Admin (Lấy từ Database)
+        let currentBagData = [];
+        let currentSellItem = null;
         // 4. Logic Boss & Combat (ĐÃ GỘP VÀO ĐÂY)
         let currentBossId = null;
         let bossData = null;
@@ -1984,41 +1988,215 @@
         ============================================================ */
 
         // 1. HÀM CHUYỂN TAB (Giữ nguyên logic tốt của bạn, chỉ tinh chỉnh ID)
-        function switchInventoryTab(tabName) {
-            // Ẩn tất cả nội dung tab
+       function switchInventoryTab(tabName) {
+            // 1. [QUAN TRỌNG] Đảm bảo khung chứa (Parent Container) được hiển thị
+            // Thay 'inventory-section' bằng ID thật của khung chứa túi đồ trong HTML của bạn
+            const mainContainer = document.getElementById('inventory-section'); 
+            if (mainContainer) mainContainer.classList.remove('hidden');
+
+            // 2. Ẩn tất cả nội dung tab con
             document.querySelectorAll('.inv-tab-content').forEach(el => el.classList.add('hidden'));
 
-            // Hiện tab được chọn
+            // 3. Hiện tab được chọn
             const targetTab = document.getElementById(`view-${tabName}`);
             if (targetTab) targetTab.classList.remove('hidden');
 
-            // Cập nhật trạng thái nút bấm
+            // 4. Cập nhật trạng thái nút bấm (Màu sắc)
             ['equip', 'bag', 'market'].forEach(t => {
                 const btn = document.getElementById(`btn-tab-${t}`);
                 if (btn) {
                     if (t === tabName) {
-                        // Active: Màu vàng/cam
+                        // Active: Vàng/Cam
                         btn.className = "px-6 py-2 rounded-lg font-bold text-amber-900 bg-amber-100 shadow-sm transition-all border border-amber-200";
                     } else {
-                        // Inactive: Màu xám
+                        // Inactive: Xám
                         btn.className = "px-6 py-2 rounded-lg font-bold text-gray-500 hover:bg-gray-50 transition-all border border-transparent";
                     }
                 }
             });
 
-            // Nếu bấm tab Chợ -> Tải dữ liệu chợ
+            // 5. Logic tải dữ liệu riêng cho từng Tab
             if (tabName === 'market' && typeof loadMarketData === 'function') {
                 loadMarketData();
             }
+            
+            // [GỢI Ý THÊM] Nếu bấm tab Trang bị, nên render lại slot để chắc chắn nó mới nhất
+            if (tabName === 'equip' && typeof window.equip_data_cache !== 'undefined') {
+                // Nếu bạn có lưu cache biến equip_data_cache ở đâu đó thì gọi render lại
+                // renderEquip(window.equip_data_cache);
+            }
         }
 
-        // 2. HÀM TẢI DỮ LIỆU TỔNG HỢP (Gộp cả Stats và Items vào 1 hàm duy nhất)
+        
+
+        //lò rèn CƯỜNG HÓA
+
+        // 1. Mở Modal và hiển thị thông tin cường hóa
+        function openForgeModal(itemId) {
+            // Tìm item trong dữ liệu đã tải (bạn cần đảm bảo biến global listItems có dữ liệu)
+            // Hoặc fetch lại từ server nếu cần thiết. 
+            // Ở đây tôi giả định bạn có thể truyền thẳng object item vào, hoặc tìm theo ID từ danh sách đang hiển thị.
+            // Cách đơn giản nhất: Lưu danh sách item vào biến toàn cục khi loadInventoryDataFull chạy xong.
+            
+            // Tạm thời để test: Gọi API lấy chi tiết item (hoặc tìm trong DOM)
+            // Để đơn giản, ta sẽ tìm trong biến toàn cục 'window.currentBagData' (Bạn cần gán nó ở hàm renderBag)
+            const item = window.currentBagData?.find(i => i.id === itemId);
+            
+            if (!item) {
+                alert("Không tìm thấy dữ liệu vật phẩm! Hãy tải lại túi đồ.");
+                return;
+            }
+
+            currentForgeItem = item;
+            document.getElementById('forge-modal').classList.remove('hidden');
+            document.getElementById('forge-message').innerText = "";
+            document.getElementById('forge-message').className = "text-center mt-4 text-sm min-h-[20px] font-bold";
+
+            // Vẽ Preview Item
+            // Vẽ Preview Item (Đã thêm class thu nhỏ w-40 và căn giữa mx-auto)
+            const previewEl = document.getElementById('forge-item-preview');
+            previewEl.className = "w-40 mx-auto mb-4 pointer-events-none"; // Thu nhỏ và chặn click nhầm
+            previewEl.innerHTML = renderCharmCard(item);
+            
+            // Điền thông số cấp độ hiện tại
+            const lv = item.enhance_level || 0;
+            document.getElementById('forge-current-lv').innerText = "+" + lv;
+
+            // --- 👇 BẮT ĐẦU ĐOẠN CODE MỚI 👇 ---
+            let rate = 100; // Giá trị mặc định phòng hờ
+            let cost = 1;
+
+            // KIỂM TRA: Nếu đã tải được cấu hình từ Admin (biến globalForgeConfig có dữ liệu)
+            if (typeof globalForgeConfig !== 'undefined' && globalForgeConfig) {
+                // 1. Xác định item đang thuộc nhóm cấp độ nào
+                let groupKey = "group_1";       // Mặc định là nhóm 1 (+0 đến +2)
+                if (lv >= 3) groupKey = "group_2"; // Nhóm 2 (+3 đến +6)
+                if (lv >= 7) groupKey = "group_3"; // Nhóm 3 (+7 trở lên)
+                
+                // 2. Lấy tỷ lệ và giá đá từ cấu hình Admin
+                if (globalForgeConfig[groupKey]) {
+                    rate = globalForgeConfig[groupKey].rate;
+                    cost = globalForgeConfig[groupKey].stone;
+                }
+            } 
+            // TRƯỜNG HỢP FALLBACK: Nếu chưa tải được config thì dùng tạm số cũ
+            else {
+                if (lv >= 3) { rate = 60; cost = 2; }
+                if (lv >= 7) { rate = 25; cost = 5; }
+            }
+            
+            // 3. Xử lý trường hợp Max cấp (+10)
+            if (lv >= 10) { 
+                rate = 0; 
+                cost = 0; 
+            }
+            // --- 👆 KẾT THÚC ĐOẠN CODE MỚI 👆 ---
+
+            // Hiển thị ra màn hình
+            document.getElementById('forge-rate').innerText = rate + "%";
+            document.getElementById('forge-cost').innerText = cost + " viên";
+            
+            // Nếu +10 rồi thì ẩn nút
+            const btn = document.getElementById('btn-forge-action');
+            if (lv >= 10) {
+                btn.disabled = true;
+                btn.innerText = "ĐÃ MAX CẤP";
+                btn.classList.add('opacity-50', 'cursor-not-allowed');
+            } else {
+                btn.disabled = false;
+                btn.innerText = "🔨 CƯỜNG HÓA NGAY";
+                btn.classList.remove('opacity-50', 'cursor-not-allowed');
+            }
+        }
+
+        function closeForgeModal() {
+            document.getElementById('forge-modal').classList.add('hidden');
+        }
+
+        // Hàm gọi API lấy cấu hình từ admin
+        async function loadSystemConfig() {
+            try {
+                const res = await fetch('/api/inventory/system-config'); // Gọi API vừa viết
+                const data = await res.json();
+                
+                if (data.status === 'success' && data.config) {
+                    globalForgeConfig = data.config;
+                    console.log("✅ Đã tải cấu hình Lò Rèn:", globalForgeConfig);
+                }
+            } catch (e) {
+                console.warn("⚠️ Lỗi tải config, sẽ dùng tỷ lệ mặc định.");
+            }
+        }
+        // 2. Gửi yêu cầu Cường hóa (ĐÃ SỬA CHUẨN)
+        async function doForge() {
+            if (!currentForgeItem) return;
+
+            const btn = document.getElementById('btn-forge-action');
+            const msg = document.getElementById('forge-message');
+            
+            // 1. Hiệu ứng chờ (UI)
+            btn.disabled = true;
+            btn.innerText = "⏳ Đang rèn...";
+            msg.innerText = "Đang tích tụ năng lượng...";
+            msg.className = "text-center mt-4 text-sm font-bold text-yellow-400 animate-pulse";
+
+            try {
+                const username = localStorage.getItem('username') || localStorage.getItem('kpi_username');
+
+                // 2. GỌI API BACKEND (Sửa đường dẫn & Body cho khớp với Python)
+                const res = await fetch('/api/inventory/forge', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        username: username,
+                        charm_id: currentForgeItem.id 
+                    })
+                });
+
+                const data = await res.json();
+
+                // 3. Xử lý kết quả trả về
+                if (res.ok && data.status === 'success') {
+                    // === THÀNH CÔNG ===
+                    msg.innerText = "🎉 " + data.message;
+                    msg.className = "text-center mt-4 text-sm font-bold text-green-400 animate-bounce";
+                    
+                    // Đợi 1.5 giây cho người chơi đọc thông báo rồi mới Reload
+                    setTimeout(() => {
+                        // Ẩn modal đi
+                        document.getElementById('forge-modal').classList.add('hidden');
+                        
+                        // Reload trang và tự mở lại túi đồ (Logic Hybrid chúng ta đã bàn)
+                        reloadWithTab('bag'); 
+                    }, 1500);
+
+                } else {
+                    // === THẤT BẠI / LỖI ===
+                    const errorMsg = data.detail || data.message || "Lỗi không xác định";
+                    msg.innerText = "💥 " + errorMsg;
+                    msg.className = "text-center mt-4 text-sm font-bold text-red-500";
+                    
+                    // Mở lại nút để thử lại
+                    btn.disabled = false;
+                    btn.innerText = "🔨 CƯỜNG HÓA NGAY";
+                }
+
+            } catch (e) {
+                console.error(e);
+                msg.innerText = "🔌 Lỗi kết nối Server!";
+                msg.className = "text-center mt-4 text-sm font-bold text-red-500";
+                btn.disabled = false;
+                btn.innerText = "🔨 CƯỜNG HÓA NGAY";
+            }
+        }
+
+        // 2. HÀM TẢI DỮ LIỆU TỔNG HỢP (ĐÃ CẬP NHẬT GOM DATA)
         async function loadInventoryDataFull() {
             console.log("🚀 [BƯỚC 1] Bắt đầu hàm loadInventoryDataFull...");
-            // A. Cập nhật Stats (Máu/Sức mạnh) từ Dashboard Data (Nếu có)
+
+            // A. Cập nhật Stats (Máu/Sức mạnh) từ Dashboard Data
             if (window.dashboardData) {
                 const data = window.dashboardData;
-                // Logic lấy máu an toàn từ file cũ của bạn
                 let currentHP = (data.info && data.info.hp !== undefined) ? data.info.hp : (data.stats && data.stats.hp) || 0;
                 let maxHP = (data.info && data.info.hp_max) ? data.info.hp_max : (data.stats && data.stats.max_hp) || 100;
                 let atk = (data.stats && data.stats.atk !== undefined) ? data.stats.atk : (data.info && data.info.atk) || 0;
@@ -2055,17 +2233,51 @@
                 console.log("📦 [BƯỚC 6] Dữ liệu JSON từ Server:", data);
 
                 if (res.ok) {
+                    // Lấy danh sách đồ thường
                     const listItems = data.bag || data.inventory || [];
+                    // Lấy danh sách trang bị/charm (quan trọng cho chức năng Bán/Rèn)
+                    const listCharms = data.player_items || data.charms || data.unequipped_items || [];
+                    // Lấy đồ đang mặc
                     const listEquip = data.equipment || data.equipped || {};
 
-                    console.log(`🎨 [BƯỚC 7] Tìm thấy ${listItems.length} món đồ. Đang gọi renderBag...`);
+                    // ============================================================
+                    // 👇 [QUAN TRỌNG] GOM TẤT CẢ VÀO BIẾN TOÀN CỤC TẠI ĐÂY 👇
+                    // ============================================================
+                    let allBagItems = [];
                     
-                    // Kiểm tra xem hàm renderBag có tồn tại không
+                    // 1. Gom đồ thường
+                    if (Array.isArray(listItems)) {
+                        allBagItems = allBagItems.concat(listItems);
+                    }
+                    
+                    // 2. Gom Charm/Trang bị (Đây là cái bạn đang thiếu)
+                    if (Array.isArray(listCharms)) {
+                        allBagItems = allBagItems.concat(listCharms);
+                    }
+
+                    // 3. Lưu vào biến toàn cục window.currentBagData
+                    window.currentBagData = allBagItems;
+                    console.log(`🎒 [GLOBAL] Đã lưu tổng cộng ${allBagItems.length} món vào currentBagData.`);
+                    // ============================================================
+
+
+                    console.log(`🎨 [BƯỚC 7] Đang gọi renderBag...`);
+                    
+                    // Render giao diện
                     if (typeof renderBag === 'function') {
-                        renderBag(listItems);
+                        // Tùy logic game, bạn có thể muốn vẽ cả Charm vào túi luôn:
+                        // renderBag(allBagItems); <--- Dùng dòng này nếu muốn vẽ tất cả
+                        // Hoặc giữ nguyên như cũ nếu bạn có hàm vẽ charm riêng:
+                        renderBag(listItems); 
+                        
+                        // Nếu có hàm vẽ Charm riêng thì gọi thêm:
+                        if (typeof renderCharmList === 'function' && listCharms.length > 0) {
+                            renderCharmList(listCharms);
+                        }
+                        
                         console.log("✅ [BƯỚC 8] Đã chạy xong renderBag.");
                     } else {
-                        console.error("❌ [LỖI CHẾT NGƯỜI] Không tìm thấy hàm renderBag() trong file JS!");
+                        console.error("❌ [LỖI] Không tìm thấy hàm renderBag()!");
                     }
 
                     if (typeof renderEquip === 'function') {
@@ -2081,8 +2293,10 @@
 
         // HÀM VẼ TÚI ĐỒ (PHIÊN BẢN BẤT TỬ - FIX CRASH 100%)
         function renderBag(items) {
+            window.currentBagData = items;
+            console.log("📦 Đã lưu currentBagData:", window.currentBagData);
             console.log("🎨 [RenderBag] Đang nhận dữ liệu:", items);
-
+            
             // 1. Tìm khung chứa (Hỗ trợ cả 2 tên ID)
             let container = document.getElementById('bag-grid') || document.getElementById('inventory-grid');
             
@@ -2108,7 +2322,10 @@
             // 4. Vẽ từng món (Có bọc bảo vệ lỗi từng item)
             container.innerHTML = items.map(item => {
                 if (!item) return ''; // Bỏ qua item bị null
-
+                // Nếu item là Charm (có thuộc tính rarity), gọi hàm vẽ riêng và trả về luôn HTML
+                if (item.rarity) {
+                    return renderCharmCard(item);
+                }
                 try {
                     // Lấy dữ liệu (Fallback an toàn)
                     const qty = item.amount || item.quantity || 1;
@@ -2163,40 +2380,352 @@
                 }
             }).join('');
         }
-        
+        // --- HÀM VẼ CHARM (MỚI) ---
+        function renderCharmCard(charm) {
+            // 1. Logic màu nền (Giữ nguyên)
+            let bgClass = "bg-gray-800 border-gray-600 text-gray-300"; 
+            let nameColor = "text-gray-300";
+            if (charm.rarity === "MAGIC") { bgClass = "bg-gradient-to-b from-blue-900/80 to-gray-900 border-blue-500 shadow-blue-500/20"; nameColor = "text-blue-300"; }
+            if (charm.rarity === "EPIC") { bgClass = "bg-gradient-to-b from-purple-900/80 to-gray-900 border-purple-500 shadow-purple-500/20"; nameColor = "text-purple-300"; }
+            if (charm.rarity === "LEGEND") { bgClass = "bg-gradient-to-b from-yellow-900/80 to-gray-900 border-yellow-500 shadow-yellow-500/20"; nameColor = "text-yellow-300"; }
+
+            // 2. Logic Glow (Giữ nguyên)
+            let glow = "";
+            const lv = charm.enhance_level || 0;
+            if (lv >= 5) glow = "shadow-lg"; 
+            if (lv >= 10) glow = "shadow-[0_0_20px_rgba(239,68,68,0.8)] ring-1 ring-red-500 animate-pulse";
+
+            // 3. Stats (Giữ nguyên)
+            let statsHtml = "";
+            try {
+                const s = typeof charm.stats_data === 'string' ? JSON.parse(charm.stats_data) : (charm.stats_data || {});
+                if (s.atk) statsHtml += `<div class="flex justify-between items-center"><span class="text-gray-400">⚔️ ATK</span> <span class="font-bold text-white">+${s.atk}</span></div>`;
+                if (s.hp)  statsHtml += `<div class="flex justify-between items-center"><span class="text-gray-400">❤️ HP</span> <span class="font-bold text-white">+${s.hp}</span></div>`;
+            } catch (e) {}
+
+            // 4. Xử lý ảnh an toàn
+            const safeName = charm.name.replace(/'/g, "\\'");
+            const safeImgUrl = charm.image_url || '/assets/items/default.png';
+            const safeImg = safeImgUrl.replace(/'/g, "\\'");
+
+            return `
+            <div class="relative group flex flex-col p-2 rounded-xl border ${bgClass} ${glow} hover:scale-[1.03] transition-all duration-300 cursor-pointer h-full min-h-[180px]">
+                
+                <div class="absolute top-2 right-2 z-10">
+                    <div class="w-10 h-10 rounded-full bg-gray-100 border-2 border-gray-400 flex items-center justify-center shadow-xl transform group-hover:scale-110 transition-transform">
+                        <span class="text-gray-900 font-black text-lg">+${lv}</span>
+                    </div>
+                </div>
+
+                <div class="flex-1 w-full aspect-square mb-2 flex items-center justify-center bg-black/20 rounded-lg overflow-hidden relative">
+                    <div class="absolute inset-0 bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                    <img src="${safeImgUrl}" class="w-full h-full object-contain p-1 filter drop-shadow-xl transform group-hover:scale-110 transition-transform duration-500" onerror="this.src='/assets/items/default.png'">
+                </div>
+
+                <div class="text-xs font-bold text-center truncate px-1 mb-2 ${nameColor} tracking-wide">${charm.name}</div>
+
+                <div class="mt-auto bg-black/40 rounded p-1.5 space-y-1 text-[10px] border border-white/5">
+                    ${statsHtml}
+                </div>
+
+                <div class="absolute inset-0 bg-black/80 hidden group-hover:flex flex-col justify-center items-center p-4 rounded-xl z-20 backdrop-blur-[1px]">
+                    <div class="grid grid-cols-2 gap-2 w-full">
+                        <button onclick="showEquipOptions(${charm.id})" class="py-2 bg-green-600 hover:bg-green-500 text-white text-[10px] font-bold rounded shadow flex flex-col items-center justify-center">
+                            <span>🛡️</span> <span>Mặc</span>
+                        </button>
+                        
+                        <button onclick="openForgeModal(${charm.id})" class="py-2 bg-orange-600 hover:bg-orange-500 text-white text-[10px] font-bold rounded shadow flex flex-col items-center justify-center">
+                            <span>🔨</span> <span>Rèn</span>
+                        </button>
+
+                        <button onclick="openSellCharm('${charm.id}', '${safeName}', '${safeImg}')" class="py-2 bg-yellow-600 hover:bg-yellow-500 text-white text-[10px] font-bold rounded shadow flex flex-col items-center justify-center">
+                            <span>💰</span> <span>Bán</span>
+                        </button>
+
+                        <button onclick="discardCharm(${charm.id})" class="py-2 bg-red-600 hover:bg-red-500 text-white text-[10px] font-bold rounded shadow flex flex-col items-center justify-center">
+                            <span>🗑️</span> <span>Vứt</span>
+                        </button>
+                    </div>
+                </div>
+            </div>`;
+        }
+        // A. Trang bị (Auto vào slot trống đầu tiên)
+        async function showEquipOptions(itemId) {
+            // 1. Xác định Username
+            const username = localStorage.getItem('username') || localStorage.getItem('kpi_username');
+            if (!username) return alert("Vui lòng đăng nhập lại!");
+
+            // 2. Hỏi slot (Nếu bạn muốn auto thì bỏ đoạn này, gán slot=1)
+            const slot = prompt("Bạn muốn lắp vào Slot nào? (Nhập 1, 2, 3 hoặc 4)", "1");
+            if (!slot || isNaN(slot) || slot < 1 || slot > 4) return;
+
+            try {
+                const res = await fetch('/api/inventory/equip', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        username: username,
+                        item_id: itemId,
+                        slot_index: parseInt(slot)
+                    })
+                });
+
+                const data = await res.json();
+                
+                if (res.ok) {
+                    alert("✅ Trang bị thành công!");            
+                    reloadWithTab('bag');
+                } else {
+                    alert("❌ Lỗi: " + (data.detail || data.message));
+                }
+            } catch (e) {
+                console.error(e);
+                alert("Lỗi kết nối Server!");
+            }
+        }
+        // B. Tháo trang bị
+        async function unequipItem(slotIndex) {
+            const username = localStorage.getItem('username') || localStorage.getItem('kpi_username');
+            
+            try {
+                const res = await fetch('/api/inventory/unequip', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        username: username,
+                        slot_index: slotIndex
+                    })
+                });
+
+                if (res.ok) {
+                    // Reload lại dữ liệu
+                    reloadWithTab('bag');
+                } else {
+                    const err = await res.json();
+                    alert("Không thể tháo: " + (err.detail || err.message));
+                }
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        // --- 1. HÀM VỨT CHARM ---
+        async function discardCharm(itemId) {
+            if (!confirm("⚠️ CẢNH BÁO: Bạn có chắc muốn VỨT BỎ trang bị này không?\nSẽ mất vĩnh viễn!")) return;
+
+            try {
+                const username = localStorage.getItem('username') || localStorage.getItem('kpi_username');
+                
+                // Gọi API mới vừa thêm ở Bước 1
+                const res = await fetch('/api/market/discard-charm', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username: username, charm_id: itemId })
+                });
+
+                const data = await res.json();
+                
+                if (res.ok) {
+                    alert("🗑️ " + data.message);
+                    reloadWithTab('bag'); // Tải lại túi
+                } else {
+                    alert("❌ Lỗi: " + (data.detail || data.message));
+                }
+            } catch (e) {
+                console.error(e);
+                alert("Lỗi kết nối Server!");
+            }
+        }
+
+        // 1. HÀM MỞ MODAL BÁN (Thay thế hàm cũ)
+        function openSellCharm(itemId) {
+            // Tìm item trong túi (Dùng biến toàn cục currentBagData đã có)
+            const item = window.currentBagData?.find(i => i.id === itemId);
+            
+            if (!item) {
+                alert("Lỗi: Không tìm thấy dữ liệu vật phẩm!");
+                return;
+            }
+
+            currentSellItem = item; // Lưu lại để tí nữa bán
+
+            // Điền thông tin vào Modal HTML
+            const safeImg = item.image_url || '/assets/items/default.png';
+            document.getElementById('sell-item-img').src = safeImg;
+            document.getElementById('sell-item-name').innerText = item.name;
+            document.getElementById('sell-item-name').className = "font-bold text-lg " + getRarityColorClass(item.rarity); // Hàm màu chữ (nếu có)
+            
+            // Hiển thị cấp độ
+            const lv = item.enhance_level || 0;
+            document.getElementById('sell-item-level').innerText = "+" + lv;
+            
+            // Reset form
+            document.getElementById('sell-price-input').value = "";
+            document.getElementById('sell-currency-select').value = "tri_thuc";
+            
+            // Hiển thị Modal
+            document.getElementById('sell-modal').classList.remove('hidden');
+            document.getElementById('sell-modal').classList.add('flex');
+            
+            // Focus vào ô giá tiền cho tiện
+            setTimeout(() => document.getElementById('sell-price-input').focus(), 100);
+        }
+
+        // 2. HÀM ĐÓNG MODAL
+        function closeSellModal() {
+            document.getElementById('sell-modal').classList.add('hidden');
+            document.getElementById('sell-modal').classList.remove('flex');
+            currentSellItem = null;
+        }
+
+        // 3. HÀM XÁC NHẬN BÁN (Gửi API)
+        async function confirmSellCharm() {
+            if (!currentSellItem) return;
+
+            // Lấy dữ liệu từ Form
+            const priceInput = document.getElementById('sell-price-input').value;
+            const currency = document.getElementById('sell-currency-select').value;
+            
+            const price = parseInt(priceInput);
+
+            // Validate
+            if (isNaN(price) || price <= 0) {
+                alert("⚠️ Vui lòng nhập giá bán hợp lệ (lớn hơn 0)!");
+                document.getElementById('sell-price-input').focus();
+                return;
+            }
+
+            // Hiệu ứng nút bấm đang chạy
+            const btn = document.getElementById('btn-confirm-sell');
+            const oldText = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = `<span>⏳</span> Đang đăng...`;
+
+            try {
+                const username = localStorage.getItem('username') || localStorage.getItem('kpi_username');
+                
+                // GỌI API BÁN (Sử dụng đúng API chúng ta đã sửa ở bước trước)
+                const res = await fetch('/api/market/sell-charm', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        username: username, 
+                        charm_id: currentSellItem.id,
+                        price: price,
+                        currency: currency 
+                    })
+                });
+
+                const data = await res.json();
+
+                if (res.ok) {
+                    // Thành công
+                    closeSellModal(); // Đóng modal
+                    alert("✅ " + (data.message || "Đã treo bán thành công!"));
+                    reloadWithTab('bag'); // Load lại túi để item biến mất
+                } else {
+                    alert("❌ Lỗi: " + (data.detail || data.message));
+                }
+            } catch (e) {
+                console.error(e);
+                alert("Lỗi kết nối Server!");
+            } finally {
+                // Trả lại trạng thái nút
+                btn.disabled = false;
+                btn.innerHTML = oldText;
+            }
+        }
+
+        // Hàm phụ trợ màu sắc (Nếu bạn chưa có)
+        function getRarityColorClass(rarity) {
+            if (rarity === 'LEGEND') return 'text-yellow-400';
+            if (rarity === 'EPIC') return 'text-purple-400';
+            if (rarity === 'MAGIC') return 'text-blue-400';
+            return 'text-white';
+        }
         // 4. Render Trang Bị (4 Slots)
         // 1. Sửa hàm renderEquip (Chỉnh màu đậm hơn)
         function renderEquip(equipped) {
             const container = document.getElementById('equip-slots-container');
+            if (!container) return;
             container.innerHTML = '';
 
             for (let i = 1; i <= 4; i++) {
                 const slotKey = `slot_${i}`;
-                const item = equipped[slotKey];
+                const item = equipped[slotKey]; // Backend cần trả về object dạng {slot_1: item...}
                 
                 let content = '';
+                let borderClass = "border-dashed border-amber-700 bg-[#e8dcc5]"; // Mặc định (Slot trống)
+
                 if (item) {
-                    // CÓ ĐỒ: Hiển thị đẹp hơn
-                    content = `
-                        <div class="relative w-full h-full flex flex-col items-center justify-center group">
-                            <img src="${item.image}" class="w-20 h-20 object-contain drop-shadow-md transition-transform group-hover:scale-110">
-                            <span class="text-xs font-bold mt-1 text-center bg-white/90 px-2 py-0.5 rounded border border-gray-300 text-gray-800 shadow-sm whitespace-nowrap overflow-hidden max-w-[90%] text-ellipsis">${item.name}</span>
-                            <button onclick="unequipItem(${i})" class="absolute -top-3 -right-3 bg-red-600 text-white rounded-full w-7 h-7 flex items-center justify-center hover:bg-red-700 shadow-lg border-2 border-white font-bold z-10" title="Tháo đồ">&times;</button>
-                        </div>
-                    `;
+                    // --- XỬ LÝ NẾU LÀ CHARM (CÓ ĐỘ HIẾM) ---
+                    if (item.rarity) {
+                        // 1. Màu nền theo độ hiếm
+                        let bgGradient = "bg-gray-800";
+                        let borderColor = "border-gray-500";
+                        let textColor = "text-gray-200";
+
+                        if (item.rarity === "MAGIC") {
+                            bgGradient = "bg-gradient-to-b from-blue-900 to-gray-900";
+                            borderColor = "border-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.5)]";
+                            textColor = "text-blue-300";
+                        } else if (item.rarity === "EPIC") {
+                            bgGradient = "bg-gradient-to-b from-purple-900 to-gray-900";
+                            borderColor = "border-purple-500 shadow-[0_0_10px_rgba(168,85,247,0.5)]";
+                            textColor = "text-purple-300";
+                        } else if (item.rarity === "LEGEND") {
+                            bgGradient = "bg-gradient-to-b from-yellow-900 to-gray-900";
+                            borderColor = "border-yellow-500 shadow-[0_0_15px_rgba(234,179,8,0.6)] animate-pulse";
+                            textColor = "text-yellow-300";
+                        }
+
+                        borderClass = `border-solid ${borderColor} ${bgGradient}`;
+
+                        // 2. Parse Stats để hiển thị mini
+                        let statsMini = "";
+                        try {
+                            const s = (typeof item.stats_data === 'string') ? JSON.parse(item.stats_data) : (item.stats_data || {});
+                            if (s.atk) statsMini += `<div class="text-[9px] text-white">⚔️ ${s.atk}</div>`;
+                            if (s.hp) statsMini += `<div class="text-[9px] text-white">❤️ ${s.hp}</div>`;
+                        } catch(e){}
+
+                        content = `
+                            <div class="relative w-full h-full flex flex-col items-center justify-center group p-1">
+                                <div class="absolute top-1 left-1 bg-black/60 px-1 rounded text-[8px] text-white font-bold">+${item.enhance_level||0}</div>
+                                
+                                <img src="${item.image_url || item.image}" class="w-14 h-14 object-contain drop-shadow-lg mb-1 filter hover:brightness-110 transition">
+                                
+                                <div class="text-[9px] font-bold text-center leading-tight ${textColor} w-full truncate px-1">${item.name}</div>
+                                <div class="flex gap-1 mt-0.5 opacity-80">${statsMini}</div>
+
+                                <button onclick="unequipItem(${i})" class="absolute -top-2 -right-2 bg-red-600 hover:bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center shadow-lg border border-white font-bold z-10 text-xs">&times;</button>
+                            </div>
+                        `;
+
+                    } else {
+                        // --- XỬ LÝ ITEM THƯỜNG ---
+                        borderClass = "border-solid border-gray-400 bg-white";
+                        content = `
+                            <div class="relative w-full h-full flex flex-col items-center justify-center group">
+                                <img src="${item.image_url || item.image}" class="w-16 h-16 object-contain drop-shadow-md group-hover:scale-105 transition-transform">
+                                <span class="text-[10px] font-bold mt-1 text-center bg-gray-100 px-1 rounded text-gray-800 w-[90%] truncate">${item.name}</span>
+                                <button onclick="unequipItem(${i})" class="absolute -top-2 -right-2 bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-red-700 shadow-md border border-white z-10">&times;</button>
+                            </div>
+                        `;
+                    }
                 } else {
-                    // SLOT TRỐNG: Màu nâu đậm (Amber-900) & Icon to hơn
+                    // --- SLOT TRỐNG ---
                     content = `
-                        <div class="flex flex-col items-center justify-center text-amber-900 opacity-60 hover:opacity-100 transition-opacity">
-                            <i class="fas fa-plus-circle text-4xl mb-2"></i>
-                            <span class="text-sm font-extrabold uppercase tracking-wide">Slot ${i}</span>
+                        <div class="flex flex-col items-center justify-center text-amber-900/40 hover:text-amber-900/80 transition-colors">
+                            <i class="fas fa-plus text-2xl mb-1"></i>
+                            <span class="text-[10px] font-bold uppercase">Slot ${i}</span>
                         </div>
                     `;
                 }
 
-                // Khung viền đậm hơn (border-amber-600)
+                // Render HTML Slot
                 const slotHtml = `
-                    <div class="w-32 h-40 bg-[#e8dcc5] border-2 border-dashed border-amber-700 rounded-xl flex items-center justify-center hover:bg-amber-200/50 transition-colors relative shadow-inner">
+                    <div class="w-24 h-32 rounded-lg border-2 flex items-center justify-center relative shadow-sm transition-all hover:shadow-md ${borderClass}">
                         ${content}
                     </div>
                 `;
@@ -2288,59 +2817,7 @@
             }
         }
         // --- CÁC HÀM HÀNH ĐỘNG (ACTIONS) ---
-        // A. Trang bị (Auto vào slot trống đầu tiên)
-        async function showEquipOptions(itemId) {
-            // Để đơn giản: Tự tìm slot trống 1->4. Nếu full thì báo lỗi.
-            // Logic nâng cao: Hiện popup chọn slot (Ta làm sau nếu cần).
-            for (let i = 1; i <= 4; i++) {
-                // Gọi API thử lắp vào slot i
-                // Nhưng logic API của ta là "Nếu slot có đồ thì thay thế". 
-                // Vậy nên cứ lắp vào Slot 1 cho nhanh, hoặc hỏi người chơi.
-                // Tạm thời: Lắp vào Slot 1.
-            }
-            // Cách tốt nhất: Hỏi người dùng nhập Slot muốn lắp (Prompt đơn giản)
-            const slot = prompt("Bạn muốn lắp vào Slot nào? (Nhập 1, 2, 3 hoặc 4)", "1");
-            if(!slot || isNaN(slot) || slot < 1 || slot > 4) return;
-
-            try {
-                const res = await fetch('/api/inventory/equip', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({
-                        username: localStorage.getItem('kpi_username'),
-                        item_id: itemId,
-                        slot_index: parseInt(slot)
-                    })
-                });
-                
-                if (res.ok) {
-                    alert("Trang bị thành công!");
-                    loadInventoryDataFull();
-                    // Cập nhật lại stats Dashboard (Load lại cả trang hoặc gọi hàm update Dashboard)
-                    if(window.loadDashboardData) window.loadDashboardData(); 
-                } else {
-                    const err = await res.json();
-                    alert("Lỗi: " + err.detail);
-                }
-            } catch (e) { console.error(e); }
-        }
-        // B. Tháo trang bị
-        async function unequipItem(slotIndex) {
-            try {
-                const res = await fetch('/api/inventory/unequip', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({
-                        username: localStorage.getItem('kpi_username'),
-                        slot_index: slotIndex
-                    })
-                });
-                if (res.ok) {
-                    loadInventoryDataFull();
-                    if(window.loadDashboardData) window.loadDashboardData();
-                }
-            } catch (e) { console.error(e); }
-        }
+        
         // C. Sử dụng Item
         async function useItem(itemId) {
             try {
@@ -6913,6 +7390,33 @@
     }
 
 
+        // 1. Hàm Reload và Lưu lại tên Tab hiện tại
+        function reloadWithTab(tabName) {
+            // Lưu tên tab vào bộ nhớ trình duyệt
+            localStorage.setItem('active_tab_after_reload', tabName);
+            // Tải lại trang
+            location.reload();
+        }
+
+        // 2. Hàm Tự động mở lại Tab sau khi Reload xong
+        function checkSavedTab() {
+            const savedTab = localStorage.getItem('active_tab_after_reload');
+            
+            if (savedTab) {
+                console.log("🔄 Đang khôi phục tab:", savedTab);
+                
+                // Gọi hàm chuyển tab có sẵn của bạn
+                // (Giả sử bạn đang dùng hàm switchInventoryTab để chuyển đổi giữa 'bag' và 'equip')
+                if (typeof switchInventoryTab === 'function') {
+                    switchInventoryTab(savedTab);
+                }
+
+                // Xóa ngay sau khi dùng xong để F5 bình thường không bị tự mở lại
+                localStorage.removeItem('active_tab_after_reload');
+            }
+        }
+
+
         // 2. Thiết lập vòng lặp thông minh (Smart Polling)
         // Dùng biến window để đảm bảo quản lý toàn cục
         if (window.bossPollInterval) clearInterval(window.bossPollInterval);
@@ -6951,10 +7455,9 @@
             }
 
             try {
-                // --- 👇 THAY ĐỔI QUAN TRỌNG NHẤT TẠI ĐÂY 👇 ---
+                await loadSystemConfig();
                 
                 // BƯỚC 1: Tải "Từ điển Skill" (Global Skills) TRƯỚC TIÊN
-                // Phải có cuốn từ điển này trước thì tí nữa game mới biết ID "THẦN_KIẾM" là chiêu gì
                 if (typeof loadGlobalSkills === 'function') {
                     console.log("📚 Đang tải danh sách Skill...");
                     await loadGlobalSkills(); 
@@ -6978,7 +7481,9 @@
                     console.log("📜 Đang tải lịch sử hoạt động...");
                     loadActivityLogs();
                 }
-
+                if (typeof checkSavedTab === 'function') {
+                    checkSavedTab();
+                }
                 console.log("✅ KHỞI ĐỘNG HOÀN TẤT! Sẵn sàng chiến đấu.");
 
             } catch (error) {
@@ -7066,7 +7571,6 @@
             </p>
         </div>
     </div>
-
 
     <div id="sellModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-[60] flex items-center justify-center">
         <div class="bg-white p-6 rounded-lg shadow-xl w-96 border-2 border-amber-500">
@@ -7163,8 +7667,96 @@
         </div>
     </div>
 
-    
+    <div id="forge-modal" class="fixed inset-0 bg-black/90 hidden z-50 flex items-center justify-center">
+        <div class="bg-gray-900 border-2 border-orange-600 rounded-xl w-[400px] p-6 relative shadow-[0_0_50px_rgba(234,88,12,0.5)]">
+            
+            <button onclick="closeForgeModal()" class="absolute top-2 right-2 text-gray-500 hover:text-white">✕</button>
 
+            <h2 class="text-2xl font-bold text-center text-orange-500 mb-6 uppercase tracking-wider">🔥 Lò Rèn Thần Bí 🔥</h2>
+
+            <div class="flex justify-center mb-6 relative">
+                <div class="absolute inset-0 bg-orange-500/20 blur-xl rounded-full animate-pulse"></div>
+                
+                <div id="forge-item-preview" class="relative z-10 transform scale-125">
+                    </div>
+            </div>
+
+            <div class="space-y-3 mb-6 bg-black/50 p-4 rounded-lg border border-gray-700">
+                <div class="flex justify-between text-sm">
+                    <span class="text-gray-400">Cấp độ hiện tại:</span>
+                    <span id="forge-current-lv" class="font-bold text-white">+0</span>
+                </div>
+                <div class="flex justify-between text-sm">
+                    <span class="text-gray-400">Tỷ lệ thành công:</span>
+                    <span id="forge-rate" class="font-bold text-green-400">100%</span>
+                </div>
+                <div class="flex justify-between text-sm">
+                    <span class="text-gray-400">Nguyên liệu (Đá):</span>
+                    <span id="forge-cost" class="font-bold text-yellow-400">1 viên</span>
+                </div>
+            </div>
+
+            <button onclick="doForge()" id="btn-forge-action" class="w-full py-3 bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-500 hover:to-orange-500 text-white font-bold rounded-lg shadow-lg transform active:scale-95 transition-all">
+                🔨 CƯỜNG HÓA NGAY
+            </button>
+            
+            <div id="forge-message" class="text-center mt-4 text-sm min-h-[20px] font-bold"></div>
+        </div>
+    </div>
+
+    <div id="sell-modal" class="fixed inset-0 bg-black/80 hidden items-center justify-center z-[60] backdrop-blur-sm transition-all duration-300">
+        <div class="bg-gray-900 w-full max-w-sm rounded-2xl border border-yellow-600/50 shadow-[0_0_30px_rgba(234,179,8,0.2)] transform scale-100 transition-all">
+            
+            <div class="flex justify-between items-center p-4 border-b border-white/10 bg-white/5 rounded-t-2xl">
+                <h3 class="text-lg font-bold text-yellow-400 flex items-center gap-2">
+                    💰 Niêm Yết Giá Bán
+                </h3>
+                <button onclick="closeSellModal()" class="text-gray-400 hover:text-white transition-colors">
+                    ✕
+                </button>
+            </div>
+
+            <div class="p-6 space-y-4">
+                
+                <div class="flex flex-col items-center justify-center mb-4">
+                    <div class="w-24 h-24 bg-gray-800 rounded-xl border border-gray-600 flex items-center justify-center mb-2 shadow-inner relative overflow-hidden group">
+                        <img id="sell-item-img" src="/assets/items/default.png" class="w-20 h-20 object-contain drop-shadow-md">
+                    </div>
+                    <div id="sell-item-name" class="font-bold text-white text-lg">Tên Vật Phẩm</div>
+                    <div id="sell-item-level" class="text-xs font-bold text-green-400 bg-green-900/30 px-2 py-0.5 rounded border border-green-500/30 mt-1">+0</div>
+                </div>
+
+                <div class="space-y-3">
+                    <div>
+                        <label class="block text-xs font-medium text-gray-400 mb-1">Số lượng bán</label>
+                        <input type="number" value="1" disabled class="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-gray-500 font-bold focus:outline-none cursor-not-allowed text-center">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-medium text-gray-400 mb-1">Giá bán (Tổng)</label>
+                        <input id="sell-price-input" type="number" placeholder="Nhập giá..." class="w-full bg-gray-800 border border-gray-600 text-white rounded-lg px-3 py-2 focus:ring-2 focus:ring-yellow-500 focus:border-transparent font-bold text-center text-lg placeholder-gray-600">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-medium text-gray-400 mb-1">Loại tiền muốn nhận</label>
+                        <select id="sell-currency-select" class="w-full bg-gray-800 border border-gray-600 text-white rounded-lg px-3 py-2 focus:ring-2 focus:ring-yellow-500 font-medium appearance-none text-center cursor-pointer hover:bg-gray-750">
+                            <option value="tri_thuc">🟡 Tri Thức (Xu)</option>
+                            <option value="kpi_point">🔵 KPI Point</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="p-4 border-t border-white/10 bg-white/5 rounded-b-2xl flex gap-3">
+                <button onclick="closeSellModal()" class="flex-1 py-2.5 rounded-xl font-bold text-gray-400 hover:bg-white/10 transition-all text-sm">
+                    Hủy Bỏ
+                </button>
+                <button id="btn-confirm-sell" onclick="confirmSellCharm()" class="flex-1 py-2.5 rounded-xl font-bold text-white bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 shadow-lg shadow-green-900/50 transition-all transform hover:scale-[1.02] text-sm flex items-center justify-center gap-2">
+                    <span>💸</span> Đăng Bán
+                </button>
+            </div>
+        </div>
+    </div>
     <div id="vfx-container" class="vfx-container hidden"></div>
 
 </body>

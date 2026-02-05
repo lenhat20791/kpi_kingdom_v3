@@ -214,8 +214,6 @@ async def view_admin_dashboard():
             return FileResponse(path)
     return {"error": "File admin.html not found"}
 
-
-
 @app.get("/index.html")
 async def read_index():
     # Điều hướng về file index.html y hệt như trang chủ

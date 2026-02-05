@@ -268,6 +268,10 @@
                 class="nav-item w-full text-left px-6 py-3 transition border-l-4 hover:bg-gray-700 hover:text-white hover:border-yellow-500 text-gray-400 border-transparent">
                 <i class="fa-solid fa-bullhorn w-6 text-center"></i> Quản Lý Thông Báo
             </button>
+            <button onclick="switchTab('charm-settings')" class="w-full text-left px-4 py-3 hover:bg-gray-700 rounded-lg flex items-center gap-3 transition">
+                <span class="text-xl">🔮</span>
+                <span class="font-bold">Charm & Lò Rèn</span>
+            </button>
 
             <button onclick="switchTab('shop')" data-tab="shop" 
                 class="nav-item w-full text-left px-6 py-3 transition border-l-4 border-transparent text-gray-300 hover:bg-gray-700 hover:text-white hover:border-pink-500">
@@ -819,6 +823,7 @@
                             <option value="exp">EXP</option>
                             <option value="currency">Tiền tệ (Xanh/Tím/Cam)</option>
                             <option value="item">Vật phẩm / Rương</option>
+                            <option value="charm"> Charm </option>
                         </select>
                     </div>
 
@@ -1628,6 +1633,124 @@
                 </div>
             </div>
         </div>
+
+        <div id="tab-charm-settings" class="tab-content hidden space-y-6">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-600">
+                    🔮 Cấu hình Hệ thống Charm
+                </h2>
+                <button onclick="saveSystemConfig()" class="bg-green-600 hover:bg-green-500 text-white px-6 py-2 rounded-lg font-bold shadow-lg flex items-center gap-2">
+                    💾 Lưu Cấu Hình
+                </button>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                
+                <div class="bg-gray-800 p-6 rounded-xl border border-gray-700 shadow-lg">
+                    <h3 class="text-xl font-bold text-purple-400 mb-4 border-b border-gray-700 pb-2">📦 Thông số Charm (Drop)</h3>
+                    
+                    <div class="mb-4 bg-gray-900/50 p-4 rounded border border-blue-500/30">
+                        <div class="flex justify-between mb-2">
+                            <span class="text-blue-400 font-bold">Ma Thuật (Magic)</span>
+                            <span class="text-xs text-gray-500">1 dòng stats</span>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="text-xs text-gray-400">ATK Range</label>
+                                <div class="flex gap-2">
+                                    <input type="number" id="magic-atk-min" class="w-full bg-gray-700 rounded px-2 py-1 text-white text-sm" placeholder="Min">
+                                    <input type="number" id="magic-atk-max" class="w-full bg-gray-700 rounded px-2 py-1 text-white text-sm" placeholder="Max">
+                                </div>
+                            </div>
+                            <div>
+                                <label class="text-xs text-gray-400">HP Range</label>
+                                <div class="flex gap-2">
+                                    <input type="number" id="magic-hp-min" class="w-full bg-gray-700 rounded px-2 py-1 text-white text-sm" placeholder="Min">
+                                    <input type="number" id="magic-hp-max" class="w-full bg-gray-700 rounded px-2 py-1 text-white text-sm" placeholder="Max">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-4 bg-gray-900/50 p-4 rounded border border-purple-500/30">
+                        <div class="flex justify-between mb-2">
+                            <span class="text-purple-400 font-bold">Sử Thi (Epic)</span>
+                            <span class="text-xs text-gray-500">2 dòng stats</span>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="text-xs text-gray-400">ATK Range</label>
+                                <div class="flex gap-2">
+                                    <input type="number" id="epic-atk-min" class="w-full bg-gray-700 rounded px-2 py-1 text-white text-sm">
+                                    <input type="number" id="epic-atk-max" class="w-full bg-gray-700 rounded px-2 py-1 text-white text-sm">
+                                </div>
+                            </div>
+                            <div>
+                                <label class="text-xs text-gray-400">HP Range</label>
+                                <div class="flex gap-2">
+                                    <input type="number" id="epic-hp-min" class="w-full bg-gray-700 rounded px-2 py-1 text-white text-sm">
+                                    <input type="number" id="epic-hp-max" class="w-full bg-gray-700 rounded px-2 py-1 text-white text-sm">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-4 bg-gray-900/50 p-4 rounded border border-yellow-500/30">
+                        <div class="flex justify-between mb-2">
+                            <span class="text-yellow-400 font-bold">Huyền Thoại (Legend)</span>
+                            <span class="text-xs text-gray-500">2 dòng stats (Max)</span>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="text-xs text-gray-400">ATK Range</label>
+                                <div class="flex gap-2">
+                                    <input type="number" id="legend-atk-min" class="w-full bg-gray-700 rounded px-2 py-1 text-white text-sm">
+                                    <input type="number" id="legend-atk-max" class="w-full bg-gray-700 rounded px-2 py-1 text-white text-sm">
+                                </div>
+                            </div>
+                            <div>
+                                <label class="text-xs text-gray-400">HP Range</label>
+                                <div class="flex gap-2">
+                                    <input type="number" id="legend-hp-min" class="w-full bg-gray-700 rounded px-2 py-1 text-white text-sm">
+                                    <input type="number" id="legend-hp-max" class="w-full bg-gray-700 rounded px-2 py-1 text-white text-sm">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-gray-800 p-6 rounded-xl border border-gray-700 shadow-lg">
+                    <h3 class="text-xl font-bold text-orange-500 mb-4 border-b border-gray-700 pb-2">🔥 Thông số Lò Rèn (Upgrade)</h3>
+                    
+                    <div class="space-y-4">
+                        <div class="grid grid-cols-4 gap-2 items-center text-sm p-3 bg-gray-900/50 rounded">
+                            <div class="col-span-1 font-bold text-gray-400">Cấp +1 ➔ +3</div>
+                            <div class="col-span-1"><input type="number" id="forge-g1-rate" class="w-full bg-gray-700 rounded px-2 py-1 text-green-400" placeholder="% Win"></div>
+                            <div class="col-span-1"><input type="number" id="forge-g1-stone" class="w-full bg-gray-700 rounded px-2 py-1 text-yellow-400" placeholder="Đá tốn"></div>
+                            <div class="col-span-1"><input type="number" id="forge-g1-bonus" class="w-full bg-gray-700 rounded px-2 py-1 text-blue-400" placeholder="% Tăng"></div>
+                        </div>
+
+                        <div class="grid grid-cols-4 gap-2 items-center text-sm p-3 bg-gray-900/50 rounded">
+                            <div class="col-span-1 font-bold text-orange-400">Cấp +4 ➔ +7</div>
+                            <div class="col-span-1"><input type="number" id="forge-g2-rate" class="w-full bg-gray-700 rounded px-2 py-1 text-green-400"></div>
+                            <div class="col-span-1"><input type="number" id="forge-g2-stone" class="w-full bg-gray-700 rounded px-2 py-1 text-yellow-400"></div>
+                            <div class="col-span-1"><input type="number" id="forge-g2-bonus" class="w-full bg-gray-700 rounded px-2 py-1 text-blue-400"></div>
+                        </div>
+
+                        <div class="grid grid-cols-4 gap-2 items-center text-sm p-3 bg-gray-900/50 rounded">
+                            <div class="col-span-1 font-bold text-red-500">Cấp +8 ➔ +10</div>
+                            <div class="col-span-1"><input type="number" id="forge-g3-rate" class="w-full bg-gray-700 rounded px-2 py-1 text-green-400"></div>
+                            <div class="col-span-1"><input type="number" id="forge-g3-stone" class="w-full bg-gray-700 rounded px-2 py-1 text-yellow-400"></div>
+                            <div class="col-span-1"><input type="number" id="forge-g3-bonus" class="w-full bg-gray-700 rounded px-2 py-1 text-blue-400"></div>
+                        </div>
+                    </div>
+
+                    <div class="mt-6 text-xs text-gray-500 italic">
+                        * Lưu ý: Tỷ lệ Win tính theo %, Đá tốn là số lượng viên cần, % Tăng là chỉ số cộng thêm so với gốc.
+                    </div>
+                </div>
+            </div>
+        </div>
     </main>
 
     <script>
@@ -1718,6 +1841,11 @@
                     break;
                 case 'notifications': 
                     if (typeof loadNotifications === 'function') loadNotifications();
+                    break;
+                case 'charm-settings': // 👈 Tên tab mới
+                    if (typeof loadSystemConfig === 'function') {
+                        loadSystemConfig(); // Gọi hàm load API Admin mà ta vừa viết
+                    }
                     break;
                 default:
                     console.log("Tab này chưa có hàm load dữ liệu riêng.");
@@ -3263,6 +3391,14 @@
                     logicConfig.value = 1; 
                 }
 
+                // TRƯỜNG HỢP 5: ĐÁ CƯỜNG HÓA
+                else if (actionType === 'enhance_stone') {
+                    // Đá cường hóa không cần giá trị số cụ thể, 
+                    // nhưng ta gán = 1 để đảm bảo logic không bị null
+                    logicConfig.value = 1; 
+                    logicConfig.target = "FORGE_SYSTEM"; 
+                }
+
             } catch (e) {
                 console.warn("Lỗi đọc logic config:", e);
                 alert("Lỗi dữ liệu cấu hình: " + e.message);
@@ -3843,14 +3979,17 @@
             const type = document.getElementById('reward-type').value;
             const subSelect = document.getElementById('reward-sub-type');
             
-            // 1. Ẩn/Hiện Dropdown phụ
+            // 1. Reset dropdown
+            subSelect.innerHTML = ''; 
+            subSelect.classList.remove('hidden');
+
+            // 2. Nếu chọn EXP
             if (type === 'exp') {
                 subSelect.classList.add('hidden');
                 return;
             }
-            subSelect.classList.remove('hidden');
 
-            // 2. Nếu chọn Tiền tệ
+            // 3. Nếu chọn Tiền tệ
             if (type === 'currency') {
                 subSelect.innerHTML = `
                     <option value="kpi">Điểm KPI (Chính)</option>
@@ -3859,33 +3998,26 @@
                     <option value="chien_tich">Chiến Tích (Cam)</option>
                 `;
             } 
-            // 3. Nếu chọn Vật phẩm (GỌI API)
+            // 4. Nếu chọn Vật phẩm (Item thường)
             else if (type === 'item') {
                 subSelect.innerHTML = `<option>⏳ Đang tải đồ...</option>`;
                 try {
-                    // Gọi đúng đường dẫn API Backend
                     const res = await fetch('/admin/items/templates');
-                    
-                    if (!res.ok) {
-                        console.error("Lỗi API:", res.status, res.statusText);
-                        throw new Error(`Lỗi Server: ${res.status}`);
-                    }
-
-                    const items = await res.json();
-                    console.log("Danh sách đồ tải được:", items); // Xem log này nếu lỗi
-
-                    if (items.length > 0) {
-                        subSelect.innerHTML = items.map(item => 
-                            // Hiển thị tên và độ hiếm
-                            `<option value="${item.id}">${item.name} (${item.rarity || 'Thường'})</option>`
-                        ).join('');
+                    if (res.ok) {
+                        const items = await res.json();
+                        subSelect.innerHTML = items.map(i => `<option value="${i.id}">${i.name}</option>`).join('');
                     } else {
-                        subSelect.innerHTML = `<option value="">Kho đồ đang trống!</option>`;
+                        subSelect.innerHTML = `<option value="">Lỗi tải đồ</option>`;
                     }
-                } catch (e) {
-                    console.error("Lỗi JS:", e);
-                    subSelect.innerHTML = `<option value="">❌ Lỗi tải Shop (Xem Console)</option>`;
-                }
+                } catch (e) { console.error(e); }
+            }
+            // 5. 👇 NẾU CHỌN CHARM (MỚI THÊM) 👇
+            else if (type === 'charm') {
+                subSelect.innerHTML = `
+                    <option value="RANDOM_CHARM_MAGIC">🔮 Charm Ma Thuật (Magic)</option>
+                    <option value="RANDOM_CHARM_EPIC">🟣 Charm Sử Thi (Epic)</option>
+                    <option value="RANDOM_CHARM_LEGEND">🟡 Charm Huyền Thoại (Legend)</option>
+                `;
             }
         }
 
@@ -3895,21 +4027,40 @@
             const type = document.getElementById('reward-type').value;
             const amount = document.getElementById('tower-reward-amount').value;
             const rate = document.getElementById('reward-drop-rate').value;
+            
+            // Lấy giá trị phụ (ID item hoặc ID charm)
             const subType = document.getElementById('reward-sub-type').value;
-            const subTypeText = document.getElementById('reward-sub-type').options[document.getElementById('reward-sub-type').selectedIndex]?.text || '';
+            let subTypeText = document.getElementById('reward-sub-type').options[document.getElementById('reward-sub-type').selectedIndex]?.text || '';
 
             if (!amount) return alert("Vui lòng nhập số lượng!");
 
-            const pool = document.getElementById(`pool-${diff}`);
-            const rewardId = Date.now(); // Tạo ID tạm để xóa
+            // --- XỬ LÝ HIỂN THỊ TÊN CHARM ---
+            // Nếu là Charm, ta sửa lại cái text hiển thị cho đẹp
+            if (type === 'charm') {
+                // Tự động bỏ chữ "RANDOM_CHARM_" để hiển thị cho gọn
+                if (subType === 'RANDOM_CHARM_MAGIC') subTypeText = "Charm Ma Thuật";
+                if (subType === 'RANDOM_CHARM_EPIC') subTypeText = "Charm Sử Thi";
+                if (subType === 'RANDOM_CHARM_LEGEND') subTypeText = "Charm Huyền Thoại";
+            }
 
+            const pool = document.getElementById(`pool-${diff}`);
+            const rewardId = Date.now(); 
+
+            // Dữ liệu ẩn để gửi về Server (Lưu vào data-attribute)
+            // Quan trọng: Ta lưu subType vào data-subtype để lúc Save còn biết đường lấy
             const card = document.createElement('div');
-            card.className = "bg-gray-900 border border-gray-700 p-2 rounded-lg flex justify-between items-center group animate-fade-in";
+            card.className = "bg-gray-900 border border-gray-700 p-2 rounded-lg flex justify-between items-center group animate-fade-in mb-2";
             card.id = `reward-${rewardId}`;
             
+            // 👇 Thêm các thuộc tính data- để hàm Save dễ lấy
+            card.dataset.type = type;
+            card.dataset.subtype = subType; // Lưu ID item hoặc mã Charm (VD: RANDOM_CHARM_MAGIC)
+            card.dataset.amount = amount;
+            card.dataset.rate = rate;
+
             card.innerHTML = `
                 <div>
-                    <div class="text-[9px] text-gray-500 font-bold uppercase">${type}</div>
+                    <div class="text-[9px] text-gray-500 font-bold uppercase">${type === 'charm' ? 'VẬT PHẨM CHARM' : type}</div>
                     <div class="text-xs text-white">
                         ${type === 'exp' ? 'KPI/EXP' : subTypeText}: 
                         <span class="text-yellow-400 font-bold">${amount}</span>
@@ -3941,25 +4092,33 @@
                 const cards = pool.querySelectorAll('[id^="reward-"]');
                 
                 rewardConfig[diff] = Array.from(cards).map(card => {
-                    // 👇 LOGIC CŨ CỦA BẠN (Dùng innerText)
+                    // [CẬP NHẬT QUAN TRỌNG] 
+                    // Thay vì đọc text hiển thị, ta đọc từ dataset (dữ liệu gốc) 
+                    // để lấy đúng mã charm (VD: RANDOM_CHARM_MAGIC)
                     
-                    // 1. Lấy Type (EXP/ITEM...) từ dòng chữ viết hoa
-                    const type = card.querySelector('.uppercase').innerText.toLowerCase();
+                    // Lấy type (exp/item/charm...)
+                    const type = card.dataset.type || card.querySelector('.uppercase').innerText.toLowerCase();
                     
-                    // 2. Lấy Info (VD: "Kiếm Thần: 10")
-                    const info = card.querySelector('.text-xs').innerText;
+                    // Lấy subtype (Quan trọng: Đây là nơi chứa ID item hoặc Mã Charm)
+                    // Nếu là Charm, nó sẽ là "RANDOM_CHARM_MAGIC". Nếu là item, nó là ID số.
+                    const name = card.dataset.subtype || card.querySelector('.text-xs').innerText.split(':')[0].trim();
                     
-                    // 3. Lấy Rate (VD: "Tỷ lệ: 50%")
-                    const rateInfo = card.querySelector('.italic').innerText;
+                    // Lấy số lượng
+                    const amount = parseInt(card.dataset.amount || card.querySelector('.text-yellow-400').innerText);
+                    
+                    // Lấy tỷ lệ rơi
+                    let rateRaw = card.dataset.rate;
+                    if (!rateRaw) {
+                        // Fallback nếu thẻ cũ chưa có dataset
+                        rateRaw = card.querySelector('.italic').innerText.replace(/\D/g, '');
+                    }
+                    const rate = parseInt(rateRaw);
 
                     return {
                         type: type,
-                        // Cắt chuỗi tại dấu hai chấm (:) để lấy tên vật phẩm phía trước
-                        name: info.split(':')[0].trim(), 
-                        // Lấy số lượng từ thẻ màu vàng
-                        amount: parseInt(card.querySelector('.text-yellow-400').innerText),
-                        // Lấy số từ dòng tỷ lệ (xóa hết chữ, chỉ giữ số)
-                        rate: parseInt(rateInfo.replace(/\D/g, ''))
+                        name: name,   // Server cần cái này chuẩn code
+                        amount: amount,
+                        rate: rate
                     };
                 });
             });
@@ -3972,7 +4131,7 @@
             };
 
             try {
-                const response = await fetch('/admin/tower/save-config', {
+                const response = await fetch('/admin/tower/save-config', { // Hoặc /tower/save-config tùy router bạn
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(finalData)
@@ -3980,7 +4139,13 @@
 
                 if (response.ok) {
                     console.log("✅ Đã lưu cấu hình thành công!");
-                    alert("Đã lưu cấu hình!"); // Bỏ comment nếu muốn hiện thông báo
+                    // alert("Đã lưu cấu hình!"); 
+                    // Thay alert bằng thông báo nhẹ nhàng nếu có library, hoặc giữ nguyên alert
+                    if(typeof Swal !== 'undefined') {
+                        Swal.fire("Thành công", "Đã lưu cấu hình tháp!", "success");
+                    } else {
+                        alert("Đã lưu cấu hình tháp thành công!");
+                    }
                 } else {
                     alert("❌ Lỗi khi lưu cấu hình.");
                 }
@@ -5283,6 +5448,117 @@
             loadNotifications(); // Reload lại sau khi đổi trạng thái
         }
 
+        // --- LOGIC CẤU HÌNH CHARM & FORGE ---
+
+        // 1. Hàm Load Config (Chạy khi mở tab hoặc mở trang)
+        async function loadSystemConfig() {
+            try {
+                const res = await fetch('/admin/get-system-config');
+                const data = await res.json();
+                
+                // --- ĐIỀN DỮ LIỆU CHARM ---
+                if (data.charm_setup) {
+                    const c = data.charm_setup;
+                    // Magic
+                    document.getElementById('magic-atk-min').value = c.MAGIC.atk_range[0];
+                    document.getElementById('magic-atk-max').value = c.MAGIC.atk_range[1];
+                    document.getElementById('magic-hp-min').value = c.MAGIC.hp_range[0];
+                    document.getElementById('magic-hp-max').value = c.MAGIC.hp_range[1];
+                    
+                    // Epic
+                    document.getElementById('epic-atk-min').value = c.EPIC.atk_range[0];
+                    document.getElementById('epic-atk-max').value = c.EPIC.atk_range[1];
+                    document.getElementById('epic-hp-min').value = c.EPIC.hp_range[0];
+                    document.getElementById('epic-hp-max').value = c.EPIC.hp_range[1];
+
+                    // Legend
+                    document.getElementById('legend-atk-min').value = c.LEGEND.atk_range[0];
+                    document.getElementById('legend-atk-max').value = c.LEGEND.atk_range[1];
+                    document.getElementById('legend-hp-min').value = c.LEGEND.hp_range[0];
+                    document.getElementById('legend-hp-max').value = c.LEGEND.hp_range[1];
+                }
+
+                // --- ĐIỀN DỮ LIỆU FORGE ---
+                if (data.forge_setup) {
+                    const f = data.forge_setup;
+                    // Group 1
+                    document.getElementById('forge-g1-rate').value = f.group_1.rate;
+                    document.getElementById('forge-g1-stone').value = f.group_1.stone;
+                    document.getElementById('forge-g1-bonus').value = f.group_1.bonus_pct;
+
+                    // Group 2
+                    document.getElementById('forge-g2-rate').value = f.group_2.rate;
+                    document.getElementById('forge-g2-stone').value = f.group_2.stone;
+                    document.getElementById('forge-g2-bonus').value = f.group_2.bonus_pct;
+
+                    // Group 3
+                    document.getElementById('forge-g3-rate').value = f.group_3.rate;
+                    document.getElementById('forge-g3-stone').value = f.group_3.stone;
+                    document.getElementById('forge-g3-bonus').value = f.group_3.bonus_pct;
+                }
+
+            } catch (e) {
+                console.error("Lỗi load config:", e);
+                // Nếu lỗi thì điền mặc định để admin đỡ phải gõ từ đầu
+                fillDefaultConfig();
+            }
+        }
+
+        // 2. Hàm Lưu Config
+        async function saveSystemConfig() {
+            // Helper lấy số
+            const num = (id) => parseInt(document.getElementById(id).value) || 0;
+
+            const payload = {
+                charm_data: {
+                    MAGIC: { 
+                        lines: 1, 
+                        atk_range: [num('magic-atk-min'), num('magic-atk-max')],
+                        hp_range: [num('magic-hp-min'), num('magic-hp-max')]
+                    },
+                    EPIC: { 
+                        lines: 2, 
+                        atk_range: [num('epic-atk-min'), num('epic-atk-max')],
+                        hp_range: [num('epic-hp-min'), num('epic-hp-max')]
+                    },
+                    LEGEND: { 
+                        lines: 2, 
+                        atk_range: [num('legend-atk-min'), num('legend-atk-max')],
+                        hp_range: [num('legend-hp-min'), num('legend-hp-max')]
+                    }
+                },
+                forge_data: {
+                    group_1: { min:0, max:3, rate: num('forge-g1-rate'), stone: num('forge-g1-stone'), bonus_pct: num('forge-g1-bonus') },
+                    group_2: { min:3, max:7, rate: num('forge-g2-rate'), stone: num('forge-g2-stone'), bonus_pct: num('forge-g2-bonus') },
+                    group_3: { min:7, max:10, rate: num('forge-g3-rate'), stone: num('forge-g3-stone'), bonus_pct: num('forge-g3-bonus') }
+                }
+            };
+
+            try {
+                const res = await fetch('/admin/save-system-config', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(payload)
+                });
+                const result = await res.json();
+                alert(result.message || "Đã lưu thành công!");
+            } catch (e) {
+                console.error(e);
+                alert("Lỗi kết nối Server!");
+            }
+        }
+
+        // Helper: Điền số mặc định nếu DB trống
+        function fillDefaultConfig() {
+            // Magic
+            document.getElementById('magic-atk-min').value = 10; document.getElementById('magic-atk-max').value = 50;
+            document.getElementById('magic-hp-min').value = 100; document.getElementById('magic-hp-max').value = 500;
+            // Forge G1
+            document.getElementById('forge-g1-rate').value = 100;
+            document.getElementById('forge-g1-stone').value = 1;
+            document.getElementById('forge-g1-bonus').value = 10;
+        }
+
 
         // --- KHỞI TẠO KHI TRANG LOAD XONG ---
         document.addEventListener('DOMContentLoaded', () => {
@@ -5465,6 +5741,7 @@
                         <option value="none">-- Chọn chức năng vật phẩm --</option>
                         <option value="heal">Hồi máu (HP)</option>
                         <option value="add_currency">Nhận tiền tệ/KPI</option>
+                        <option value="enhance_stone">Nguyên liệu: Đá Cường Hóa</option>
                         <option value="reset_cooldown">Xóa thời gian chờ hồi sinh</option>
                         <option value="gacha_open">Rương Gacha (Quay vật phẩm)</option>
                         <option value="send_message">Thiệp thông điệp</option>
