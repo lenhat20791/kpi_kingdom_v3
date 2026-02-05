@@ -2040,10 +2040,10 @@
             
             // Tạm thời để test: Gọi API lấy chi tiết item (hoặc tìm trong DOM)
             // Để đơn giản, ta sẽ tìm trong biến toàn cục 'window.currentBagData' (Bạn cần gán nó ở hàm renderBag)
-            const item = window.currentBagData?.find(i => i.id === itemId);
-            
+            const item = window.currentBagData?.find(i => i.id == itemId && i.inventory_type === 'CHARM');
+    
             if (!item) {
-                alert("Không tìm thấy dữ liệu vật phẩm! Hãy tải lại túi đồ.");
+                alert("Không tìm thấy dữ liệu trang bị!");
                 return;
             }
 
@@ -2247,12 +2247,20 @@
                     
                     // 1. Gom đồ thường
                     if (Array.isArray(listItems)) {
-                        allBagItems = allBagItems.concat(listItems);
+                        const labeledItems = listItems.map(item => ({
+                            ...item, 
+                            inventory_type: 'NORMAL' // 👈 Nhãn cho đồ thường
+                        }));
+                        allBagItems = allBagItems.concat(labeledItems);
                     }
                     
-                    // 2. Gom Charm/Trang bị (Đây là cái bạn đang thiếu)
+                    // 2. Gom Charm -> Dán nhãn type = 'CHARM'
                     if (Array.isArray(listCharms)) {
-                        allBagItems = allBagItems.concat(listCharms);
+                        const labeledCharms = listCharms.map(item => ({
+                            ...item, 
+                            inventory_type: 'CHARM' // 👈 Nhãn cho Charm
+                        }));
+                        allBagItems = allBagItems.concat(labeledCharms);
                     }
 
                     // 3. Lưu vào biến toàn cục window.currentBagData
@@ -2540,14 +2548,14 @@
         // 1. HÀM MỞ MODAL BÁN (Thay thế hàm cũ)
         function openSellCharm(itemId) {
             // Tìm item trong túi (Dùng biến toàn cục currentBagData đã có)
-            const item = window.currentBagData?.find(i => i.id === itemId);
-            
+            const item = window.currentBagData.find(i => i.id == itemId && i.inventory_type === 'CHARM');
+    
             if (!item) {
-                alert("Lỗi: Không tìm thấy dữ liệu vật phẩm!");
+                alert("Lỗi: Không tìm thấy Charm này (Có thể do trùng ID với vật phẩm thường)!");
                 return;
             }
 
-            currentSellItem = item; // Lưu lại để tí nữa bán
+            currentSellItem = item;
 
             // Điền thông tin vào Modal HTML
             const safeImg = item.image_url || '/assets/items/default.png';
