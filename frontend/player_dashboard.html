@@ -1394,7 +1394,13 @@
                                     </div>
                                     <div>
                                         <label class="text-xs font-bold text-green-700 uppercase">Giá trị điểm</label>
-                                        <input type="number" id="score-value" class="w-full mt-1 p-2 rounded border border-green-300 focus:outline-none focus:border-green-500 font-bold text-green-800" placeholder="VD: 8.5 hoặc 1">
+                                        <input type="number" 
+                                            id="score-value" 
+                                            min="0" 
+                                            max="10" 
+                                            step="0.1"
+                                            class="w-full mt-1 p-2 rounded border border-green-300 focus:outline-none focus:border-green-500 font-bold text-green-800" 
+                                            placeholder="Nhập từ 0 đến 10">
                                     </div>
                                     <button onclick="preSubmitScore('academic')" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded shadow transition transform active:scale-95">
                                         GHI NHẬN THÀNH TÍCH
@@ -2624,59 +2630,67 @@
 
         // 3. HÀM XÁC NHẬN BÁN (Gửi API)
         async function confirmSellCharm() {
-            if (!currentSellItem) return;
-
-            // Lấy dữ liệu từ Form
-            const priceInput = document.getElementById('sell-price-input').value;
-            const currency = document.getElementById('sell-currency-select').value;
-            
-            const price = parseInt(priceInput);
-
-            // Validate
-            if (isNaN(price) || price <= 0) {
-                alert("⚠️ Vui lòng nhập giá bán hợp lệ (lớn hơn 0)!");
-                document.getElementById('sell-price-input').focus();
+            // 1. Lấy Token đăng nhập
+            const token = localStorage.getItem("access_token");
+            if (!token) {
+                alert("⚠️ Bạn chưa đăng nhập hoặc phiên đăng nhập hết hạn!");
                 return;
             }
 
-            // Hiệu ứng nút bấm đang chạy
-            const btn = document.getElementById('btn-confirm-sell');
-            const oldText = btn.innerHTML;
-            btn.disabled = true;
-            btn.innerHTML = `<span>⏳</span> Đang đăng...`;
+            // 2. Kiểm tra dữ liệu đầu vào
+            if (!currentSellItem) {
+                alert("⚠️ Không xác định được vật phẩm cần bán!");
+                return;
+            }
 
+            const priceInput = document.getElementById('sell-price-input').value;
+            const price = parseInt(priceInput);
+            const currency = document.getElementById('sell-currency-select').value;
+
+            if (!price || price <= 0) {
+                alert("⚠️ Vui lòng nhập giá bán hợp lệ (lớn hơn 0)!");
+                return;
+            }
+
+            // 3. Gửi yêu cầu lên Server (Kèm Token)
             try {
-                const username = localStorage.getItem('username') || localStorage.getItem('kpi_username');
-                
-                // GỌI API BÁN (Sử dụng đúng API chúng ta đã sửa ở bước trước)
+                const btn = document.getElementById('btn-confirm-sell');
+                const originalText = btn.innerHTML;
+                btn.innerHTML = "⏳ Đang xử lý...";
+                btn.disabled = true;
+
                 const res = await fetch('/api/market/sell-charm', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ 
-                        username: username, 
-                        charm_id: currentSellItem.id,
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": `Bearer ${token}` // 👈 QUAN TRỌNG NHẤT: PHẢI CÓ DÒNG NÀY
+                    },
+                    body: JSON.stringify({
+                        item_id: currentSellItem.id, // ID của cái Charm trong túi
                         price: price,
-                        currency: currency 
+                        currency: currency
                     })
                 });
 
                 const data = await res.json();
 
                 if (res.ok) {
-                    // Thành công
-                    closeSellModal(); // Đóng modal
-                    alert("✅ " + (data.message || "Đã treo bán thành công!"));
-                    reloadWithTab('bag'); // Load lại túi để item biến mất
+                    alert("✅ " + (data.message || "Đăng bán thành công!"));
+                    closeSellModal();   // Đóng modal
+                    loadInventoryDataFull(); // Tải lại túi đồ (Charm sẽ biến mất)
+                    loadMarketData();   // Tải lại chợ (Charm sẽ hiện lên)
                 } else {
-                    alert("❌ Lỗi: " + (data.detail || data.message));
+                    alert("❌ Lỗi: " + (data.detail || "Không thể đăng bán"));
                 }
+
+                // Reset nút
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+
             } catch (e) {
                 console.error(e);
-                alert("Lỗi kết nối Server!");
-            } finally {
-                // Trả lại trạng thái nút
-                btn.disabled = false;
-                btn.innerHTML = oldText;
+                alert("❌ Lỗi kết nối Server!");
+                document.getElementById('btn-confirm-sell').disabled = false;
             }
         }
 
@@ -2850,7 +2864,7 @@
                         } catch (e) { console.error("Lỗi đọc stats charm:", e); }
                     }
 
-                    // Thẻ Item Chợ (Đã thêm hiển thị Cấp cộng và Stats)
+                    // Thẻ Item Chợ (Đã sửa tên hàm thành buyMarketItem để tránh lỗi mua nhầm Shop)
                     const card = `
                         <div class="bg-white border-b-4 border-amber-700 p-3 rounded shadow-sm flex gap-3 items-center min-w-[280px] relative">
                             ${item.is_charm && item.enhance_level > 0 ? 
@@ -2873,7 +2887,7 @@
                                 
                                 ${item.seller_name === myName 
                                     ? `<button onclick="cancelSell(${item.id})" class="mt-1 w-full text-xs bg-red-100 text-red-600 py-1 rounded hover:bg-red-200 font-medium transition-colors">Hủy Bán</button>`
-                                    : `<button onclick="buyItem(${item.id})" class="mt-1 w-full text-xs bg-blue-600 text-white py-1 rounded hover:bg-blue-700 font-bold shadow-sm transition-transform active:scale-95">MUA NGAY</button>`
+                                    : `<button onclick="buyMarketItem(${item.id}, '${item.item_name}', ${item.price})" class="mt-1 w-full text-xs bg-blue-600 text-white py-1 rounded hover:bg-blue-700 font-bold shadow-sm transition-transform active:scale-95">MUA NGAY</button>`
                                 }
                             </div>
                         </div>
@@ -2962,29 +2976,37 @@
         }
 
         // E. Mua hàng & Hủy bán
-        async function buyItem(listingId) {
-            if (!confirm("Bạn chắc chắn muốn mua món hàng này?")) return;
-            
+        async function buyMarketItem(listingId, name, price) {
+            // Hiển thị thông báo rõ ràng
+            if (!confirm(`Bạn có chắc muốn mua [${name}] với giá ${price} không?`)) return;
+
             try {
                 const res = await fetch('/api/market/buy', {
                     method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
+                    headers: {
+                        'Content-Type': 'application/json',
+                        "Authorization": `Bearer ${localStorage.getItem("access_token")}`
+                    },
                     body: JSON.stringify({
                         buyer_username: localStorage.getItem('kpi_username'),
                         listing_id: listingId
                     })
                 });
-                
+
                 const data = await res.json();
+                
                 if (res.ok) {
-                    alert("Mua thành công!");
-                    loadMarketData();
-                    // Update tiền trên Dashboard
-                    if(window.loadDashboardData) window.loadDashboardData(); 
+                    alert("✅ " + (data.message || "Mua thành công!"));
+                    loadMarketData(); // Tải lại chợ
+                    // Reload túi đồ nếu cần
+                    if(typeof loadInventoryDataFull === 'function') loadInventoryDataFull();
                 } else {
-                    alert("Lỗi: " + data.detail);
+                    alert("❌ Lỗi: " + (data.detail || "Không thể mua"));
                 }
-            } catch (e) { console.error(e); }
+            } catch (e) {
+                console.error(e);
+                alert("Lỗi kết nối server!");
+            }
         }
 
         async function cancelSell(listingId) {
@@ -7211,7 +7233,11 @@
                     alert("⚠️ Vui lòng nhập điểm số hợp lệ!");
                     return;
                 }
-
+                if (val < 0 || val > 10) {
+                    alert("❌ Điểm nhập vào phải nằm trong khoảng từ 0 đến 10!");
+                    document.getElementById('score-value').focus(); // Đưa chuột lại ô nhập
+                    return;
+                }
                 // Mapping tên loại điểm
                 const typeNames = {
                     'speech': 'Phát biểu', 'tx': 'Kiểm tra TX', 

@@ -365,33 +365,39 @@ def submit_academic_score(
     current_user: Player = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
+    # 1. Kiểm tra quyền
     if current_user.role != "U1":
         raise HTTPException(status_code=403, detail="Chỉ Tổ Trưởng mới được nhập điểm!")
+    
+    # 2. Validate điểm (0-10)
+    if req.value < 0 or req.value > 10:
+        raise HTTPException(status_code=400, detail="Giá trị điểm không hợp lệ (phải từ 0-10)!")
 
+    # 3. Tìm học sinh
     target = db.get(Player, req.target_player_id)
     if not target:
         raise HTTPException(status_code=404, detail="Không tìm thấy học sinh")
 
-    # Cộng điểm vào chỉ số tương ứng
     desc = ""
+
+    # 👇 LOGIC CHỈ CỘNG ĐIỂM (KHÔNG TIỀN, KHÔNG KPI) 👇
     if req.score_type == "speech":
         target.diem_phat_bieu += int(req.value)
-        desc = "Phát biểu"
+        desc = "Phát biểu xây dựng bài"
+
     elif req.score_type == "tx":
-        target.diem_tx += req.value
-        desc = "Kiểm tra TX"
+        target.diem_tx += req.value 
+        desc = "Điểm Kiểm tra TX"
+
     elif req.score_type == "product":
         target.diem_san_pham += req.value
-        desc = "Sản phẩm"
-    elif req.score_type == "hk":
-        target.diem_hk = req.value
-        desc = "Thi Học Kỳ"
-    
-    # Cộng KPI và Vàng
-    target.kpi += req.value
-    target.tri_thuc += int(req.value * 100) # Thưởng 100 vàng mỗi điểm
+        desc = "Điểm Sản phẩm"
 
-    # --- 👇 LƯU LỊCH SỬ (LOG) 👇 ---
+    elif req.score_type == "hk":
+        target.diem_hk = req.value 
+        desc = "Điểm Thi Học Kỳ"
+
+    # --- Lưu lịch sử ---
     new_log = ScoreLog(
         sender_name=current_user.full_name,
         target_name=target.full_name,
@@ -403,11 +409,10 @@ def submit_academic_score(
         created_at=get_vn_time()
     )
     db.add(new_log)
-    # -------------------------------
 
     db.add(target)
     db.commit()
-    return {"success": True, "message": f"Đã cộng {req.value} điểm cho {target.full_name}"}
+    return {"success": True, "message": f"Đã nhập {desc}: {req.value} điểm cho {target.full_name}"}
 
 # 2. CẬP NHẬT API Phạt Vi Phạm
 @router.post("/team/submit-violation")
