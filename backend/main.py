@@ -2,17 +2,16 @@ import os
 import traceback
 import random
 import json
+import asyncio
 from fastapi import FastAPI, Depends, HTTPException, status, Query, Body, APIRouter,Request
-#from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from fastapi.middleware.cors import CORSMiddleware
 from sqlmodel import Session, select, update, func, col 
 from datetime import datetime, timedelta
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import JSONResponse, FileResponse
 from typing import Optional
-from database import create_db_and_tables, engine, Player, get_db, Item, Inventory, Title, TowerProgress, Boss, QuestionBank, BossLog, ArenaMatch, ArenaParticipant, SystemStatus
-#from auth import verify_password, create_access_token, get_current_user, ACCESS_TOKEN_EXPIRE_MINUTES
-from routes import admin, users, shop, tower, pets, inventory_api, arena_api, auth, skills, market_api, notifications
+from database import create_db_and_tables, engine, Player, get_db, Item, Inventory, Title, TowerProgress, Boss, QuestionBank, BossLog, ArenaMatch, ArenaParticipant, SystemStatus, ChatLog
+from routes import admin, users, shop, tower, pets, inventory_api, arena_api, auth, skills, market_api, notifications, chat_api
 from pydantic import BaseModel
 from sqlalchemy import func, desc, or_
 from game_logic.level import add_exp_to_player
@@ -105,6 +104,7 @@ app.include_router(auth.router, prefix="/api", tags=["Authentication"])
 app.include_router(skills.router, prefix="/api/skills", tags=["Skills System"])
 app.include_router(market_api.router)
 app.include_router(notifications.router, prefix="/api/noti", tags=["Notifications"])
+app.include_router(chat_api.router, prefix="/api/chat", tags=["Chat"])
 # --- CẤU HÌNH ĐƯỜNG DẪN FILE (Phiên bản Tuyệt Đối - Chống Lỗi) ---
 
 # 1. Lấy đường dẫn tuyệt đối của file main.py đang chạy
@@ -927,6 +927,44 @@ def grant_exp_to_user(username: str, amount: int, db: Session = Depends(get_db))
         print(f"Lỗi: {e}")
         return {"success": False, "message": f"Lỗi hệ thống: {str(e)}"}
 
+# --- TÁC VỤ CHẠY NGẦM: Dọn dẹp chat lúc 0h00 ---
+async def cleanup_chat_task():
+    while True:
+        now = datetime.now()
+        # Tính thời gian đến 0h00 ngày hôm sau
+        tomorrow = datetime(now.year, now.month, now.day) + timedelta(days=1)
+        seconds_until_midnight = (tomorrow - now).total_seconds()
+        
+        print(f"⏳ Còn {int(seconds_until_midnight)} giây nữa đến giờ dọn dẹp Chat...")
+        
+        # Ngủ cho đến 0h00
+        await asyncio.sleep(seconds_until_midnight)
+        
+        # Đến 0h00 -> Thực hiện xóa
+        try:
+            print("🧹 Đang dọn dẹp lịch sử Chat...")
+            # Tạo session DB thủ công để xóa
+            from database import SessionLocal
+            db = SessionLocal()
+            try:
+                # Xóa toàn bộ bảng chatlog
+                db.execute(text("DELETE FROM chatlog"))
+                db.commit()
+                # Gửi thông báo cho mọi người biết (Optional)
+                print("✅ Đã xóa sạch lịch sử Chat ngày cũ!")
+            finally:
+                db.close()
+        except Exception as e:
+            print(f"❌ Lỗi dọn dẹp: {e}")
+            
+        # Ngủ thêm 60s để tránh chạy lặp lại ngay lập tức
+        await asyncio.sleep(60)
+
+# Kích hoạt tác vụ khi Server khởi động
+@app.on_event("startup")
+async def startup_event():
+    asyncio.create_task(cleanup_chat_task())
+    
 # 👇 ĐOẠN CODE KHỞI ĐỘNG SERVER (PHẢI CÓ Ở CUỐI FILE)
 if __name__ == "__main__":
     import uvicorn

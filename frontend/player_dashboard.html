@@ -400,6 +400,48 @@
         #main-content {
             transition: all 0.3s ease;
         }
+
+        /* --- CSS CHO CHAT --- */
+
+        /* 1. Hiệu ứng bông tuyết rơi */
+        .snowflake {
+            position: absolute;
+            top: -10px;
+            background: white;
+            border-radius: 50%;
+            opacity: 0.8;
+            pointer-events: none;
+            animation: fall linear forwards;
+        }
+
+        @keyframes fall {
+            to { transform: translateY(100vh); } /* Rơi từ đỉnh xuống đáy màn hình */
+        }
+
+        /* 2. Thanh cuộn (Scrollbar) tùy chỉnh cho Chat */
+        #chat-messages::-webkit-scrollbar {
+            width: 10px;
+        }
+        #chat-messages::-webkit-scrollbar-track {
+            background: #111; 
+        }
+        #chat-messages::-webkit-scrollbar-thumb {
+            background: #555; 
+            border-radius: 5px;
+            border: 1px solid #333;
+        }
+        #chat-messages::-webkit-scrollbar-thumb:hover {
+            background: #777; 
+        }
+
+        /* 3. Hiệu ứng tin nhắn mới hiện ra */
+        .msg-row {
+            animation: fadeIn 0.3s ease-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
     </style>
 </head>
 
@@ -440,6 +482,10 @@
             
             <a href="#" onclick="switchMainScreen('inventory'); return false;" id="nav-inventory" class="flex items-center px-6 py-3 text-gray-700 hover:bg-amber-50 hover:text-amber-900 transition-all cursor-pointer">
                 <i class="fas fa-suitcase w-6 text-center mr-2 text-yellow-700"></i> Túi Đồ & Chợ Đen 
+            </a>
+
+            <a href="#" onclick="switchMainScreen('chat'); initChat(); return false;" id="nav-chat" class="flex items-center px-6 py-3 text-gray-700 hover:bg-amber-100 hover:text-amber-900 transition-colors">
+                <i class="fas fa-comments w-6 text-center mr-2 text-gray-600"></i> Kênh Chat Server
             </a>
             
             <a href="#" class="flex items-center px-6 py-3 text-gray-700 hover:bg-amber-100 hover:text-amber-900 transition-colors">
@@ -1442,6 +1488,7 @@
                     </div>
                 </div>
             </div>
+
             <div id="confirm-score-modal" class="hidden fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4 backdrop-blur-sm animate-fade-in">
                 <div class="bg-white rounded-xl shadow-2xl max-w-md w-full overflow-hidden border-4 border-yellow-500 transform transition-all scale-100">
                     <div class="bg-yellow-500 p-4 text-white font-bold text-lg text-center uppercase tracking-wide">
@@ -1481,7 +1528,38 @@
                 </div>
             </div>
 
-            
+            <div id="section-chat" class="section-content hidden h-full">
+                <div class="flex justify-between items-center mb-4 border-b-2 border-amber-200 pb-2">
+                    <h2 class="text-2xl font-bold text-amber-800">
+                        💬 Kênh Chat Thế Giới
+                    </h2>
+                    <span class="text-sm text-gray-500 italic">Trạng thái: <span id="chat-status" class="text-red-500 font-bold">Chưa kết nối</span></span>
+                </div>
+
+                <div id="chat-panel" class="bg-black border-4 border-gray-700 rounded-lg w-full max-w-6xl mx-auto relative overflow-hidden shadow-2xl flex flex-col" style="height: 70vh;">
+                    
+                    <div id="snow-container" class="absolute inset-0 pointer-events-none z-10"></div>
+
+                    <div id="chat-messages" class="flex-1 overflow-y-auto p-4 space-y-2 z-20 relative font-mono text-sm">
+                        <div class="text-gray-500 italic text-center mt-10">
+                            --- Hãy nói gì đó để bắt đầu ---
+                        </div>
+                    </div>
+
+                    <div class="bg-gray-900 p-3 flex gap-3 border-t border-gray-700 z-30 relative shrink-0">
+                        <input type="text" id="chat-input" 
+                            class="flex-1 bg-gray-800 text-white border border-gray-600 rounded px-4 py-3 text-base focus:outline-none focus:border-green-500 transition-colors" 
+                            placeholder="Nhập tin nhắn... (Enter để gửi)"
+                            onkeypress="handleChatKey(event)">
+                        
+                        <button onclick="sendChatMessage()" 
+                            class="bg-green-700 hover:bg-green-600 text-white font-bold py-2 px-8 rounded transition-transform active:scale-95 shadow-lg uppercase tracking-wide">
+                            GỬI
+                        </button>
+                    </div>
+                </div>
+            </div>
+
         </main>
 
     <script>
@@ -1493,6 +1571,8 @@
         let userAnswers = {};           // Lưu đáp án người chơi chọn
         let quizTimerInterval = null;   // Lưu bộ đếm giờ để còn tắt đi
         let arenaLobbyInterval = null;  // Biến giữ nhịp tự động cập nhật
+        let chatSocket = null;
+        let isChatConnected = false;
 
         // 2. Dữ liệu Hệ thống & Player
         let dashboardData = null;       // [QUAN TRỌNG] Lưu data nhân vật
@@ -1548,7 +1628,8 @@
                 'main-view-shop',
                 'main-view-boss',
                 'main-view-team-manager',
-                'main-view-grading' 
+                'main-view-grading',
+                'section-chat' 
             ];
 
             views.forEach(id => {
@@ -1564,7 +1645,8 @@
                 'tower': document.getElementById('nav-tower'),
                 'skills': document.getElementById('nav-skills'),
                 'boss': document.getElementById('nav-boss'),
-                'team-manager': document.getElementById('nav-team-manager') // 👈 [MỚI] Thêm ID nút menu này
+                'team-manager': document.getElementById('nav-team-manager'),
+                'chat': document.getElementById('nav-chat')
             };
 
             const setInactive = (el) => {
@@ -1664,6 +1746,15 @@
 
                 // Gọi hàm tải dropdown học sinh
                 if (typeof loadGradingStudents === 'function') loadGradingStudents();
+            }
+            else if (screenName === 'chat') {
+                const view = document.getElementById('section-chat');
+                if(view) view.classList.remove('hidden'); // Hiện khung chat
+                
+                if(navs.chat) setActive(navs.chat); // Làm đậm nút menu
+                
+                // Gọi hàm khởi động chat (nếu chưa kết nối)
+                if (typeof initChat === 'function') initChat();
             }
         }
 
@@ -7516,7 +7607,162 @@
             }
         }
 
+        //logic kênh chat
+        // 1. HÀM KHỞI ĐỘNG (Được gọi từ switchMainScreen khi chọn tab Chat)
+        function initChat() {
+            if (isChatConnected) return; // Nếu đang kết nối rồi thì thôi
 
+            const token = localStorage.getItem("access_token");
+            if (!token) {
+                alert("Vui lòng đăng nhập lại!");
+                return;
+            }
+
+            // Tự động chọn ws:// hoặc wss:// tùy theo http/https
+            const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
+            const wsUrl = `${protocol}://${window.location.host}/api/chat/ws?token=${token}`;
+
+            updateChatStatus("Đang kết nối...", "text-yellow-500");
+
+            // Mở kết nối
+            chatSocket = new WebSocket(wsUrl);
+
+            // Khi kết nối thành công
+            chatSocket.onopen = () => {
+                console.log("🟢 Đã kết nối Chat!");
+                isChatConnected = true;
+                updateChatStatus("Đã kết nối", "text-green-600");
+                
+                // Xóa thông báo chờ và tải lịch sử
+                document.getElementById('chat-messages').innerHTML = ''; 
+                loadChatHistory(); 
+                startSnowEffect(); // Bật tuyết rơi
+            };
+
+            // Khi nhận tin nhắn mới
+            chatSocket.onmessage = (event) => {
+                const data = JSON.parse(event.data);
+                if (data.type === 'chat') {
+                    appendMessage(data);
+                } else if (data.type === 'error') {
+                    alert("⚠️ " + data.content); // Báo lỗi (ví dụ Spam)
+                }
+            };
+
+            // Khi mất kết nối
+            chatSocket.onclose = () => {
+                console.warn("🔴 Mất kết nối Chat.");
+                isChatConnected = false;
+                updateChatStatus("Mất kết nối", "text-red-500");
+                
+                // Thử kết nối lại sau 3 giây nếu người dùng vẫn đang ở màn hình chat
+                setTimeout(() => { 
+                    if(!document.getElementById('section-chat').classList.contains('hidden')) {
+                        initChat(); 
+                    }
+                }, 3000);
+            };
+        }
+
+        // 2. Tải lịch sử chat cũ
+        async function loadChatHistory() {
+            try {
+                const res = await fetch('/api/chat/history', {
+                    headers: { "Authorization": `Bearer ${localStorage.getItem("access_token")}` }
+                });
+                const msgs = await res.json();
+                msgs.forEach(msg => appendMessage(msg));
+            } catch (e) { console.error("Lỗi tải lịch sử:", e); }
+        }
+
+        // 3. Hiển thị tin nhắn lên màn hình (Đã sửa màu ngày giờ thành Trắng)
+        function appendMessage(msg) {
+            const box = document.getElementById('chat-messages');
+            
+            // Logic màu sắc theo Role
+            let roleClass = "text-blue-300"; // Mặc định
+            let roleBadge = "";
+
+            if (msg.role === 'ADMIN' || msg.role === 'U0') {
+                roleClass = "text-yellow-400 font-bold drop-shadow-md";
+                roleBadge = "👑";
+            } else if (msg.role === 'U1') { // Tổ trưởng
+                roleClass = "text-green-400 font-bold";
+                roleBadge = "🛡️";
+            }
+
+            const div = document.createElement('div');
+            div.className = "msg-row hover:bg-gray-800 px-3 py-1 rounded transition-colors break-words border-l-2 border-transparent hover:border-gray-600";
+            
+            div.innerHTML = `
+                <span class="${roleClass}">${roleBadge}[${msg.player_name}]</span> : 
+                <span class="text-white text-shadow">${msg.content}</span>
+                <span class="text-white text-[11px] ml-2 select-none float-right mt-1 opacity-70">[${msg.time}]</span>
+            `;
+            
+            box.appendChild(div);
+            
+            // TỰ ĐỘNG CUỘN XUỐNG DƯỚI CÙNG
+            box.scrollTop = box.scrollHeight;
+        }
+
+        // 4. Gửi tin nhắn
+        function sendChatMessage() {
+            const input = document.getElementById('chat-input');
+            const content = input.value.trim();
+            
+            if (!content) return;
+
+            if (chatSocket && chatSocket.readyState === WebSocket.OPEN) {
+                chatSocket.send(content);
+                input.value = '';
+                input.focus();
+            } else {
+                alert("Đang mất kết nối máy chủ! Vui lòng đợi...");
+            }
+        }
+
+        // Xử lý phím Enter
+        function handleChatKey(e) {
+            if (e.key === 'Enter') sendChatMessage();
+        }
+
+        // 5. Cập nhật trạng thái text
+        function updateChatStatus(text, colorClass) {
+            const el = document.getElementById('chat-status');
+            if(el) {
+                el.innerText = text;
+                el.className = `font-bold ${colorClass}`;
+            }
+        }
+
+        // 6. Hiệu ứng Tuyết rơi (Chỉ chạy khi mở Chat)
+        function startSnowEffect() {
+            const container = document.getElementById('snow-container');
+            if(container.children.length > 0) return; // Tránh tạo trùng
+
+            setInterval(() => {
+                // Kiểm tra nếu đang ẩn chat thì không tạo tuyết (đỡ lag)
+                if (document.getElementById('section-chat').classList.contains('hidden')) return;
+
+                const flake = document.createElement('div');
+                flake.classList.add('snowflake');
+                
+                // Random vị trí và kích thước
+                flake.style.left = Math.random() * 100 + '%';
+                const size = Math.random() * 3 + 2 + 'px'; // 2px - 5px
+                flake.style.width = size;
+                flake.style.height = size;
+                
+                // Random tốc độ rơi (3s - 8s)
+                flake.style.animationDuration = Math.random() * 5 + 3 + 's';
+                
+                container.appendChild(flake);
+
+                // Xóa sau khi rơi xong
+                setTimeout(() => { flake.remove(); }, 8000);
+            }, 200); // 0.2s tạo 1 bông tuyết
+        }
         // 2. Thiết lập vòng lặp thông minh (Smart Polling)
         // Dùng biến window để đảm bảo quản lý toàn cục
         if (window.bossPollInterval) clearInterval(window.bossPollInterval);

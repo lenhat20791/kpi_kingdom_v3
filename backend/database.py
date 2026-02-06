@@ -365,7 +365,33 @@ class Notification(SQLModel, table=True):
     content: str = Field(sa_column=Column(Text)) # Nội dung (HTML hoặc Text)
     is_active: bool = Field(default=True) # Đang bật hay tắt
     created_at: datetime = Field(default_factory=datetime.now)
-    
+
+class ChatLog(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    player_id: int
+    player_name: str
+    role: str           # Để phân loại màu sắc (U1, Admin...)
+    content: str        # Nội dung chat
+    created_at: str     # Lưu giờ VN
+
+class ChatWarningLog(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    player_id: int
+    player_name: str
+    content: str
+    created_at: str
+
+# 1. Bảng lưu danh sách người bị cấm chat
+class ChatBan(SQLModel, table=True):
+    player_id: int = Field(primary_key=True)
+    player_name: str
+    banned_until: str # Thời gian hết hạn cấm (ISO format)
+    reason: str
+
+# 2. Bảng lưu từ khóa bị cấm (Blacklist)
+class ChatKeyword(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    word: str
 if __name__ == "__main__":
     create_db_and_tables()
     print(f"✅ Đã khởi tạo thành công Database tại: {DB_PATH}")

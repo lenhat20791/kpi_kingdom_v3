@@ -214,6 +214,36 @@
             /* Bo góc khớp với overlay */
             border-radius: 0.75rem; 
         }
+        /* Style riêng cho Admin Log */
+        .inner-shadow {
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
+        }
+        .log-item {
+            border-bottom: 1px dashed #333;
+            padding-bottom: 4px;
+            animation: fadeIn 0.3s;
+        }
+        .tag-keyword {
+            background: #fcd34d;
+            color: #78350f;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: bold;
+            border: 1px solid #d97706;
+        }
+        /* Sửa lỗi chữ trắng trên nền trắng cho Admin Control Panel */
+        #section-admin-chat input, 
+        #section-admin-chat select {
+            color: #1a202c !important; /* Màu đen đậm */
+            background-color: #ffffff !important; /* Nền trắng */
+        }
+
+        /* Riêng ô nhập chat trong nền đen thì vẫn để chữ trắng */
+        #section-admin-chat #chat-input {
+            color: #ffffff !important;
+            background-color: #1f2937 !important; /* bg-gray-800 */
+        }
 
     </style>
 </head>
@@ -252,6 +282,11 @@
             <button onclick="switchTab('dungeon-tower')" data-tab="dungeon-tower" 
                 class="nav-item w-full text-left px-6 py-3 transition border-l-4 border-transparent text-gray-300 hover:bg-gray-700 hover:text-white hover:border-gray-400">
                 <i class="fas fa-chess-rook w-6 text-center"></i> Tháp Thí Luyện
+            </button>
+
+            <button onclick="switchTab('chat')" data-tab="chat" 
+                class="nav-item w-full text-left px-6 py-3 transition border-l-4 border-transparent text-gray-300 hover:bg-gray-700 hover:text-white hover:border-gray-400">
+                <i class="fas fa-comments w-6 text-center"></i> Chat & Kiểm Soát
             </button>
 
             <button onclick="switchTab('arena')" data-tab="arena" 
@@ -1751,6 +1786,80 @@
                 </div>
             </div>
         </div>
+
+        <div id="tab-chat" class="tab-content hidden h-full flex flex-col gap-4">
+    
+            <div class="bg-black border-4 border-gray-700 rounded-lg w-full relative overflow-hidden shadow-2xl flex flex-col h-[50vh]">
+                <div id="snow-container" class="absolute inset-0 pointer-events-none z-10"></div>
+                
+                <div id="chat-messages" class="flex-1 overflow-y-auto p-4 space-y-2 z-20 relative font-mono text-sm text-gray-200">
+                    </div>
+
+                <div class="bg-gray-900 p-2 flex gap-2 border-t border-gray-700 z-30 relative">
+                    <input type="text" id="chat-input" class="flex-1 bg-gray-800 text-white border border-gray-600 rounded px-3 focus:outline-none focus:border-yellow-500" placeholder="Admin chat...">
+                    <button onclick="sendChatMessage()" class="bg-yellow-600 text-black font-bold px-6 rounded hover:bg-yellow-500">GỬI</button>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 h-[35vh]">
+                
+                <div class="bg-red-50 border-2 border-red-200 rounded p-3 flex flex-col shadow-md">
+                    <h3 class="font-bold text-red-800 mb-2 border-b border-red-200 flex items-center gap-2">
+                        🔨 CẤM NGƯỜI CHƠI
+                    </h3>
+                    <div class="flex-1 flex flex-col gap-2 overflow-y-auto">
+                        <label class="text-xs font-bold text-gray-600">Chọn đối tượng:</label>
+                        <select id="ban-target-select" class="w-full p-1 border rounded bg-white text-sm">
+                            <option value="">-- Đang tải danh sách... --</option>
+                        </select>
+
+                        <div class="flex gap-2">
+                            <div class="w-1/3">
+                                <label class="text-xs font-bold text-gray-600">Giờ:</label>
+                                <input type="number" id="ban-hours" value="12" class="w-full p-1 border rounded text-center">
+                            </div>
+                            <div class="w-2/3">
+                                <label class="text-xs font-bold text-gray-600">Lý do:</label>
+                                <input type="text" id="ban-reason" placeholder="Lý do..." class="w-full p-1 border rounded text-black bg-white">
+                            </div>
+                        </div>
+
+                        <button onclick="banPlayer()" class="mt-auto w-full bg-red-600 text-white font-bold py-2 rounded hover:bg-red-700 transition-colors shadow">
+                            THỰC THI LỆNH CẤM
+                        </button>
+                    </div>
+                </div>
+
+                <div class="bg-amber-50 border-2 border-amber-200 rounded p-3 flex flex-col shadow-md">
+                    <h3 class="font-bold text-amber-800 mb-2 border-b border-amber-200 flex items-center gap-2">
+                        🚫 TỪ KHÓA CẤM
+                    </h3>
+                    <div class="flex gap-2 mb-2">
+                        <input type="text" id="keyword-input" placeholder="Nhập từ cấm..." class="flex-1 p-1 border rounded text-sm text-black bg-white">
+                        <button onclick="addKeyword()" class="bg-amber-600 text-white px-3 rounded font-bold hover:bg-amber-700">+</button>
+                    </div>
+                    <div class="text-xs text-gray-500 mb-1 italic">Danh sách từ đang chặn:</div>
+                    <div id="keyword-list" class="flex-1 bg-white border rounded p-2 overflow-y-auto flex flex-wrap gap-1 content-start">
+                        <span class="bg-gray-200 px-2 rounded text-xs">đang tải...</span>
+                    </div>
+                </div>
+
+                <div class="bg-black border-2 border-gray-600 rounded p-3 flex flex-col shadow-md">
+                    <h3 class="font-bold text-green-400 mb-2 border-b border-gray-700 flex items-center gap-2">
+                        ⚠️ NHẬT KÝ VI PHẠM
+                        <button onclick="loadWarningLogs()" class="ml-auto text-xs bg-gray-700 px-2 rounded hover:bg-gray-600">Refresh</button>
+                    </h3>
+                    <div id="warning-logs" class="flex-1 overflow-y-auto font-mono text-xs space-y-2 p-1 bg-gray-900 rounded inner-shadow text-gray-300">
+                        <div class="border-l-2 border-red-500 pl-2">
+                            <span class="text-green-500">[10:00]</span> 
+                            <span class="text-yellow-400 font-bold">NguyenVanA</span>: 
+                            <span class="text-white">...</span>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
     </main>
 
     <script>
@@ -1759,6 +1868,7 @@
         let adminAllSkills = []; // Lưu toàn bộ skill tải từ server
         let currentFilter = 'WARRIOR'; // Mặc định hiển thị Warrior trước
         let currentBossDrops = [];
+        let chatSocket = null;
 
         // --- HÀM CHUYỂN TAB ĐÃ SỬA LỖI (ĐỒNG BỘ CSS & TAILWIND) ---
         function switchTab(tabName) {
@@ -1845,6 +1955,11 @@
                 case 'charm-settings': // 👈 Tên tab mới
                     if (typeof loadSystemConfig === 'function') {
                         loadSystemConfig(); // Gọi hàm load API Admin mà ta vừa viết
+                    }
+                    break;
+                case 'chat': // 👈 [MỚI] Thêm case này vào
+                    if (typeof initAdminChat === 'function') {
+                        initAdminChat();
                     }
                     break;
                 default:
@@ -5559,6 +5674,243 @@
             document.getElementById('forge-g1-bonus').value = 10;
         }
 
+        
+
+        // 1. KHỞI ĐỘNG ADMIN CHAT DASHBOARD
+        function initAdminChat() {
+            const token = localStorage.getItem("access_token");
+            if (!token) return;
+
+            // A. Kết nối WebSocket
+            const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
+            const wsUrl = `${protocol}://${window.location.host}/api/chat/ws?token=${token}`;
+            
+            if(!chatSocket || chatSocket.readyState !== WebSocket.OPEN) {
+                chatSocket = new WebSocket(wsUrl);
+                
+                chatSocket.onopen = () => {
+                    console.log("🟢 Admin Chat Online");
+                    document.getElementById('chat-messages').innerHTML = '';
+                    loadChatHistory(); // Tải lịch sử chat
+                    startSnowEffect(); // Hiệu ứng
+                };
+
+                chatSocket.onmessage = (event) => {
+                    const data = JSON.parse(event.data);
+                    if (data.type === 'chat') appendMessage(data);
+                    
+                    // Nếu là cảnh báo hệ thống -> Tự động reload log vi phạm
+                    if (data.role === 'SYSTEM') loadWarningLogs();
+                };
+            }
+
+            // B. Tải dữ liệu quản trị
+            loadStudentListForBan(); // Tải dropdown học sinh
+            loadKeywords();
+            loadWarningLogs();       // Tải log vi phạm
+            // loadKeywords();       // (Optional) Tải danh sách từ khóa
+        }
+
+        // 2. CÁC HÀM CƠ BẢN (Giống Player)
+        async function loadChatHistory() { /* ... Copy y hệt bên Player ... */ 
+            try {
+                const res = await fetch('/api/chat/history', { headers: { "Authorization": `Bearer ${localStorage.getItem("access_token")}` }});
+                const msgs = await res.json();
+                msgs.forEach(msg => appendMessage(msg));
+            } catch(e){}
+        }
+
+        function appendMessage(msg) { /* ... Copy y hệt bên Player ... */ 
+            const box = document.getElementById('chat-messages');
+            let roleClass = "text-blue-300";
+            if (msg.role === 'ADMIN') roleClass = "text-yellow-400 font-bold";
+            else if (msg.role === 'SYSTEM') roleClass = "text-red-500 font-bold bg-red-900/30 px-2 rounded"; // Style cho cảnh báo
+            else if (msg.role === 'U1') roleClass = "text-green-400 font-bold";
+
+            const div = document.createElement('div');
+            div.className = "hover:bg-gray-800 px-2 py-1 rounded transition-colors break-words";
+            div.innerHTML = `
+                <span class="${roleClass}">[${msg.player_name}]</span> : 
+                <span class="text-white">${msg.content}</span>
+                <span class="text-gray-400 text-[10px] ml-2 float-right">[${msg.time}]</span>
+            `;
+            box.appendChild(div);
+            box.scrollTop = box.scrollHeight;
+        }
+
+        function sendChatMessage() {
+            const input = document.getElementById('chat-input');
+            const content = input.value.trim();
+            if (content && chatSocket) {
+                chatSocket.send(content);
+                input.value = '';
+            }
+        }
+
+        // ==========================================
+        // 👇👇👇 CÁC HÀM QUẢN TRỊ (ADMIN ONLY) 👇👇👇
+        // ==========================================
+
+        // Hàm tải danh sách học sinh vào ô chọn (Dropdown)
+        async function loadStudentListForBan() {
+            const select = document.getElementById('ban-target-select');
+            if (!select) return;
+
+            try {
+                const res = await fetch('/api/chat/admin/all-players', {
+                    headers: { 
+                        "Authorization": `Bearer ${localStorage.getItem("access_token")}` 
+                    }
+                });
+                
+                if (!res.ok) throw new Error("Không thể tải danh sách");
+                
+                const players = await res.json();
+                
+                // Xóa nội dung cũ và thêm option mặc định
+                select.innerHTML = '<option value="">-- Chọn người chơi --</option>';
+                
+                players.forEach(p => {
+                    const opt = document.createElement('option');
+                    opt.value = p.id;
+                    opt.innerText = p.full_name;
+                    opt.className = "text-black"; // Đảm bảo chữ màu đen dễ nhìn
+                    select.appendChild(opt);
+                });
+                
+                console.log("✅ Đã tải xong danh sách học sinh vào mục cấm.");
+            } catch (e) {
+                console.error("❌ Lỗi tải DS học sinh:", e);
+                select.innerHTML = '<option value="">Lỗi tải dữ liệu!</option>';
+            }
+        }
+
+        // 4. Thực thi lệnh CẤM (BAN)
+        async function banPlayer() {
+            const targetId = document.getElementById('ban-target-select').value;
+            const hours = document.getElementById('ban-hours').value;
+            const reason = document.getElementById('ban-reason').value;
+
+            if (!targetId || !reason) {
+                alert("Vui lòng chọn người chơi và nhập lý do!");
+                return;
+            }
+
+            if (!confirm(`Xác nhận CẤM người chơi này ${hours} tiếng?`)) return;
+
+            try {
+                const res = await fetch(`/api/chat/admin/ban?target_id=${targetId}&hours=${hours}&reason=${encodeURIComponent(reason)}`, {
+                    method: 'POST',
+                    headers: { "Authorization": `Bearer ${localStorage.getItem("access_token")}` }
+                });
+                const data = await res.json();
+                if (data.success) {
+                    alert("✅ " + data.message);
+                    // Gửi tin nhắn thông báo ra kênh chat cho ngầu
+                    if(chatSocket) chatSocket.send(`[SYSTEM] Đã cấm chat ${document.getElementById('ban-target-select').selectedOptions[0].text} trong ${hours}h. Lý do: ${reason}`);
+                } else {
+                    alert("❌ Lỗi: " + data.detail);
+                }
+            } catch (e) { alert("Lỗi kết nối!"); }
+        }
+
+        // 5. Thêm Từ khóa Cấm
+        async function addKeyword() {
+            const input = document.getElementById('keyword-input');
+            const word = input.value.trim();
+            if (!word) return;
+
+            try {
+                const res = await fetch(`/api/chat/admin/keyword?word=${encodeURIComponent(word)}`, {
+                    method: 'POST',
+                    headers: { "Authorization": `Bearer ${localStorage.getItem("access_token")}` }
+                });
+                input.value = '';
+                alert("✅ Đã thêm từ khóa cấm: " + word);
+                // Có thể reload list keyword ở đây
+                const list = document.getElementById('keyword-list');
+                list.insertAdjacentHTML('beforeend', `<span class="tag-keyword">${word}</span>`);
+            } catch (e) { alert("Lỗi thêm từ khóa"); }
+        }
+
+        async function loadKeywords() {
+            const container = document.getElementById('keyword-list');
+            if (!container) return;
+
+            try {
+                const res = await fetch('/api/chat/admin/keywords_list', { // Giả sử bạn có API này
+                    headers: { "Authorization": `Bearer ${localStorage.getItem("access_token")}` }
+                });
+                const keywords = await res.json();
+                
+                container.innerHTML = ''; // Xóa chữ "đang tải..."
+                if (keywords.length === 0) {
+                    container.innerHTML = '<span class="text-gray-400 text-[10px]">Chưa có từ khóa nào</span>';
+                    return;
+                }
+
+                keywords.forEach(k => {
+                    container.insertAdjacentHTML('beforeend', `<span class="tag-keyword m-1">${k.word}</span>`);
+                });
+            } catch (e) {
+                container.innerHTML = 'Lỗi!';
+            }
+        }
+        // 6. Tải Nhật ký Vi phạm (Log bí mật)
+        async function loadWarningLogs() {
+            const container = document.getElementById('warning-logs');
+            try {
+                const res = await fetch('/api/chat/admin/warnings', {
+                    headers: { "Authorization": `Bearer ${localStorage.getItem("access_token")}` }
+                });
+                const logs = await res.json();
+                
+                container.innerHTML = '';
+                logs.forEach(log => {
+                    const div = document.createElement('div');
+                    div.className = "log-item mb-2 text-[11px]";
+                    div.innerHTML = `
+                        <div class="flex justify-between text-gray-500">
+                            <span>${log.created_at}</span>
+                            <span class="text-red-400 font-bold">${log.player_name}</span>
+                        </div>
+                        <div class="text-white bg-red-900/20 p-1 rounded mt-1 border-l-2 border-red-600 truncate">
+                            ${log.content}
+                        </div>
+                    `;
+                    container.appendChild(div);
+                });
+            } catch (e) { container.innerHTML = '<div class="text-red-500">Lỗi tải log</div>'; }
+        }
+
+        // 7. Hiệu ứng Tuyết rơi (Chỉ chạy khi mở Chat)
+        function startSnowEffect() {
+            const container = document.getElementById('snow-container');
+            if (!container) return; // Nếu không thấy chỗ chứa tuyết thì thoát luôn
+            
+            if (container.children.length > 0) return; 
+
+            setInterval(() => {
+                // 👇 SỬA CHỖ NÀY: Kiểm tra an toàn hơn
+                const chatTab = document.getElementById('tab-chat');
+                
+                // Nếu không có tab-chat HOẶC tab-chat đang bị ẩn thì không tạo tuyết
+                if (!chatTab || chatTab.classList.contains('hidden')) return;
+
+                const flake = document.createElement('div');
+                flake.classList.add('snowflake');
+                
+                flake.style.left = Math.random() * 100 + '%';
+                const size = Math.random() * 3 + 2 + 'px';
+                flake.style.width = size;
+                flake.style.height = size;
+                flake.style.animationDuration = Math.random() * 5 + 3 + 's';
+                
+                container.appendChild(flake);
+
+                setTimeout(() => { flake.remove(); }, 8000);
+            }, 250); // Giảm tần suất một chút cho Admin đỡ lag (0.25s)
+        }
 
         // --- KHỞI TẠO KHI TRANG LOAD XONG ---
         document.addEventListener('DOMContentLoaded', () => {
