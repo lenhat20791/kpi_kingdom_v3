@@ -2027,10 +2027,8 @@
             }
         }
 
-        
 
         //lò rèn CƯỜNG HÓA
-
         // 1. Mở Modal và hiển thị thông tin cường hóa
         function openForgeModal(itemId) {
             // Tìm item trong dữ liệu đã tải (bạn cần đảm bảo biến global listItems có dữ liệu)
@@ -2549,11 +2547,11 @@
 
         // 1. HÀM MỞ MODAL BÁN (Thay thế hàm cũ)
         function openSellCharm(itemId) {
-            // Tìm item trong túi (Dùng biến toàn cục currentBagData đã có)
+            // 1. Tìm Item (Đảm bảo tìm đúng Charm, tránh nhầm ID với vật phẩm thường)
             const item = window.currentBagData.find(i => 
                 i.id == itemId && (i.stats_data || i.enhance_level !== undefined)
             );
-    
+
             if (!item) {
                 alert("Lỗi: Không tìm thấy Charm này (Có thể do trùng ID với vật phẩm thường)!");
                 return;
@@ -2561,26 +2559,60 @@
 
             currentSellItem = item;
 
-            // Điền thông tin vào Modal HTML
-            const safeImg = item.image_url || '/assets/items/default.png';
-            document.getElementById('sell-item-img').src = safeImg;
-            document.getElementById('sell-item-name').innerText = item.name;
-            document.getElementById('sell-item-name').className = "font-bold text-lg " + getRarityColorClass(item.rarity); // Hàm màu chữ (nếu có)
+            // 2. Xử lý Ảnh (Vơ vét mọi key có thể + Thêm đuôi chống Cache)
+            let rawImg = item.image_url || item.image || item.item_image || item.img;
+            let safeImg = '/assets/items/default.png'; // Mặc định
+
+            if (rawImg && !rawImg.includes('default')) {
+                // Thêm tham số thời gian để ép trình duyệt tải lại ảnh mới nhất
+                safeImg = rawImg + "?v=" + new Date().getTime();
+            }
+
+            // 3. Điền thông tin vào Modal HTML (Dùng ID MỚI đã đổi ở bước trước)
             
-            // Hiển thị cấp độ
-            const lv = item.enhance_level || 0;
-            document.getElementById('sell-item-level').innerText = "+" + lv;
+            // Gán ảnh vào ID mới: sell-charm-img
+            const imgEl = document.getElementById('sell-charm-img');
+            if (imgEl) imgEl.src = safeImg;
+
+            // Gán tên vào ID mới: sell-charm-name
+            const nameEl = document.getElementById('sell-charm-name');
+            if (nameEl) {
+                nameEl.innerText = item.name;
+                
+                // Đổi màu tên theo phẩm chất (Rarity)
+                let colorClass = "text-white"; // Mặc định
+                if (item.rarity === 'LEGEND') colorClass = "text-yellow-400";
+                else if (item.rarity === 'EPIC') colorClass = "text-purple-400";
+                else if (item.rarity === 'MAGIC') colorClass = "text-blue-400";
+                
+                nameEl.className = "font-bold text-lg " + colorClass;
+            }
+
+            // Gán cấp độ vào ID mới: sell-charm-level
+            const levelEl = document.getElementById('sell-charm-level');
+            if (levelEl) {
+                const lv = item.enhance_level || 0;
+                levelEl.innerText = "+" + lv;
+            }
             
-            // Reset form
-            document.getElementById('sell-price-input').value = "";
-            document.getElementById('sell-currency-select').value = "tri_thuc";
+            // 4. Reset form nhập giá (ID này giữ nguyên vì không trùng)
+            const priceInput = document.getElementById('sell-price-input');
+            if (priceInput) priceInput.value = "";
             
-            // Hiển thị Modal
-            document.getElementById('sell-modal').classList.remove('hidden');
-            document.getElementById('sell-modal').classList.add('flex');
+            const currencySelect = document.getElementById('sell-currency-select');
+            if (currencySelect) currencySelect.value = "tri_thuc";
             
-            // Focus vào ô giá tiền cho tiện
-            setTimeout(() => document.getElementById('sell-price-input').focus(), 100);
+            // 5. Hiển thị Modal
+            const modal = document.getElementById('sell-modal');
+            if (modal) {
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+            }
+            
+            // Focus vào ô nhập giá cho tiện
+            if (priceInput) {
+                setTimeout(() => priceInput.focus(), 100);
+            }
         }
 
         // 2. HÀM ĐÓNG MODAL
@@ -2800,18 +2832,48 @@
                 marketList.forEach(item => {
                     const currencyIcon = item.currency === 'tri_thuc' ? '🟡' : (item.currency === 'chien_tich' ? '🔴' : '🔵');
                     
-                    // Thẻ Item Chợ
+                    // --- 👇 ĐOẠN NÂNG CẤP HIỂN THỊ CHARM 👇 ---
+                    let statsHtml = "";
+                    let rarityColor = "text-amber-900"; // Mặc định
+                    
+                    if (item.is_charm && item.stats_data) {
+                        try {
+                            // Giải nén chỉ số từ JSON
+                            const s = typeof item.stats_data === 'string' ? JSON.parse(item.stats_data) : item.stats_data;
+                            if (s.atk) statsHtml += `<span class="text-[10px] text-red-600 font-bold">⚔️${s.atk}</span> `;
+                            if (s.hp) statsHtml += `<span class="text-[10px] text-green-600 font-bold">❤️${s.hp}</span>`;
+                            
+                            // Đổi màu tên theo phẩm chất
+                            if (item.rarity === 'LEGEND') rarityColor = "text-yellow-600";
+                            else if (item.rarity === 'EPIC') rarityColor = "text-purple-600";
+                            else if (item.rarity === 'MAGIC') rarityColor = "text-blue-600";
+                        } catch (e) { console.error("Lỗi đọc stats charm:", e); }
+                    }
+
+                    // Thẻ Item Chợ (Đã thêm hiển thị Cấp cộng và Stats)
                     const card = `
-                        <div class="bg-white border-b-4 border-amber-700 p-3 rounded shadow-sm flex gap-3 items-center min-w-[250px]">
-                            <img src="${item.item_image || '/assets/images/items/default_box.png'}" class="w-16 h-16 object-contain border rounded bg-gray-50">
+                        <div class="bg-white border-b-4 border-amber-700 p-3 rounded shadow-sm flex gap-3 items-center min-w-[280px] relative">
+                            ${item.is_charm && item.enhance_level > 0 ? 
+                                `<div class="absolute top-1 left-1 bg-orange-600 text-white text-[9px] font-bold px-1 rounded shadow-sm">+${item.enhance_level}</div>` 
+                                : ''
+                            }
+
+                            <img src="${item.item_image || '/assets/images/items/default_box.png'}" class="w-16 h-16 object-contain border rounded bg-gray-50 shadow-inner">
+                            
                             <div class="flex-1">
-                                <div class="font-bold text-amber-900 text-sm">${item.item_name} <span class="text-gray-500 text-xs">(x${item.amount})</span></div>
-                                <div class="text-xs text-gray-500 mb-1">Người bán: <span class="font-semibold text-blue-600">${item.seller_name}</span></div>
-                                <div class="font-bold text-lg text-green-700">${item.price} ${currencyIcon}</div>
+                                <div class="font-bold ${rarityColor} text-sm flex justify-between">
+                                    <span>${item.item_name}</span>
+                                    <span class="text-gray-400 text-[10px] font-normal">x${item.amount}</span>
+                                </div>
+                                
+                                <div class="h-4 flex items-center">${statsHtml}</div>
+
+                                <div class="text-[10px] text-gray-500 mb-1 italic">Người bán: <span class="font-semibold text-blue-600">${item.seller_name}</span></div>
+                                <div class="font-bold text-base text-green-700 flex items-center gap-1">${item.price} <span class="text-sm">${currencyIcon}</span></div>
                                 
                                 ${item.seller_name === myName 
-                                    ? `<button onclick="cancelSell(${item.id})" class="mt-1 w-full text-xs bg-red-100 text-red-600 py-1 rounded hover:bg-red-200">Hủy Bán</button>`
-                                    : `<button onclick="buyItem(${item.id})" class="mt-1 w-full text-xs bg-blue-600 text-white py-1 rounded hover:bg-blue-700 font-bold">MUA NGAY</button>`
+                                    ? `<button onclick="cancelSell(${item.id})" class="mt-1 w-full text-xs bg-red-100 text-red-600 py-1 rounded hover:bg-red-200 font-medium transition-colors">Hủy Bán</button>`
+                                    : `<button onclick="buyItem(${item.id})" class="mt-1 w-full text-xs bg-blue-600 text-white py-1 rounded hover:bg-blue-700 font-bold shadow-sm transition-transform active:scale-95">MUA NGAY</button>`
                                 }
                             </div>
                         </div>
@@ -7732,10 +7794,10 @@
                 
                 <div class="flex flex-col items-center justify-center mb-4">
                     <div class="w-24 h-24 bg-gray-800 rounded-xl border border-gray-600 flex items-center justify-center mb-2 shadow-inner relative overflow-hidden group">
-                        <img id="sell-item-img" src="/assets/items/default.png" class="w-20 h-20 object-contain drop-shadow-md">
+                        <img id="sell-charm-img" src="/assets/items/default.png" class="w-20 h-20 object-contain drop-shadow-md">
                     </div>
-                    <div id="sell-item-name" class="font-bold text-white text-lg">Tên Vật Phẩm</div>
-                    <div id="sell-item-level" class="text-xs font-bold text-green-400 bg-green-900/30 px-2 py-0.5 rounded border border-green-500/30 mt-1">+0</div>
+                    <div id="sell-charm-name" class="font-bold text-white text-lg">Tên Vật Phẩm</div>
+                    <div id="sell-charm-level" class="text-xs font-bold text-green-400 bg-green-900/30 px-2 py-0.5 rounded border border-green-500/30 mt-1">+0</div>
                 </div>
 
                 <div class="space-y-3">

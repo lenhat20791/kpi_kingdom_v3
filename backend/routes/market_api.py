@@ -1,3 +1,4 @@
+import json
 from fastapi import APIRouter, Depends, HTTPException
 from sqlmodel import Session, select
 from database import get_db, MarketListing, Player, Inventory, Item, PlayerItem
@@ -33,32 +34,39 @@ class CharmActionRequest(BaseModel):
 # =======================================================
 @router.get("/list")
 async def get_market_list(db: Session = Depends(get_db)):
-    # ❌ Bỏ .where(status="active") vì bảng của bạn không có cột status
     listings = db.exec(select(MarketListing)).all()
-    
     result = []
     for l in listings:
-        # Lấy thông tin Item
-        item = db.get(Item, l.item_id)
-        
-        # Lấy thông tin người bán từ ID (Vì model bạn chỉ lưu seller_id)
         seller = db.get(Player, l.seller_id)
-        seller_name = seller.username if seller else "Ẩn danh"
         
-        if item:
-            # Logic an toàn để lấy ảnh (Check nhiều trường hợp tên cột)
-            img_url = getattr(item, "item_image", None) or getattr(item, "image_url", None) or getattr(item, "image", None) or "/assets/images/items/default.png"
-
+        # Nếu là Charm (999999)
+        if l.item_id == 999999 and l.item_data_json:
+            c_data = json.loads(l.item_data_json) # 👈 MỞ GÓI TẠI ĐÂY
             result.append({
                 "id": l.id,
-                "item_name": getattr(item, "name", "Vật phẩm lạ"),
-                "item_image": img_url,
-                "amount": l.amount,
+                "item_name": c_data.get("name"),
+                "item_image": c_data.get("image_url"),
+                "rarity": c_data.get("rarity"),
+                "enhance_level": c_data.get("enhance_level"),
+                "stats_data": c_data.get("stats_data"),
                 "price": l.price,
                 "currency": l.currency,
-                "seller_name": seller_name,
-                "description": l.description # Model bạn có field này
+                "seller_name": seller.username if seller else "Ẩn danh",
+                "is_charm": True
             })
+        else:
+            # Xử lý đồ thường (như cũ)
+            item = db.get(Item, l.item_id)
+            if item:
+                result.append({
+                    "id": l.id,
+                    "item_name": item.name,
+                    "item_image": item.image_url,
+                    "price": l.price,
+                    "currency": l.currency,
+                    "seller_name": seller.username if seller else "Ẩn danh",
+                    "is_charm": False
+                })
     return result
 
 # =======================================================
@@ -150,32 +158,78 @@ def buy_market_item(req: BuyRequest, db: Session = Depends(get_db)):
     return {"status": "success", "message": "Mua hàng thành công!"}
 
 # =======================================================
-# 4. API HỦY BÁN
+# 4. API HỦY BÁN (PHIÊN BẢN ĐÃ FIX TRẢ CHARM)
 # =======================================================
 @router.post("/cancel")
-def cancel_market(req: CancelRequest, db: Session = Depends(get_db)):
+async def cancel_market(req: CancelRequest, db: Session = Depends(get_db)):
+    # 1. Tìm đơn hàng
     listing = db.get(MarketListing, req.listing_id)
-    if not listing: raise HTTPException(404, "Đơn hàng không tồn tại")
+    if not listing: 
+        raise HTTPException(404, "Đơn hàng không tồn tại")
 
+    # 2. Xác thực người sở hữu
+    # Lưu ý: req.buyer_username ở đây thực chất là người đang thao tác (người bán muốn hủy)
     user = db.exec(select(Player).where(Player.username == req.buyer_username)).first()
+    if not user:
+        raise HTTPException(404, "User không tồn tại")
     
     if listing.seller_id != user.id: 
         raise HTTPException(403, "Không phải hàng của bạn")
 
-    # Trả đồ về kho
-    inv = db.exec(select(Inventory).where(
-        Inventory.player_id == user.id, 
-        Inventory.item_id == listing.item_id
-    )).first()
+    # ====================================================
+    # 👇 LOGIC MỚI: KIỂM TRA XEM LÀ CHARM HAY ĐỒ THƯỜNG
+    # ====================================================
     
-    if inv: inv.amount += listing.amount
-    else: db.add(Inventory(player_id=user.id, item_id=listing.item_id, amount=listing.amount))
+    # TRƯỜNG HỢP 1: LÀ CHARM (Có dữ liệu JSON)
+    if listing.item_id == 999999 and listing.item_data_json:
+        try:
+            # Mở gói dữ liệu
+            c_data = json.loads(listing.item_data_json)
+            
+            # Tái tạo Charm mới dựa trên dữ liệu cũ
+            restored_charm = PlayerItem(
+                player_id=user.id,
+                name=c_data.get("name", "Charm Hồi Phục"),
+                image_url=c_data.get("image_url", "/assets/items/default.png"),
+                rarity=c_data.get("rarity", "COMMON"),
+                stats_data=c_data.get("stats_data", "{}"),   # Trả lại chỉ số ATK/HP
+                enhance_level=c_data.get("enhance_level", 0), # Trả lại cấp độ cộng
+                is_equipped=False, # Về túi thì phải tháo ra
+                slot_index=0
+            )
+            
+            db.add(restored_charm)
+            
+        except Exception as e:
+            print(f"Lỗi khi khôi phục Charm: {e}")
+            raise HTTPException(500, "Lỗi dữ liệu Charm, không thể thu hồi!")
 
-    # Xóa khỏi chợ
+    # TRƯỜNG HỢP 2: LÀ ĐỒ THƯỜNG (Logic cũ)
+    else:
+        # Tìm xem trong túi đã có món này chưa để cộng dồn
+        inv = db.exec(select(Inventory).where(
+            Inventory.player_id == user.id, 
+            Inventory.item_id == listing.item_id
+        )).first()
+        
+        if inv: 
+            inv.amount += listing.amount
+        else: 
+            # Nếu chưa có thì tạo mới
+            new_item = Inventory(
+                player_id=user.id, 
+                item_id=listing.item_id, 
+                amount=listing.amount
+            )
+            db.add(new_item)
+
+    # 3. Xóa đơn hàng trên chợ
     db.delete(listing)
     
+    # 4. Lưu tất cả thay đổi
     db.commit()
-    return {"status": "success", "message": "Đã hủy bán, vật phẩm đã về kho!"}
+    
+    return {"status": "success", "message": "Đã thu hồi vật phẩm về túi!"}
 
 # =======================================================
 # 5. [BỔ SUNG] API XỬ LÝ RIÊNG CHO CHARM (TRANG BỊ)
@@ -208,30 +262,28 @@ async def sell_charm_api(req: CharmActionRequest, db: Session = Depends(get_db))
     if not player: raise HTTPException(404, "User not found")
 
     charm = db.exec(select(PlayerItem).where(PlayerItem.id == req.charm_id, PlayerItem.player_id == player.id)).first()
-    
     if not charm: raise HTTPException(404, "Trang bị không tồn tại!")
-    if charm.is_equipped: raise HTTPException(400, "Đang mặc không thể bán!")
-    if req.price <= 0: raise HTTPException(400, "Giá bán phải lớn hơn 0!")
-
-    # Validate loại tiền (Chỉ cho phép 2 loại này)
-    if req.currency not in ["tri_thuc", "kpi_point"]:
-        raise HTTPException(400, "Loại tiền tệ không hợp lệ!")
-
-    stats_desc = f"Cấp: +{charm.enhance_level} | Hệ: {charm.rarity}"
     
-    # Tạo Listing mới
+    # Tạo bản sao dữ liệu của Charm để nhét vào Chợ
+    charm_data = {
+        "name": charm.name,
+        "image_url": charm.image_url,
+        "rarity": charm.rarity,
+        "stats_data": charm.stats_data,
+        "enhance_level": charm.enhance_level
+    }
+
     listing = MarketListing(
         seller_id=player.id,
-        item_id=999999, # ID giả định cho Charm
+        item_id=999999, # Mã định danh đồ độc bản
         amount=1,
         price=req.price,
-        currency=req.currency, # 👈 LẤY LOẠI TIỀN TỪ REQUEST
-        created_at=str(datetime.now()),
-        description=f"{charm.name} ({stats_desc}) - {player.username}",
+        currency=req.currency,
+        item_data_json=json.dumps(charm_data), # 👈 ĐÓNG GÓI TẠI ĐÂY
+        description=f"Bán bởi {player.username}"
     )
     
     db.add(listing)
-    db.delete(charm) 
+    db.delete(charm) # Xóa khỏi túi người bán
     db.commit()
-    
-    return {"status": "success", "message": f"Đã treo bán với giá {req.price} {req.currency}!"}
+    return {"status": "success", "message": "Đã treo bán thành công!"}

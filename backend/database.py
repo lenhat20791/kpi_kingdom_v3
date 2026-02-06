@@ -231,15 +231,18 @@ class PlayerPet(SQLModel, table=True):
 #16 [MỚI] BẢNG CHỢ ĐEN (MARKET) ---
 class MarketListing(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
-    seller_id: int = Field(foreign_key="player.id") # Người bán
-    item_id: int = Field(foreign_key="item.id")     # Vật phẩm
+    seller_id: int = Field(foreign_key="player.id")
+    item_id: int = Field(foreign_key="item.id") 
     
-    amount: int = Field(default=1) # Số lượng bán
-    price: int = Field(default=0)  # Giá bán
-    currency: str = Field(default="tri_thuc") # Loại tiền muốn nhận
+    amount: int = Field(default=1)
+    price: int = Field(default=0)
+    currency: str = Field(default="tri_thuc")
     
     created_at: str = Field(default_factory=lambda: datetime.now().isoformat())
-    description: str = Field(default="") # Lời nhắn người bán
+    description: str = Field(default="")
+    
+    # 👇 THÊM CỘT NÀY ĐỂ LƯU DỮ LIỆU CHARM 👇
+    item_data_json: Optional[str] = Field(default=None)
 # bảng kỹ năng
 class SkillTemplate(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
@@ -328,7 +331,6 @@ class ScoreLog(SQLModel, table=True):
     target_id: int
 
 # --- BỔ SUNG CHO HỆ THỐNG CHARM & CƯỜNG HÓA ---
-
 # 17. Bảng lưu trữ Charm độc bản của người chơi
 class PlayerItem(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
@@ -357,14 +359,16 @@ class SystemConfig(SQLModel, table=True):
     key: str = Field(primary_key=True) # VD: "charm_setup", "forge_setup"
     value: str = Field(sa_column=Column(TEXT)) # Chuỗi JSON chứa toàn bộ config
 
-if __name__ == "__main__":
-    create_db_and_tables()
-    print(f"✅ Đã khởi tạo thành công Database tại: {DB_PATH}")
-#thông báo admin
 class Notification(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     type: str  # 'marquee' (chạy chữ) hoặc 'popup' (bảng nổi)
     content: str = Field(sa_column=Column(Text)) # Nội dung (HTML hoặc Text)
     is_active: bool = Field(default=True) # Đang bật hay tắt
     created_at: datetime = Field(default_factory=datetime.now)
+    
+if __name__ == "__main__":
+    create_db_and_tables()
+    print(f"✅ Đã khởi tạo thành công Database tại: {DB_PATH}")
+#thông báo admin
+
 
