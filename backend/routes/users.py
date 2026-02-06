@@ -380,7 +380,7 @@ def submit_academic_score(
 
     desc = ""
 
-    # 👇 LOGIC CHỈ CỘNG ĐIỂM (KHÔNG TIỀN, KHÔNG KPI) 👇
+    # Xử lý cộng điểm vào các cột tương ứng trong sổ điểm
     if req.score_type == "speech":
         target.diem_phat_bieu += int(req.value)
         desc = "Phát biểu xây dựng bài"
@@ -397,6 +397,11 @@ def submit_academic_score(
         target.diem_hk = req.value 
         desc = "Điểm Thi Học Kỳ"
 
+    # 👇 [MỚI] CỘNG KPI TỰ ĐỘNG CHO MỌI LOẠI ĐIỂM 👇
+    # Logic: Nhập bao nhiêu điểm học tập -> Cộng bấy nhiêu KPI
+    target.kpi += req.value
+    # ----------------------------------------------------
+
     # --- Lưu lịch sử ---
     new_log = ScoreLog(
         sender_name=current_user.full_name,
@@ -406,13 +411,13 @@ def submit_academic_score(
         value_change=req.value,
         target_id=target.id,
         sender_id=current_user.id,
-        created_at=get_vn_time()
+        created_at=get_vn_time() # Hoặc datetime.now() nếu bạn dùng thư viện chuẩn
     )
     db.add(new_log)
 
     db.add(target)
     db.commit()
-    return {"success": True, "message": f"Đã nhập {desc}: {req.value} điểm cho {target.full_name}"}
+    return {"success": True, "message": f"Đã nhập {desc}: {req.value} điểm (và +{req.value} KPI) cho {target.full_name}"}
 
 # 2. CẬP NHẬT API Phạt Vi Phạm
 @router.post("/team/submit-violation")
