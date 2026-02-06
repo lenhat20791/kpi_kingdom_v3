@@ -5741,9 +5741,23 @@
         function sendChatMessage() {
             const input = document.getElementById('chat-input');
             const content = input.value.trim();
-            if (content && chatSocket) {
+            
+            if (!content) return;
+
+            // Kiểm tra xem socket có đang MỞ (ReadyState === 1) không
+            if (chatSocket && chatSocket.readyState === WebSocket.OPEN) {
                 chatSocket.send(content);
                 input.value = '';
+                input.focus();
+            } else {
+                // Thông báo cho Admin biết tình trạng
+                console.error("❌ Không thể gửi: WebSocket đang đóng.");
+                alert("Mất kết nối với máy chủ Chat! Vui lòng chờ giây lát để hệ thống tự kết nối lại.");
+                
+                // Thử kích hoạt lại kết nối nếu nó đang chết
+                if (!chatSocket || chatSocket.readyState === WebSocket.CLOSED) {
+                    initAdminChat(); 
+                }
             }
         }
 
