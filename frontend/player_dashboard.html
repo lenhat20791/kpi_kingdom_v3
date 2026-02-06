@@ -2040,7 +2040,9 @@
             
             // Tạm thời để test: Gọi API lấy chi tiết item (hoặc tìm trong DOM)
             // Để đơn giản, ta sẽ tìm trong biến toàn cục 'window.currentBagData' (Bạn cần gán nó ở hàm renderBag)
-            const item = window.currentBagData?.find(i => i.id == itemId && i.inventory_type === 'CHARM');
+            const item = window.currentBagData.find(i => 
+                i.id == itemId && (i.stats_data || i.enhance_level !== undefined)
+            )
     
             if (!item) {
                 alert("Không tìm thấy dữ liệu trang bị!");
@@ -2548,7 +2550,9 @@
         // 1. HÀM MỞ MODAL BÁN (Thay thế hàm cũ)
         function openSellCharm(itemId) {
             // Tìm item trong túi (Dùng biến toàn cục currentBagData đã có)
-            const item = window.currentBagData.find(i => i.id == itemId && i.inventory_type === 'CHARM');
+            const item = window.currentBagData.find(i => 
+                i.id == itemId && (i.stats_data || i.enhance_level !== undefined)
+            );
     
             if (!item) {
                 alert("Lỗi: Không tìm thấy Charm này (Có thể do trùng ID với vật phẩm thường)!");
