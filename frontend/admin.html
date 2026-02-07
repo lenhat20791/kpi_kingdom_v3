@@ -5779,8 +5779,8 @@
             if (currentRole === 'ADMIN' || currentRole === 'U0') {
                 roleClass = "name-admin"; 
                 roleBadge = "👑 ";
-                // Bọc hiệu ứng "con rắn" chỉ cho phần Tên, dấu [] để ở ngoài cho thẳng hàng
-                const styledName = `<span class="name-admin-wrapper"><span class="name-admin">${msg.player_name}</span></span>`;
+                let shortName = msg.player_name.replace(" Hệ Thống", "");        
+                const styledName = `<span class="name-admin-wrapper"><span class="name-admin">${shortName}</span></span>`;
                 finalDisplayName = `${roleBadge}[${styledName}]`;
             } 
             else if (currentRole === 'U1') { // Tổ trưởng
