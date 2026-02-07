@@ -442,6 +442,46 @@
             from { opacity: 0; transform: translateY(5px); }
             to { opacity: 1; transform: translateY(0); }
         }
+        /* Container bao quanh tên để làm đường chạy cho đốm sáng */
+        .name-admin-wrapper {
+            position: relative;
+            display: inline-flex; /* Chuyển từ inline-block sang inline-flex để căn giữa chuẩn */
+            align-items: center;  /* Căn giữa theo chiều dọc */
+            vertical-align: middle; /* Giúp nó nằm đúng hàng với dấu [] */
+            padding: 0px 6px;     /* Giảm padding dọc về 0 để không làm cao dòng chat */
+            margin: 0 2px;
+            border-radius: 4px;
+            overflow: hidden;
+            background: rgba(255, 140, 0, 0.15);
+            height: 1.4em;        /* Khống chế chiều cao bằng đúng dòng chữ */
+        }
+
+        /* Đốm sáng "con rắn" chạy quanh */
+        .name-admin-wrapper::before {
+            content: "";
+            position: absolute;
+            width: 40px;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, #FFD700, #FFFFFF, #FFD700, transparent);
+            top: 0;
+            left: -100%;
+            animation: snake-run 3s linear infinite;
+        }
+
+        /* Tên Admin bên trong */
+        .name-admin {
+            color: #FF8C00;
+            font-weight: bold;
+            text-shadow: 0 0 8px #FF4500;
+            position: relative;
+            z-index: 1; /* Nổi lên trên đốm sáng */
+        }
+
+        /* Hiệu ứng con rắn trườn từ trái qua phải */
+        @keyframes snake-run {
+            0% { left: -100%; }
+            100% { left: 100%; }
+        }
     </style>
 </head>
 
@@ -7675,58 +7715,58 @@
             } catch (e) { console.error("Lỗi tải lịch sử:", e); }
         }
 
-        // 3. Hiển thị tin nhắn lên màn hình (Đã sửa màu ngày giờ thành Trắng)
         function appendMessage(msg) {
-            const box = document.getElementById('chat-messages');
-            
-            // Logic màu sắc theo Role
-            let roleClass = "text-blue-300"; // Mặc định
-            let roleBadge = "";
+            // 1. Ghi log để kiểm tra dữ liệu nếu cần
+            console.log("Dữ liệu Chat nhận được:", msg); 
 
-            if (msg.role === 'ADMIN' || msg.role === 'U0') {
-                roleClass = "text-yellow-400 font-bold drop-shadow-md";
-                roleBadge = "👑";
-            } else if (msg.role === 'U1') { // Tổ trưởng
+            const box = document.getElementById('chat-messages');
+            if (!box) return;
+
+            // 2. Thiết lập các biến mặc định (cho Player bình thường)
+            let roleClass = "text-blue-300"; 
+            let roleBadge = "";
+            let finalDisplayName = ""; // Biến này dùng để lắp ghép tên hoàn chỉnh
+
+            // Chuẩn hóa role về chữ HOA
+            const currentRole = (msg.role || "").toUpperCase();
+
+            // 3. Phân loại hiển thị theo Role
+            if (currentRole === 'ADMIN' || currentRole === 'U0') {
+                roleClass = "name-admin"; 
+                roleBadge = "👑 ";
+                // Bọc hiệu ứng "con rắn" chỉ cho phần Tên, dấu [] để ở ngoài cho thẳng hàng
+                const styledName = `<span class="name-admin-wrapper"><span class="name-admin">${msg.player_name}</span></span>`;
+                finalDisplayName = `${roleBadge}[${styledName}]`;
+            } 
+            else if (currentRole === 'U1') { // Tổ trưởng
                 roleClass = "text-green-400 font-bold";
-                roleBadge = "🛡️";
+                roleBadge = "🛡️ ";
+                finalDisplayName = `${roleBadge}[${msg.player_name}]`;
+            } 
+            else if (currentRole === 'SYSTEM') { // Thông báo hệ thống
+                roleClass = "text-red-500 font-bold bg-red-900/30 px-2 rounded";
+                roleBadge = "⚠️ ";
+                finalDisplayName = `${roleBadge}[${msg.player_name}]`;
+            } 
+            else { // Người chơi thường
+                finalDisplayName = `${roleBadge}[${msg.player_name}]`;
             }
 
+            // 4. Tạo phần tử tin nhắn
             const div = document.createElement('div');
-            div.className = "msg-row hover:bg-gray-800 px-3 py-1 rounded transition-colors break-words border-l-2 border-transparent hover:border-gray-600";
+            // Thêm border-l để tạo vệt màu khi hover cho chuyên nghiệp
+            div.className = "msg-row hover:bg-gray-800 px-3 py-1 rounded transition-colors break-words border-l-2 border-transparent hover:border-orange-500 mb-1";
             
             div.innerHTML = `
-                <span class="${roleClass}">${roleBadge}[${msg.player_name}]</span> : 
+                <span class="${roleClass}">${finalDisplayName}</span> : 
                 <span class="text-white text-shadow">${msg.content}</span>
-                <span class="text-white text-[11px] ml-2 select-none float-right mt-1 opacity-70">[${msg.time}]</span>
+                <span class="text-white text-[11px] ml-2 select-none float-right mt-1 opacity-60">[${msg.time}]</span>
             `;
             
+            // 5. Thêm vào khung chat và tự động cuộn
             box.appendChild(div);
-            
-            // TỰ ĐỘNG CUỘN XUỐNG DƯỚI CÙNG
             box.scrollTop = box.scrollHeight;
         }
-
-        // 4. Gửi tin nhắn
-        function sendChatMessage() {
-            const input = document.getElementById('chat-input');
-            const content = input.value.trim();
-            
-            if (!content) return;
-
-            if (chatSocket && chatSocket.readyState === WebSocket.OPEN) {
-                chatSocket.send(content);
-                input.value = '';
-                input.focus();
-            } else {
-                alert("Đang mất kết nối máy chủ! Vui lòng đợi...");
-            }
-        }
-
-        // Xử lý phím Enter
-        function handleChatKey(e) {
-            if (e.key === 'Enter') sendChatMessage();
-        }
-
         // 5. Cập nhật trạng thái text
         function updateChatStatus(text, colorClass) {
             const el = document.getElementById('chat-status');

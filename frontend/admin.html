@@ -244,6 +244,46 @@
             color: #ffffff !important;
             background-color: #1f2937 !important; /* bg-gray-800 */
         }
+        /* Container bao quanh tên để làm đường chạy cho đốm sáng */
+        .name-admin-wrapper {
+            position: relative;
+            display: inline-flex; /* Chuyển từ inline-block sang inline-flex để căn giữa chuẩn */
+            align-items: center;  /* Căn giữa theo chiều dọc */
+            vertical-align: middle; /* Giúp nó nằm đúng hàng với dấu [] */
+            padding: 0px 6px;     /* Giảm padding dọc về 0 để không làm cao dòng chat */
+            margin: 0 2px;
+            border-radius: 4px;
+            overflow: hidden;
+            background: rgba(255, 140, 0, 0.15);
+            height: 1.4em;        /* Khống chế chiều cao bằng đúng dòng chữ */
+        }
+
+        /* Đốm sáng "con rắn" chạy quanh */
+        .name-admin-wrapper::before {
+            content: "";
+            position: absolute;
+            width: 40px;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, #FFD700, #FFFFFF, #FFD700, transparent);
+            top: 0;
+            left: -100%;
+            animation: snake-run 3s linear infinite;
+        }
+
+        /* Tên Admin bên trong */
+        .name-admin {
+            color: #FF8C00;
+            font-weight: bold;
+            text-shadow: 0 0 8px #FF4500;
+            position: relative;
+            z-index: 1; /* Nổi lên trên đốm sáng */
+        }
+
+        /* Hiệu ứng con rắn trườn từ trái qua phải */
+        @keyframes snake-run {
+            0% { left: -100%; }
+            100% { left: 100%; }
+        }
 
     </style>
 </head>
@@ -5712,7 +5752,7 @@
         }
 
         // 2. CÁC HÀM CƠ BẢN (Giống Player)
-        async function loadChatHistory() { /* ... Copy y hệt bên Player ... */ 
+        async function loadChatHistory() { 
             try {
                 const res = await fetch('/api/chat/history', { headers: { "Authorization": `Bearer ${localStorage.getItem("access_token")}` }});
                 const msgs = await res.json();
@@ -5720,45 +5760,57 @@
             } catch(e){}
         }
 
-        function appendMessage(msg) { /* ... Copy y hệt bên Player ... */ 
-            const box = document.getElementById('chat-messages');
-            let roleClass = "text-blue-300";
-            if (msg.role === 'ADMIN') roleClass = "text-yellow-400 font-bold";
-            else if (msg.role === 'SYSTEM') roleClass = "text-red-500 font-bold bg-red-900/30 px-2 rounded"; // Style cho cảnh báo
-            else if (msg.role === 'U1') roleClass = "text-green-400 font-bold";
+        function appendMessage(msg) {
+            // 1. Ghi log để kiểm tra dữ liệu nếu cần
+            console.log("Dữ liệu Chat nhận được:", msg); 
 
+            const box = document.getElementById('chat-messages');
+            if (!box) return;
+
+            // 2. Thiết lập các biến mặc định (cho Player bình thường)
+            let roleClass = "text-blue-300"; 
+            let roleBadge = "";
+            let finalDisplayName = ""; // Biến này dùng để lắp ghép tên hoàn chỉnh
+
+            // Chuẩn hóa role về chữ HOA
+            const currentRole = (msg.role || "").toUpperCase();
+
+            // 3. Phân loại hiển thị theo Role
+            if (currentRole === 'ADMIN' || currentRole === 'U0') {
+                roleClass = "name-admin"; 
+                roleBadge = "👑 ";
+                // Bọc hiệu ứng "con rắn" chỉ cho phần Tên, dấu [] để ở ngoài cho thẳng hàng
+                const styledName = `<span class="name-admin-wrapper"><span class="name-admin">${msg.player_name}</span></span>`;
+                finalDisplayName = `${roleBadge}[${styledName}]`;
+            } 
+            else if (currentRole === 'U1') { // Tổ trưởng
+                roleClass = "text-green-400 font-bold";
+                roleBadge = "🛡️ ";
+                finalDisplayName = `${roleBadge}[${msg.player_name}]`;
+            } 
+            else if (currentRole === 'SYSTEM') { // Thông báo hệ thống
+                roleClass = "text-red-500 font-bold bg-red-900/30 px-2 rounded";
+                roleBadge = "⚠️ ";
+                finalDisplayName = `${roleBadge}[${msg.player_name}]`;
+            } 
+            else { // Người chơi thường
+                finalDisplayName = `${roleBadge}[${msg.player_name}]`;
+            }
+
+            // 4. Tạo phần tử tin nhắn
             const div = document.createElement('div');
-            div.className = "hover:bg-gray-800 px-2 py-1 rounded transition-colors break-words";
+            // Thêm border-l để tạo vệt màu khi hover cho chuyên nghiệp
+            div.className = "msg-row hover:bg-gray-800 px-3 py-1 rounded transition-colors break-words border-l-2 border-transparent hover:border-orange-500 mb-1";
+            
             div.innerHTML = `
-                <span class="${roleClass}">[${msg.player_name}]</span> : 
-                <span class="text-white">${msg.content}</span>
-                <span class="text-gray-400 text-[10px] ml-2 float-right">[${msg.time}]</span>
+                <span class="${roleClass}">${finalDisplayName}</span> : 
+                <span class="text-white text-shadow">${msg.content}</span>
+                <span class="text-white text-[11px] ml-2 select-none float-right mt-1 opacity-60">[${msg.time}]</span>
             `;
+            
+            // 5. Thêm vào khung chat và tự động cuộn
             box.appendChild(div);
             box.scrollTop = box.scrollHeight;
-        }
-
-        function sendChatMessage() {
-            const input = document.getElementById('chat-input');
-            const content = input.value.trim();
-            
-            if (!content) return;
-
-            // Kiểm tra xem socket có đang MỞ (ReadyState === 1) không
-            if (chatSocket && chatSocket.readyState === WebSocket.OPEN) {
-                chatSocket.send(content);
-                input.value = '';
-                input.focus();
-            } else {
-                // Thông báo cho Admin biết tình trạng
-                console.error("❌ Không thể gửi: WebSocket đang đóng.");
-                alert("Mất kết nối với máy chủ Chat! Vui lòng chờ giây lát để hệ thống tự kết nối lại.");
-                
-                // Thử kích hoạt lại kết nối nếu nó đang chết
-                if (!chatSocket || chatSocket.readyState === WebSocket.CLOSED) {
-                    initAdminChat(); 
-                }
-            }
         }
 
         // ==========================================
