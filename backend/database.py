@@ -36,7 +36,8 @@ class Player(SQLModel, table=True):
     plain_password: Optional[str] = Field(default=None)
     full_name: str
     role: str = Field(default="student") # admin / student
-    
+    parent_of_id: Optional[int] = Field(default=None, foreign_key="player.id")
+
     # --- 2. CHỈ SỐ SỨC MẠNH (LEVEL UP SYSTEM) ---
     level: int = Field(default=1)
     
@@ -64,6 +65,26 @@ class Player(SQLModel, table=True):
     diem_hk: float = Field(default=0.0)       # Kiểm tra học kỳ
     diem_san_pham: float = Field(default=0.0) # Điểm sản phẩm
 
+    # ĐIỂM HỌC KỲ 1
+    toan_hk1: Optional[float] = Field(default=0.0)
+    van_hk1: Optional[float] = Field(default=0.0)
+    anh_hk1: Optional[float] = Field(default=0.0)
+    gdcd_hk1: Optional[float] = Field(default=0.0)
+    cong_nghe_hk1: Optional[float] = Field(default=0.0)
+    tin_hk1: Optional[float] = Field(default=0.0)
+    khtn_hk1: Optional[float] = Field(default=0.0)
+    lsdl_hk1: Optional[float] = Field(default=0.0)
+
+    # ĐIỂM HỌC KỲ 2
+    toan_hk2: Optional[float] = Field(default=0.0)
+    van_hk2: Optional[float] = Field(default=0.0)
+    anh_hk2: Optional[float] = Field(default=0.0)
+    gdcd_hk2: Optional[float] = Field(default=0.0)
+    cong_nghe_hk2: Optional[float] = Field(default=0.0)
+    tin_hk2: Optional[float] = Field(default=0.0)
+    khtn_hk2: Optional[float] = Field(default=0.0)
+    lsdl_hk2: Optional[float] = Field(default=0.0)
+    
     # --- 4. KINH TẾ ---
     tri_thuc: int = Field(default=0)   # Vàng (Gold)
     chien_tich: int = Field(default=0) # Ruby

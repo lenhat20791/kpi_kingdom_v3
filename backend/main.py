@@ -214,6 +214,18 @@ async def view_admin_dashboard():
             return FileResponse(path)
     return {"error": "File admin.html not found"}
 
+@app.get("/parent.html")
+async def view_parent_page():
+    # Tìm ở backend trước, sau đó tìm ở frontend theo đúng logic các hàm cũ
+    paths_to_check = [
+        os.path.join(backend_path, "parent.html"),
+        os.path.join(frontend_path, "parent.html")
+    ]
+    for path in paths_to_check:
+        if os.path.exists(path):
+            return FileResponse(path)
+    return {"error": "File parent.html not found"}
+
 @app.get("/index.html")
 async def read_index():
     # Điều hướng về file index.html y hệt như trang chủ
@@ -221,7 +233,7 @@ async def read_index():
     if os.path.exists(local_index):
         return FileResponse(local_index)
     return JSONResponse(content={"error": "Chưa tạo file index.html"}, status_code=404)
-
+    
 # --- hàm lấy thông tin item  ---
 @app.get("/api/shop/items")
 def get_shop_items(db: Session = Depends(get_db)):
@@ -967,7 +979,9 @@ async def cleanup_chat_task():
 @app.on_event("startup")
 async def startup_event():
     asyncio.create_task(cleanup_chat_task())
-    
+
+
+
 # 👇 ĐOẠN CODE KHỞI ĐỘNG SERVER (PHẢI CÓ Ở CUỐI FILE)
 if __name__ == "__main__":
     import uvicorn

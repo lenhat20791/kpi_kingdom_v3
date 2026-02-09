@@ -283,13 +283,19 @@
                         localStorage.setItem('kpi_role', data.user_info.role);         // Dashboard cần cái này!
                     }
 
-                    // 3. Logic phân luồng (Mới thêm sáng nay)
-                    // Lưu ý: data.user_info.role backend trả về là 'admin' (chữ thường)
-                    if (data.user_info?.role === 'admin') {
+                    // 3. Logic phân luồng (Cập nhật thêm nhánh cho Phụ huynh)
+                    const role = data.user_info?.role;
+
+                    if (role === 'admin') {
                         alert("🫡 Chào sếp! Đang vào trang quản trị...");
                         window.location.href = 'admin.html';
-                    } else {
-                        // Player vẫn vào trang cũ bình thường
+                    } 
+                    else if (role === 'parent') {
+                        // 👇 NHÁNH MỚI CHO PHỤ HUYNH 👇
+                        window.location.href = 'parent.html'; 
+                    } 
+                    else {
+                        // Học sinh (player) vẫn vào trang cũ bình thường
                         window.location.href = 'player_dashboard.html'; 
                     }
                     

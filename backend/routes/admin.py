@@ -262,6 +262,7 @@ def create_item_template(
         db.rollback()
         print(f"Lỗi tạo Item: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
 # 2. API XÓA VẬT PHẨM
 @router.delete("/items/templates/{item_id}")
 def delete_item_template(
@@ -599,6 +600,100 @@ class ChangePassSchema(BaseModel):
     old_password: str
     new_password: str
 
+@router.post("/gradebook/create-parents")
+async def create_parent_accounts(file: UploadFile = File(...), db: Session = Depends(get_db)):
+    try:
+        contents = await file.read()
+        df = pd.read_excel(BytesIO(contents))
+        if df.empty: return {"status": "error", "message": "File Excel trống!"}
+
+        from unidecode import unidecode
+        def normalize_str(s): return unidecode(str(s)).lower().strip().replace(" ", "").replace("_", "")
+        
+        col_map_raw = {normalize_str(c): c for c in df.columns}
+        normalized_cols = list(col_map_raw.keys())
+        keywords_name = ['hovaten', 'hoten', 'ten', 'fullname', 'name', 'hocsinh']
+        
+        col_name_origin = None
+        for kw in keywords_name:
+            for col_norm in normalized_cols:
+                if kw in col_norm:
+                    col_name_origin = col_map_raw[col_norm]
+                    break
+            if col_name_origin: break
+        
+        if not col_name_origin:
+            return {"status": "error", "message": "Không tìm thấy cột Họ tên!"}
+
+        created_count = 0
+        skipped_count = 0
+        not_found_student = 0
+        
+        for index, row in df.iterrows():
+            full_name = str(row[col_name_origin]).strip()
+            if not full_name or full_name == "nan": continue
+            
+            student_user_slug = generate_username(full_name) 
+
+            # Tìm học sinh để lấy ID liên kết
+            student = db.exec(select(Player).where(
+                (Player.full_name == full_name) | 
+                (Player.username == student_user_slug)
+            )).first()
+            
+            if not student:
+                not_found_student += 1
+                continue
+
+            parent_user = f"ph{student.username}"
+            existing_parent = db.exec(select(Player).where(Player.username == parent_user)).first()
+            
+            if not existing_parent:
+                # --- TẠO MỚI: Gán liên kết ngay lập tức ---
+                new_parent = Player(
+                    username=parent_user,
+                    full_name=f"Phụ huynh {student.full_name}",
+                    password_hash=get_password_hash("123456"),
+                    plain_password="123456",
+                    role="parent",
+                    parent_of_id=student.id # Liên kết khi tạo mới
+                )
+                db.add(new_parent)
+                created_count += 1
+            else:
+                # --- CẬP NHẬT (Quan trọng): Nếu đã có acc nhưng chưa liên kết hoặc sai liên kết ---
+                if existing_parent.parent_of_id != student.id:
+                    existing_parent.parent_of_id = student.id
+                    db.add(existing_parent)
+                    created_count += 1 # Tính vào số lượng đã xử lý/cập nhật
+                else:
+                    skipped_count += 1
+        
+        db.commit()
+        return {
+            "status": "success", 
+            "message": f"✅ Hệ thống đã đồng bộ: {created_count} tài khoản được tạo mới hoặc sửa liên kết. (Bỏ qua {skipped_count} đã chuẩn xác)."
+        }
+        
+    except Exception as e:
+        return {"status": "error", "message": f"Lỗi hệ thống: {str(e)}"}
+
+@router.get("/gradebook/parents-list")
+async def get_parents_list(db: Session = Depends(get_db)):
+    try:
+        # Lấy tất cả Player có role là 'parent'
+        parents = db.exec(select(Player).where(Player.role == "parent")).all()
+        
+        # Trả về danh sách rút gọn để hiển thị
+        return [{
+            "username": p.username,
+            "full_name": p.full_name,
+            "plain_password": p.plain_password or "Chưa đặt",
+            "student_id": p.parent_of_id
+        } for p in parents]
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+    
 @router.post("/security/change-admin-password")
 async def change_admin_password(req: ChangePassSchema, db: Session = Depends(get_db)):
     print(f"🔄 Đang xử lý đổi mật khẩu cho Admin...")
@@ -1348,3 +1443,61 @@ def save_system_config(
     except Exception as e:
         print("Lỗi lưu config:", e)
         raise HTTPException(status_code=500, detail=str(e))
+# hàm đọc file excel nhập điểm từ admin cho trang ph xem
+@router.post("/gradebook/import-scores")
+async def import_scores(file: UploadFile = File(...), semester: str = Form(...), db: Session = Depends(get_db)):
+    try:
+        contents = await file.read()
+        # Đọc file không lấy header trước để dò tìm
+        df_raw = pd.read_excel(BytesIO(contents), header=None)
+        
+        # 1. TỰ ĐỘNG TÌM HÀNG CHỨA TIÊU ĐỀ "Họ tên"
+        header_row_index = None
+        for i, row in df_raw.iterrows():
+            # Kiểm tra xem trong hàng này có ô nào chứa chữ "họ" và "tên" không
+            if any("họ" in str(cell).lower() and "tên" in str(cell).lower() for cell in row):
+                header_row_index = i
+                break
+        
+        if header_row_index is None:
+            return {"status": "error", "message": "Không thể tìm thấy hàng tiêu đề có cột 'Họ tên' trong file Excel!"}
+
+        # 2. Thiết lập lại DataFrame từ hàng tiêu đề đã tìm thấy
+        df = pd.read_excel(BytesIO(contents), header=header_row_index)
+        df.columns = [str(c).strip() for c in df.columns] # Làm sạch tên cột
+
+        # --- Giữ nguyên logic mapping và update bên dưới ---
+        subject_map = {
+            "Toán": f"toan_{semester}",
+            "Ngữ văn": f"van_{semester}",
+            "Ngoại ngữ": f"anh_{semester}",
+            "GDCD": f"gdcd_{semester}",
+            "Công nghệ": f"cong_nghe_{semester}",
+            "Tin học": f"tin_{semester}",
+            "Khoa học": f"khtn_{semester}",
+            "Lịch sử": f"lsdl_{semester}"
+        }
+
+        name_col = next((c for c in df.columns if "họ" in c.lower() and "tên" in c.lower()), None)
+        updated_count = 0
+        
+        for _, row in df.iterrows():
+            full_name = str(row[name_col]).strip()
+            if not full_name or full_name.lower() == "nan": continue
+
+            student = db.exec(select(Player).where(Player.full_name == full_name)).first()
+            if student:
+                for excel_keyword, db_field in subject_map.items():
+                    actual_col = next((c for c in df.columns if excel_keyword.lower() in c.lower()), None)
+                    if actual_col:
+                        val = row[actual_col]
+                        clean_score = float(val) if pd.notnull(val) else 0.0
+                        setattr(student, db_field, clean_score)
+                db.add(student)
+                updated_count += 1
+        
+        db.commit()
+        return {"status": "success", "message": f"Đã cập nhật điểm {semester.upper()} cho {updated_count} học sinh."}
+
+    except Exception as e:
+        return {"status": "error", "message": f"Lỗi: {str(e)}"}

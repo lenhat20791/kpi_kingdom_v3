@@ -360,6 +360,11 @@
                 <i class="fa-solid fa-medal w-6 text-center"></i> Quản Lý Danh Hiệu
             </button>
 
+            <button onclick="switchTab('gradebook')" class="flex items-center space-x-3 w-full p-3 rounded-lg transition hover:bg-gray-700 text-gray-400 hover:text-white">
+                <span>📊</span>
+                <span class="font-bold">Sổ Điểm</span>
+            </button>
+
             <button onclick="switchTab('dungeon-tower')" data-tab="dungeon-tower" 
                 class="nav-item w-full text-left px-6 py-3 transition border-l-4 border-transparent text-gray-300 hover:bg-gray-700 hover:text-white hover:border-gray-400">
                 <i class="fas fa-chess-rook w-6 text-center"></i> Tháp Thí Luyện
@@ -384,6 +389,7 @@
                 class="nav-item w-full text-left px-6 py-3 transition border-l-4 hover:bg-gray-700 hover:text-white hover:border-yellow-500 text-gray-400 border-transparent">
                 <i class="fa-solid fa-bullhorn w-6 text-center"></i> Quản Lý Thông Báo
             </button>
+
             <button onclick="switchTab('charm-settings')" class="w-full text-left px-4 py-3 hover:bg-gray-700 rounded-lg flex items-center gap-3 transition">
                 <span class="text-xl">🔮</span>
                 <span class="font-bold">Charm & Lò Rèn</span>
@@ -1017,6 +1023,87 @@
                     <button onclick="saveTowerFullConfig()" class="bg-gradient-to-r from-yellow-600 to-red-600 hover:from-yellow-500 hover:to-red-500 text-white font-bold py-3 px-12 rounded-full shadow-lg transform transition hover:scale-105 flex items-center text-sm">
                         <i class="fas fa-cloud-upload-alt mr-2"></i> LƯU TOÀN BỘ CẤU HÌNH & TỶ LỆ RƠI
                     </button>
+                </div>
+            </div>
+        </div>
+
+        <div id="tab-gradebook" class="tab-content hidden space-y-6">
+            <div class="bg-gray-800 p-6 rounded-2xl border border-gray-700 shadow-xl">
+                <h2 class="text-2xl font-bold text-blue-400 mb-4 flex items-center">
+                    <span class="mr-2">👨‍👩‍👧‍👦</span> Quản lý tài khoản Phụ huynh
+                </h2>
+                
+                <div class="bg-blue-900/20 border border-blue-500/30 p-4 rounded-xl mb-6">
+                    <p class="text-blue-300 text-sm">
+                        <b>Hướng dẫn:</b> Tải lên file Excel danh sách lớp (Cột đầu tiên phải là "Họ tên"). 
+                        Hệ thống sẽ tự động quét và tạo tài khoản Phụ huynh có tiền tố <b>ph</b> dựa trên tên học sinh.
+                    </p>
+                </div>
+
+                <div class="flex flex-col items-center justify-center border-2 border-dashed border-gray-600 rounded-2xl p-10 hover:border-blue-500 transition cursor-pointer bg-gray-900/50" onclick="document.getElementById('excel-parent-file').click()">
+                    <input type="file" id="excel-parent-file" class="hidden" accept=".xlsx, .xls">
+                    <span class="text-4xl mb-3">📁</span>
+                    <p id="file-name-display" class="text-gray-400">Nhấn để chọn file Excel danh sách lớp</p>
+                </div>
+
+                <button onclick="uploadParentExcel()" id="btn-upload-parent" class="w-full mt-6 bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-xl shadow-lg transition transform active:scale-95">
+                    🚀 Khởi tạo hàng loạt tài khoản Phụ huynh
+                </button>
+
+                <div class="bg-gray-800 p-6 rounded-3xl shadow-xl border border-gray-700 mb-8">
+                    <h2 class="text-xl font-bold text-white mb-4 flex items-center">
+                        <span class="mr-2">📝</span> Nhập Điểm Học Sinh từ Excel
+                    </h2>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-end">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-400 mb-2">Chọn Học kỳ ghi nhận:</label>
+                            <div class="flex space-x-4">
+                                <label class="flex items-center space-x-2 cursor-pointer bg-gray-700 px-4 py-2 rounded-xl border border-transparent has-[:checked]:border-blue-500 has-[:checked]:bg-blue-500/10">
+                                    <input type="radio" name="semester" value="hk1" checked class="hidden">
+                                    <span class="text-white font-bold">Học kỳ I</span>
+                                </label>
+                                <label class="flex items-center space-x-2 cursor-pointer bg-gray-700 px-4 py-2 rounded-xl border border-transparent has-[:checked]:border-blue-500 has-[:checked]:bg-blue-500/10">
+                                    <input type="radio" name="semester" value="hk2" class="hidden">
+                                    <span class="text-white font-bold">Học kỳ II</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div>
+                            <input type="file" id="gradeExcelFile" accept=".xlsx, .xls" class="hidden">
+                            <button onclick="document.getElementById('gradeExcelFile').click()" class="w-full py-3 px-4 bg-gray-700 border-2 border-dashed border-gray-600 rounded-2xl text-gray-400 hover:border-blue-500 hover:text-white transition">
+                                📂 Chọn file Excel bảng điểm
+                            </button>
+                        </div>
+                    </div>
+
+                    <button onclick="importGrades()" class="w-full mt-6 py-4 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black rounded-2xl shadow-lg transition transform active:scale-95">
+                        🚀 Cập nhật Điểm số Hàng loạt
+                    </button>
+                    <div id="importStatus" class="mt-4 text-center hidden"></div>
+                </div>
+                <div class="mt-8 border border-gray-700 rounded-2xl overflow-hidden">
+                    <button onclick="toggleParentList()" class="w-full flex justify-between items-center p-4 bg-gray-700 hover:bg-gray-600 transition">
+                        <span class="font-bold text-gray-200">📋 Danh sách Tài khoản & Mật khẩu Phụ huynh</span>
+                        <span id="parent-list-icon" class="transition-transform duration-300">▼</span>
+                    </button>
+                    
+                    <div id="parent-list-content" class="hidden bg-gray-900 p-4">
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-sm text-left text-gray-300">
+                                <thead class="text-xs uppercase bg-gray-800 text-gray-400">
+                                    <tr>
+                                        <th class="p-3">Tên hiển thị</th>
+                                        <th class="p-3">Tài khoản (Username)</th>
+                                        <th class="p-3">Mật khẩu (Plain)</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="parent-table-body" class="divide-y divide-gray-800">
+                                    </tbody>
+                            </table>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -2043,6 +2130,9 @@
                         initAdminChat();
                     }
                     break;
+                case 'gradebook': 
+                    console.log("Tab Sổ Điểm đã sẵn sàng");
+                    break;
                 default:
                     console.log("Tab này chưa có hàm load dữ liệu riêng.");
             }
@@ -2523,6 +2613,125 @@
             return html;
         }
 
+        // hàm nút bấm gửi file excel acc ph lên backend
+        function uploadParentExcel() {
+            const fileInput = document.getElementById('excel-parent-file');
+            if (fileInput.files.length === 0) {
+                alert("Vui lòng chọn file Excel trước!");
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append("file", fileInput.files[0]);
+
+            const btn = document.getElementById('btn-upload-parent');
+            btn.disabled = true;
+            btn.innerText = "⏳ Đang xử lý xưởng đúc tài khoản...";
+
+            fetch('/admin/gradebook/create-parents', {
+                method: 'POST',
+                body: formData
+            })
+            .then(res => res.json())
+            .then(data => {
+                alert(data.message);
+                btn.disabled = false;
+                btn.innerText = "🚀 Khởi tạo hàng loạt tài khoản Phụ huynh";
+            })
+            .catch(err => {
+                console.error(err);
+                alert("Có lỗi xảy ra khi upload!");
+                btn.disabled = false;
+            });
+        }
+
+        // 1. Hàm ẩn hiện danh sách acc PH
+        function toggleParentList() {
+            const content = document.getElementById('parent-list-content');
+            const icon = document.getElementById('parent-list-icon');
+            
+            if (content.classList.contains('hidden')) {
+                content.classList.remove('hidden');
+                icon.style.transform = 'rotate(180deg)';
+                loadParentAccounts(); // Tải dữ liệu khi mở ra
+            } else {
+                content.classList.add('hidden');
+                icon.style.transform = 'rotate(0deg)';
+            }
+        }
+
+        // 2. Hàm tải và hiển thị dữ liệu acc PH
+        async function loadParentAccounts() {
+            const body = document.getElementById('parent-table-body');
+            body.innerHTML = '<tr><td colspan="3" class="p-4 text-center text-blue-400 italic animate-pulse"> đang tra cứu sổ sách...</td></tr>';
+
+            try {
+                const res = await fetch('/admin/gradebook/parents-list');
+                const data = await res.json();
+
+                // Kiểm tra nếu API trả về lỗi thay vì danh sách
+                if (data.status === "error" || !Array.isArray(data)) {
+                    throw new Error(data.message || "Dữ liệu không hợp lệ");
+                }
+
+                if (data.length === 0) {
+                    body.innerHTML = '<tr><td colspan="3" class="p-4 text-center text-gray-500">Chưa có tài khoản phụ huynh nào.</td></tr>';
+                    return;
+                }
+
+                body.innerHTML = data.map(p => `
+                    <tr class="hover:bg-gray-800/50 transition border-b border-gray-800">
+                        <td class="p-3 font-medium text-blue-300">${p.full_name}</td>
+                        <td class="p-3"><code class="bg-black/40 px-2 py-1 rounded text-green-400 text-xs">${p.username}</code></td>
+                        <td class="p-3 font-mono text-yellow-500">${p.plain_password}</td>
+                    </tr>
+                `).join('');
+            } catch (err) {
+                console.error("API Error:", err);
+                body.innerHTML = `<tr><td colspan="3" class="p-4 text-center text-red-400">❌ Lỗi: ${err.message}</td></tr>`;
+            }
+        }
+
+        //nhập điểm cho trang ph
+        async function importGrades() {
+            const fileInput = document.getElementById('gradeExcelFile');
+            const semester = document.querySelector('input[name="semester"]:checked').value;
+            const statusDiv = document.getElementById('importStatus');
+
+            if (!fileInput.files[0]) {
+                alert("Vui lòng chọn file Excel trước!");
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+            formData.append('semester', semester);
+
+            statusDiv.className = "mt-4 text-center text-blue-400 italic animate-pulse";
+            statusDiv.innerText = "⏳ Đang xử lý dữ liệu bảng điểm...";
+            statusDiv.classList.remove('hidden');
+
+            try {
+                const response = await fetch('/admin/gradebook/import-scores', {
+                    method: 'POST',
+                    body: formData
+                });
+                const result = await response.json();
+
+                if (result.status === "success") {
+                    statusDiv.className = "mt-4 text-center text-emerald-400 font-bold";
+                    statusDiv.innerText = `✅ Thành công: ${result.message}`;
+                } else {
+                    statusDiv.className = "mt-4 text-center text-red-400 font-bold";
+                    statusDiv.innerText = `❌ Lỗi: ${result.message}`;
+                }
+            } catch (err) {
+                statusDiv.className = "mt-4 text-center text-red-500 font-bold";
+                statusDiv.innerText = "⚠️ Lỗi kết nối Server!";
+            }
+        }
+
+
         // Hàm phụ trợ lấy chữ cái đầu (Giữ nguyên hoặc thêm vào nếu thiếu)
         function getInitials(name) {
             if (!name) return '??';
@@ -2531,6 +2740,12 @@
             if (parts.length >= 2) return parts[parts.length - 2].charAt(0) + parts[parts.length - 1].charAt(0);
             return name.charAt(0);
         }
+
+        // Hiển thị tên file khi chọn
+        document.getElementById('excel-parent-file').addEventListener('change', function(e) {
+            const fileName = e.target.files[0]?.name || "Nhấn để chọn file Excel danh sách lớp";
+            document.getElementById('file-name-display').innerText = fileName;
+        });
 
         // --- BIẾN TOÀN CỤC MỚI ---
         let currentTargetTeamId = null;

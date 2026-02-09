@@ -18,6 +18,53 @@ router_public = APIRouter(tags=["Public Info"])
 
 class AddMembersRequest(BaseModel):
     player_ids: List[int]
+
+#api để ph lấy dữ liệu hs
+@router.get("/parent/my-child")
+async def get_child_info(
+    current_user: Player = Depends(get_current_user), 
+    db: Session = Depends(get_db)
+):
+    # 1. Tìm thông tin học sinh được liên kết
+    child = db.get(Player, current_user.parent_of_id)
+    if not child:
+        raise HTTPException(status_code=404, detail="Không tìm thấy dữ liệu con em")
+
+    # 2. Danh sách các môn học để map dữ liệu
+    # (Tên hiển thị, tiền tố cột trong DB)
+    subjects_map = [
+        ("Toán học", "toan"), ("Ngữ văn", "van"), ("Ngoại ngữ", "anh"),
+        ("GDCD", "gdcd"), ("Công nghệ", "cong_nghe"), ("Tin học", "tin"),
+        ("Khoa học tự nhiên", "khtn"), ("Lịch sử và Địa lý", "lsdl")
+    ]
+
+    subjects_data = []
+    total_score_hk2 = 0
+    count = 0
+
+    for label, key in subjects_map:
+        hk1_val = getattr(child, f"{key}_hk1", 0.0) or 0.0
+        hk2_val = getattr(child, f"{key}_hk2", 0.0) or 0.0
+        
+        subjects_data.append({
+            "name": label,
+            "hk1": hk1_val,
+            "hk2": hk2_val
+        })
+        
+        if hk2_val > 0:
+            total_score_hk2 += hk2_val
+            count += 1
+
+    # Tính trung bình HK2 (làm ví dụ hiển thị ở khung lớn)
+    avg_hk2 = round(total_score_hk2 / count, 1) if count > 0 else 0.0
+
+    return {
+        "full_name": child.full_name,
+        "kpi": child.kpi,
+        "diem_hk": avg_hk2, # Hiện điểm TB ở khung trên cùng
+        "subjects": subjects_data
+    }
 # 1. API Lấy danh sách học sinh chưa có tổ (Free Agents)
 @router.get("/players/free-agents")
 def get_free_agents(db: Session = Depends(get_db)):
@@ -202,7 +249,6 @@ def handle_choose_class(
     db.refresh(player)
     
     return {"message": f"Đã chuyển thành {class_name}. Máu: {player.hp}"}
-
 
 # 2. XỬ LÝ DASHBOARD (Khớp Frontend: /api/player/dashboard)
 @router_public.get("/player/dashboard")
@@ -516,3 +562,4 @@ def promote_member(
     db.add(target)
     db.commit()
     return {"success": True, "message": message}
+

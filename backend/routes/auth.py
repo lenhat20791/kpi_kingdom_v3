@@ -112,7 +112,7 @@ async def login(data: LoginRequest, db: Session = Depends(get_db)):
         # ==================================================================
         
         # Logic: Nếu KHÔNG PHẢI Admin -> Phải kiểm tra xem cửa có khóa không
-        if user.role != "admin": 
+        if user.role not in ["admin", "parent"]: 
             # Lấy trạng thái từ DB (ID luôn là 1)
             system_status = db.get(SystemStatus, 1)
             
