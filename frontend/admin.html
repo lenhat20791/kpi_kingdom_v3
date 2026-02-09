@@ -284,6 +284,47 @@
             0% { left: -100%; }
             100% { left: 100%; }
         }
+        /* Hiệu ứng vệt sáng màu tím cho đồ Huyền Thoại */
+        .name-legend-wrapper {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            vertical-align: middle;
+            padding: 0px 8px;
+            margin: 0 2px;
+            border-radius: 4px;
+            overflow: hidden;
+            background: rgba(138, 43, 226, 0.2); /* Nền tím mờ */
+            height: 1.4em;
+            border: 1px solid rgba(138, 43, 226, 0.4);
+        }
+
+        .name-legend {
+            color: #bf40ff; /* Chữ màu tím sáng */
+            font-weight: bold;
+            text-shadow: 0 0 5px rgba(191, 64, 255, 0.8);
+            position: relative;
+            z-index: 2;
+        }
+
+        /* Con rắn ánh sáng màu tím chạy qua */
+        .name-legend-wrapper::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 50%;
+            height: 100%;
+            background: linear-gradient(
+                to right,
+                transparent,
+                rgba(255, 255, 255, 0.6), /* Ánh trắng */
+                rgba(191, 64, 255, 0.8),  /* Ánh tím */
+                transparent
+            );
+            transform: skewX(-25deg);
+            animation: snake-run 2.5s infinite; /* Dùng chung animation snake-run bạn đã có */
+        }
 
     </style>
 </head>

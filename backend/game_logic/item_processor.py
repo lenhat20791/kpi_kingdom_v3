@@ -1,8 +1,9 @@
 import json
 import random
 import os
+import datetime
 from sqlmodel import Session, select
-from database import Inventory, Item, Player, PlayerItem, SystemConfig
+from database import Inventory, Item, Player, PlayerItem, SystemConfig, ChatLog
 # =====================================================
 # CẤU HÌNH MẶC ĐỊNH (FALLBACK)
 # =====================================================
@@ -110,8 +111,27 @@ def apply_item_effects(player: Player, item: Item, db: Session):
                             # Lấy tên tiếng Việt của Charm vừa đúc xong để hiện thông báo
                             clean_name = f"{new_charm.name} ({rarity_type})"
                             received_map[clean_name] = received_map.get(clean_name, 0) + 1
-                        
-                        continue # Bỏ qua đoạn cộng vào Inventory phía dưới vì Charm lưu ở bảng riêng
+                        # 👇 THÊM ĐOẠN NÀY ĐỂ LOA THÔNG BÁO 👇
+                            if rarity_type == "LEGEND":
+                                
+                                now = datetime.datetime.now().strftime("%H:%M")
+                                
+                                # Tạo nội dung tin nhắn có chứa hiệu ứng "con rắn"
+                                announcement_content = (
+                                    f"📢 Chúc mừng <b>{player.username}</b> đã may mắn mở rương được "
+                                    f"Charm Huyền Thoại: <span class='name-admin-wrapper'><span class='name-admin'>{new_charm.name}</span></span>!"
+                                )
+                                
+                                # Tạo bản ghi tin nhắn mới vào bảng Chat của bạn
+                                # (Lưu ý: Bạn hãy kiểm tra tên bảng Chat của mình là 'Chat' hay 'ChatMessage' nhé)
+                                system_msg = ChatLog(
+                                    player_name="HỆ THỐNG",
+                                    content=announcement_content,
+                                    role="SYSTEM",
+                                    time=now
+                                )
+                                db.add(system_msg)
+                        continue 
                     # --- KẾT THÚC ĐOẠN KIỂM TRA CHARM ---
 
                     # --- CỘNG VÀO KHO (AN TOÀN) - Chỉ chạy cho Item thường ---
