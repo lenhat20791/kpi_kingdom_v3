@@ -768,26 +768,29 @@ def attack_boss(req: AttackRequest, db: Session = Depends(get_db)):
         return JSONResponse(status_code=500, content={"detail": str(e)})
 
 @app.get("/api/boss/get-question")
-def get_boss_question(db: Session = Depends(get_db)):
+def get_boss_question(boss_id: int, db: Session = Depends(get_db)):
     try:
         # 1. Tìm Boss để biết Môn học (subject) và Khối lớp (grade)
         boss = db.get(Boss, boss_id)
         if not boss:
             return JSONResponse(status_code=404, content={"message": "Không tìm thấy Boss!"})
         # Phân loại độ khó câu hỏi dựa trên sức mạnh của Boss (Ví dụ qua ATK)
-        if boss.atk >= 180:
+        if boss.atk >= 1000:
             target_diff = "hell"
-        elif boss.atk >= 120:
+        elif boss.atk >= 500:
             target_diff = "extreme"
-        elif boss.atk >= 60:
+        elif boss.atk >= 200:
             target_diff = "hard"
         else:
             target_diff = "medium"
-        # 2. Lấy câu hỏi KHỚP với Môn học và Khối lớp của Boss từ QuestionBank
+
+        search_subject = f"boss-{boss.subject.lower()}"
+        # 2. Lấy câu hỏi với điều kiện linh hoạt chữ hoa/thường
         statement = select(QuestionBank).where(
-            QuestionBank.subject == boss.subject,
+            # Sử dụng func.lower để so sánh không phân biệt hoa thường
+            func.lower(QuestionBank.subject) == search_subject,
             QuestionBank.grade == boss.grade,
-            QuestionBank.difficulty == target_diff  # Bạn có thể tùy biến mức độ khó ở đây
+            QuestionBank.difficulty == target_diff
         ).order_by(func.random()).limit(1)
         
         q = db.exec(statement).first()
