@@ -851,10 +851,6 @@ async def import_tower_questions(
 # ==================================================================
 @router.get("/tower/stats") # Giữ nguyên đường dẫn cũ cho Frontend
 async def get_tower_stats(db: Session = Depends(get_db)):
-    """
-    Trả về cấu trúc Dictionary lồng nhau để khớp với hàm loadTowerQuestions ở Frontend.
-    Output: { "Toán": { "total": 5, "details": { "easy": 2, "hard": 3 } }, ... }
-    """
     # 1. Truy vấn dữ liệu từ bảng QuestionBank
     statement = (
         select(QuestionBank.subject, QuestionBank.difficulty, func.count(QuestionBank.id))

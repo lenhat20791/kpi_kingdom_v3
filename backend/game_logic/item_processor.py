@@ -67,10 +67,8 @@ def apply_item_effects(player: Player, item: Item, db: Session):
         # =====================================================
         if action == "gacha_open" or action == "Rương Gacha (Quay vật phẩm)":
             # Hỗ trợ mọi kiểu key mà admin có thể nhập
-            drops = (config.get("gacha_items") or config.get("drops") or config.get("pool") or config.get("loot_table") or [])
-            
+            drops = (config.get("gacha_items") or config.get("drops") or config.get("pool") or config.get("loot_table") or [])           
             if not drops: return False, "Rương rỗng!", {}
-
             received_map = {} # Dùng để gộp đồ: {"Bình máu": 2}
             
             # --- QUAY THƯỞNG ---
@@ -85,14 +83,44 @@ def apply_item_effects(player: Player, item: Item, db: Session):
                     max_q = int(drop.get("max", 1))
                     qty = random.randint(min_q, max_q)
                     
-                    # --- CỘNG VÀO KHO (AN TOÀN) ---
+                    # --- ĐOẠN KIỂM TRA CHARM MỚI ---
+                    item_obj = db.get(Item, target_id)
+                    if not item_obj: continue
+
+                    # Đọc config của item vừa quay trúng
+                    item_config = {}
+                    try:
+                        item_config = json.loads(item_obj.config) if item_obj.config else {}
+                    except: pass
+                    
+                    item_action = item_config.get("action")
+
+                    # Nếu là Phôi Charm (Ma thuật, Sử thi, Huyền thoại)
+                    if item_action in ["charm_gen_magic", "charm_gen_epic", "charm_gen_legend"]:
+                        rarity_map = {
+                            "charm_gen_magic": "MAGIC",
+                            "charm_gen_epic": "EPIC",
+                            "charm_gen_legend": "LEGEND"
+                        }
+                        rarity_type = rarity_map.get(item_action)
+
+                        # Chạy dây chuyền sản xuất Charm theo số lượng qty
+                        for _ in range(qty):
+                            new_charm = generate_charm(db, player.id, rarity_type)
+                            # Lấy tên tiếng Việt của Charm vừa đúc xong để hiện thông báo
+                            clean_name = f"{new_charm.name} ({rarity_type})"
+                            received_map[clean_name] = received_map.get(clean_name, 0) + 1
+                        
+                        continue # Bỏ qua đoạn cộng vào Inventory phía dưới vì Charm lưu ở bảng riêng
+                    # --- KẾT THÚC ĐOẠN KIỂM TRA CHARM ---
+
+                    # --- CỘNG VÀO KHO (AN TOÀN) - Chỉ chạy cho Item thường ---
                     inv_item = db.exec(select(Inventory).where(
                         Inventory.player_id == player.id,
                         Inventory.item_id == target_id
                     )).first()
 
                     if inv_item:
-                        # Ép kiểu int để chống crash
                         current_amt = int(inv_item.amount)
                         inv_item.amount = current_amt + qty
                         db.add(inv_item)
@@ -100,13 +128,10 @@ def apply_item_effects(player: Player, item: Item, db: Session):
                         new_item = Inventory(player_id=player.id, item_id=target_id, amount=qty)
                         db.add(new_item)
                     
-                    # --- LẤY TÊN VÀ XỬ LÝ KÝ TỰ LẠ ---
-                    item_obj = db.get(Item, target_id)
+                    # Xử lý tên cho Item thường để hiện thông báo
                     raw_name = item_obj.name if item_obj else f"Item {target_id}"
-                    # Xóa ký tự \xa0 gây lỗi Frontend
                     clean_name = raw_name.replace("\xa0", " ").strip()
                     
-                    # Cộng dồn vào danh sách hiển thị
                     if clean_name in received_map:
                         received_map[clean_name] += qty
                     else:
