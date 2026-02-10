@@ -2450,7 +2450,7 @@
                     // Bước 2: Chạy vòng lặp gửi từng người
                     for (var i = 0; i < players.length; i++) {
                         const p = players[i];
-                        const url = '/admin/players/' + p.id + '/items?item_id=' + itemId + '&quantity=' + finalQty;
+                        const url = '/admin/players/' + p.id + '/items?item_id=' + itemId + '&amount=' + finalQty;
                         
                         // Gửi lệnh (không cần await để chạy song song cho nhanh, hoặc await để an toàn)
                         await fetch(url, { method: 'POST' });
@@ -2472,7 +2472,7 @@
                 if (typeof logSystem === 'function') logSystem('Đang ' + actionName + '...', 'info');
 
                 // Tạo URL với query parameters
-                const url = '/admin/players/' + id + '/items?item_id=' + itemId + '&quantity=' + finalQty;
+                const url = '/admin/players/' + id + '/items?item_id=' + itemId + '&amount=' + finalQty;
 
                 const res = await fetch(url, {
                     method: 'POST',
