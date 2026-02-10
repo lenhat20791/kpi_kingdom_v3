@@ -6066,6 +6066,27 @@
             box.scrollTop = box.scrollHeight;
         }
 
+        function sendChatMessage() {
+            const input = document.getElementById('chat-input');
+            if (!input) return;
+
+            const content = input.value.trim();
+            
+            // CHỈ GỬI CHỮ THÔ (Nội dung tin nhắn)
+            if (content && chatSocket && chatSocket.readyState === WebSocket.OPEN) {
+                chatSocket.send(content); // Server sẽ tự đóng gói lại thành object chat
+                input.value = ''; // Xóa ô nhập sau khi gửi
+            } else {
+                console.warn("Chưa kết nối Chat hoặc tin nhắn trống");
+            }
+        }
+
+        // Hàm bắt phím Enter
+        function handleChatKey(event) {
+            if (event.key === "Enter") {
+                sendChatMessage();
+            }
+        }
         // ==========================================
         // 👇👇👇 CÁC HÀM QUẢN TRỊ (ADMIN ONLY) 👇👇👇
         // ==========================================
