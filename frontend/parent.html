@@ -8,6 +8,19 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Inter', sans-serif; }
+        /* Hiệu ứng hạt điểm tỏa sáng khi có điểm tốt hoặc tiến bộ */
+        .grade-bead {
+            transition: all 0.3s ease;
+            box-shadow: 0 0 5px rgba(0,0,0,0.2);
+        }
+        .glow-green {
+            box-shadow: 0 0 12px rgba(52, 211, 153, 0.4);
+            border: 1px solid rgba(52, 211, 153, 0.5);
+        }
+        .glow-blue {
+            box-shadow: 0 0 12px rgba(59, 130, 246, 0.4);
+            border: 1px solid rgba(59, 130, 246, 0.5);
+        }
     </style>
 </head>
 <body class="bg-gray-900 text-white p-4 md:p-10">
@@ -46,25 +59,50 @@
             </div>
         </div>
 
-        <div class="flex space-x-2 p-1 bg-gray-800 rounded-2xl border border-gray-700 mb-6">
-            <button onclick="switchTab('grades')" id="tab-btn-grades" class="flex-1 py-2.5 rounded-xl bg-blue-600 text-white font-bold transition-all text-sm">
-                📊 Điểm môn học
+        <div class="flex space-x-1 p-1 bg-gray-800 rounded-2xl border border-gray-700 mb-6">
+            <button onclick="switchTab('grades')" id="tab-btn-grades" class="flex-1 py-2.5 rounded-xl bg-blue-600 text-white font-bold transition-all text-[11px]">
+                📊 Điểm số
             </button>
-            <button onclick="switchTab('stats')" id="tab-btn-stats" class="flex-1 py-2.5 rounded-xl text-gray-400 hover:bg-gray-700 transition-all text-sm">
+            <button onclick="switchTab('violations')" id="tab-btn-violations" class="flex-1 py-2.5 rounded-xl text-gray-400 hover:bg-gray-700 transition-all text-[11px]">
+                🚫 Vi phạm
+            </button>
+            <button onclick="switchTab('stats')" id="tab-btn-stats" class="flex-1 py-2.5 rounded-xl text-gray-400 hover:bg-gray-700 transition-all text-[11px]">
                 📈 Thống kê
             </button>
         </div>
 
         <div id="tab-grades" class="block space-y-3">
-            <div class="flex justify-between items-center px-4 text-[10px] font-bold text-gray-500 uppercase tracking-widest">
-                <span>Môn học</span>
-                <div class="flex space-x-4 w-2/3 justify-end px-2">
-                    <span class="w-[60px] text-center">HK I</span>
-                    <span class="w-[60px] text-center">HK II</span>
+            <div class="flex justify-between items-center px-4 text-[9px] font-bold text-gray-500 uppercase tracking-tighter">
+                <span class="w-1/4">Môn học</span>
+                <div class="flex space-x-1 w-3/4 justify-end px-1">
+                    <span class="w-[40px] text-center">KTTX</span>
+                    <span class="w-[40px] text-center">S.Phẩm</span>
+                    <span class="w-[40px] text-center">P.Biểu</span>
+                    <span class="w-[40px] text-center text-blue-400">HK I</span>
+                    <span class="w-[40px] text-center text-emerald-400">HK II</span>
                 </div>
             </div>
             <div id="subject-list" class="grid grid-cols-1 gap-2">
                 </div>
+        </div>
+
+        <div id="tab-violations" class="hidden space-y-4">
+            <div class="bg-red-900/10 p-8 rounded-3xl border border-red-500/20 text-center shadow-inner">
+                <div class="w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-4 border border-red-500/30">
+                    <span class="text-3xl">⚠️</span>
+                </div>
+                <p class="text-[10px] text-gray-500 uppercase font-bold tracking-widest">Tổng số lỗi ghi nhận</p>
+                <h2 id="violation-count" class="text-6xl font-black text-red-500 mt-2">0</h2>
+                <p class="text-xs text-gray-400 mt-4 leading-relaxed px-4">
+                    
+                </p>
+            </div>
+
+            <div class="p-4 bg-gray-800/50 rounded-2xl border border-gray-700 border-dashed">
+                <p class="text-[11px] text-gray-500 text-center italic">
+                    * Liên hệ giáo viên chủ nhiệm qua Zalo để biết thêm chi tiết về từng lỗi vi phạm.
+                </p>
+            </div>
         </div>
 
         <div id="tab-stats" class="hidden py-20 text-center">
@@ -81,25 +119,61 @@
             "Công nghệ", "Tin học", "Khoa học tự nhiên", "Lịch sử và Địa lý"
         ];
 
+        function switchTab(tabName) {
+            // 1. Danh sách các ID tab và nút
+            const tabs = ['grades', 'violations', 'stats'];
+            
+            tabs.forEach(t => {
+                const content = document.getElementById(`tab-${t}`);
+                const btn = document.getElementById(`tab-btn-${t}`);
+                
+                if (t === tabName) {
+                    // Hiển thị tab được chọn
+                    content.classList.remove('hidden');
+                    content.classList.add('block');
+                    // Cập nhật style cho nút active
+                    btn.className = "flex-1 py-2.5 rounded-xl bg-blue-600 text-white font-bold transition-all text-[11px]";
+                } else {
+                    // Ẩn các tab còn lại
+                    content.classList.remove('block');
+                    content.classList.add('hidden');
+                    // Cập nhật style cho nút inactive
+                    btn.className = "flex-1 py-2.5 rounded-xl text-gray-400 hover:bg-gray-700 transition-all text-[11px]";
+                }
+            });
+        }    
         // 2. Khởi tạo danh sách điểm bằng 0
         function initGradeList() {
             const listContainer = document.getElementById('subject-list');
-            listContainer.innerHTML = defaultSubjects.map(subject => {
+            
+            // Tiêu đề bảng mới
+            let headerHtml = `
+            <div class="flex justify-between items-center px-4 mb-2 text-[10px] font-bold text-gray-500 uppercase tracking-widest">
+                <span class="w-1/4">Môn học</span>
+                <span class="w-2/4 text-center">Hành trình rèn luyện</span>
+                <span class="w-1/4 text-right px-2">Đích đến</span>
+            </div>`;
+
+            let listHtml = defaultSubjects.map(subject => {
                 const safeId = subject.replace(/\s/g, '');
                 return `
-                <div class="flex items-center justify-between bg-gray-800/40 p-4 rounded-2xl border border-gray-800 transition shadow-sm">
-                    <span class="text-sm font-medium text-gray-300 w-1/3">${subject}</span>
-                    
-                    <div class="flex space-x-4 w-2/3 justify-end px-2">
-                        <div class="text-center w-[60px]">
-                            <span id="score1-${safeId}" class="block bg-gray-900/50 text-gray-500 px-3 py-1 rounded-lg font-bold text-base">0.0</span>
-                        </div>
-                        <div class="text-center w-[60px]">
-                            <span id="score2-${safeId}" class="block bg-gray-900/50 text-gray-500 px-3 py-1 rounded-lg font-bold text-base border border-blue-500/20">0.0</span>
-                        </div>
+                <div class="flex items-center justify-between bg-gray-800/40 p-3 rounded-2xl border border-gray-800 mb-2">
+                    <div class="w-1/4">
+                        <p class="text-[11px] font-bold text-gray-300 truncate">${subject}</p>
+                    </div>
+
+                    <div class="w-2/4 flex justify-center items-center space-x-1.5" id="flow-${safeId}">
+                        <span class="text-[9px] text-gray-600 italic">Đang chờ dữ liệu...</span>
+                    </div>
+
+                    <div class="w-1/4 flex justify-end space-x-2">
+                        <span id="score1-${safeId}" class="w-9 text-center text-[10px] font-bold py-1.5 rounded-lg bg-gray-900/50 text-gray-500">0.0</span>
+                        <span id="score2-${safeId}" class="w-9 text-center text-[10px] font-bold py-1.5 rounded-lg bg-blue-600/10 text-blue-400 border border-blue-500/20">0.0</span>
                     </div>
                 </div>`;
             }).join('');
+
+            listContainer.innerHTML = headerHtml + listHtml;
         }
 
         async function loadChildData() {
@@ -113,40 +187,109 @@
                 const data = await res.json();
 
                 if (res.ok) {
-                    // 1. Cập nhật thông tin tổng quan
+                    // 1. Cập nhật thông tin tổng quan ở trên cùng
                     document.getElementById('child-name').innerText = data.full_name;
                     document.getElementById('child-kpi').innerText = data.kpi || 0;
-                    document.getElementById('child-hk').innerText = data.diem_hk.toFixed(1);
+                    document.getElementById('child-hk').innerText = (data.diem_hk || 0).toFixed(1);
+                    
+                    // Cập nhật con số tổng trong tab Vi Phạm
+                    const viEl = document.getElementById('violation-count');
+                    if (viEl) viEl.innerText = data.diem_vi_pham || 0;
 
-                    // 2. Cập nhật danh sách điểm chi tiết
+                    // 2. Duyệt qua từng môn học để nạp dữ liệu vào bảng
                     if (data.subjects) {
                         data.subjects.forEach(item => {
-                            // Xóa khoảng trắng để khớp với ID (vd: "Toán học" -> "Toánhọc")
                             const safeId = item.name.replace(/\s/g, '');
-                            
-                            // Đổ điểm HK I
-                            const el1 = document.getElementById(`score1-${safeId}`);
-                            if (el1) {
-                                el1.innerText = item.hk1 > 0 ? item.hk1.toFixed(1) : "0.0";
-                                if (item.hk1 > 0) el1.className = "block bg-gray-700 text-white px-3 py-1 rounded-lg font-bold text-base";
+
+                            // --- KHU VỰC GIỮA: Nạp chuỗi hạt "Hành trình" ---
+                            // Chúng ta gọi hàm vẽ hạt điểm vào vùng chứa flow-${safeId}
+                            renderProgressFlow(`flow-${safeId}`, data);
+
+                            // --- KHU VỰC PHẢI: Nạp điểm Học kỳ (Đích đến) ---
+                            const elHk1 = document.getElementById(`score1-${safeId}`);
+                            const elHk2 = document.getElementById(`score2-${safeId}`);
+
+                            if (elHk1) {
+                                elHk1.innerText = (item.hk1 || 0).toFixed(1);
+                                if (item.hk1 > 0) {
+                                    elHk1.className = "w-9 text-center text-[10px] font-bold py-1.5 rounded-lg bg-gray-700 text-white";
+                                }
                             }
 
-                            // Đổ điểm HK II
-                            const el2 = document.getElementById(`score2-${safeId}`);
-                            if (el2) {
-                                el2.innerText = item.hk2 > 0 ? item.hk2.toFixed(1) : "0.0";
+                            if (elHk2) {
+                                elHk2.innerText = (item.hk2 || 0).toFixed(1);
                                 if (item.hk2 > 0) {
-                                    el2.className = "block bg-blue-600/20 text-blue-400 px-3 py-1 rounded-lg font-bold text-base border border-blue-500/40";
+                                    // Làm nổi bật cột HK2 nếu đã có điểm thực tế
+                                    elHk2.className = "w-9 text-center text-[10px] font-bold py-1.5 rounded-lg bg-blue-500 text-white shadow-lg shadow-blue-500/20";
                                 }
                             }
                         });
                     }
+
+                    // 3. Cập nhật các thành phần bổ trợ (Biểu đồ & AI)
+                    if (typeof renderRadarChart === "function") {
+                        renderRadarChart(data.subjects);
+                    }
+                    if (typeof updateAIConsultant === "function") {
+                        updateAIConsultant(data);
+                    }
                 }
             } catch (err) {
-                console.error("Lỗi tải dữ liệu:", err);
+                console.error("Lỗi kết nối dữ liệu:", err);
             }
         }
 
+        function updateAIConsultant(data) {
+            const aiText = document.getElementById('analysis-text');
+            if (!aiText) return;
+
+            let advice = "";
+            if (data.diem_phat_bieu > 10) {
+                advice = `🌟 <span class="text-emerald-400 font-bold">Cố vấn:</span> Con đang cực kỳ năng nổ với ${data.diem_phat_bieu} lần phát biểu. Đây là tinh thần của một thủ lĩnh!`;
+            } else if (data.diem_san_pham > 8) {
+                advice = `💡 <span class="text-blue-400 font-bold">Cố vấn:</span> Con có tư duy sáng tạo rất tốt qua các sản phẩm thực hành. Hãy tiếp tục khuyến khích con!`;
+            } else if (data.diem_vi_pham > 0) {
+                advice = `⚠️ <span class="text-red-400 font-bold">Cảnh báo:</span> Hệ thống ghi nhận ${data.diem_vi_pham} lỗi vi phạm. Bố mẹ nên nhắc nhở con về nội quy lớp học.`;
+            } else {
+                advice = `✅ <span class="text-gray-300 font-bold">Cố vấn:</span> Các chỉ số chuyên cần ổn định. Con đang duy trì phong độ học tập tốt.`;
+            }
+            aiText.innerHTML = advice;
+        }
+
+        function renderProgressFlow(containerId, data) {
+            const container = document.getElementById(containerId);
+            if (!container) return;
+
+            // Giả sử ta có dữ liệu dạng mảng để thể hiện "dòng chảy"
+            // Nếu DB hiện tại chỉ có 1 số, ta hiện 1 hạt. Sau này nâng cấp DB mảng sẽ tự nhảy thêm hạt.
+            const kttx = data.diem_tx || 0;
+            const sp = data.diem_san_pham || 0;
+            const pb = data.diem_phat_bieu || 0;
+
+            container.innerHTML = `
+                <div class="flex flex-col items-center group">
+                    <span class="grade-bead w-7 h-7 rounded-full bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 text-[10px] flex items-center justify-center font-black ${kttx >= 8 ? 'glow-green' : ''}">
+                        ${kttx.toFixed(1)}
+                    </span>
+                    <span class="text-[7px] text-gray-500 mt-1 uppercase font-bold">TX</span>
+                </div>
+
+                <div class="flex flex-col items-center">
+                    <span class="grade-bead w-7 h-7 rounded-lg bg-purple-500/20 border border-purple-500/30 text-purple-400 text-[10px] flex items-center justify-center font-black ${sp >= 8 ? 'glow-blue' : ''}">
+                        ${sp.toFixed(1)}
+                    </span>
+                    <span class="text-[7px] text-gray-500 mt-1 uppercase font-bold">SP</span>
+                </div>
+
+                <div class="flex flex-col items-center">
+                    <div class="relative">
+                        <span class="text-lg">${pb > 10 ? '🔥' : '🙋‍♂️'}</span>
+                        <span class="absolute -top-1 -right-2 bg-blue-600 text-[8px] text-white px-1 rounded-full font-bold">${pb}</span>
+                    </div>
+                    <span class="text-[7px] text-gray-500 mt-1 uppercase font-bold">PB</span>
+                </div>
+            `;
+        }
         // Chạy khởi tạo
         initGradeList();
         loadChildData();
