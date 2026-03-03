@@ -400,9 +400,9 @@
                 <i class="fa-solid fa-store w-6 text-center"></i> Tiệm tạp hóa
             </button>
 
-            <button onclick="switchTab('pet')" data-tab="pet" 
-                class="nav-item w-full text-left px-6 py-3 transition border-l-4 border-transparent text-gray-300 hover:bg-gray-700 hover:text-white hover:border-orange-500">
-                <i class="fas fa-paw w-6 text-center"></i> Quản Lý Thú Cưng
+            <button onclick="switchTab('companion')" id="nav-companion" data-tab="companion" 
+                    class="nav-item w-full text-left px-6 py-3 transition border-l-4 border-transparent text-gray-300 hover:bg-gray-700 hover:text-white hover:border-emerald-500">
+                <i class="fa-solid fa-paw w-6 text-center"></i> Hệ Thống Đồng Hành
             </button>
 
             <button onclick="switchTab('skills')" data-tab="skills" 
@@ -1290,223 +1290,112 @@
             </div>
         </div>
 
-        <div id="tab-pet" class="tab-content hidden">
-            <div class="card bg-gray-800 text-white p-6 rounded-lg shadow-lg">
+        <div id="tab-companion" class="tab-content max-w-6xl mx-auto hidden">
+            <h2 class="text-2xl font-bold text-emerald-400 mb-6 flex items-center">
+                <i class="fa-solid fa-seedling mr-3"></i> Quản Lý Đồng Hành & Sản Xuất
+            </h2>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
                 
-                <h2 class="text-2xl font-bold mb-6 text-orange-500 border-b border-gray-700 pb-2">
-                    <i class="fas fa-paw mr-2"></i> Danh Sách Linh Thú
-                </h2>
-
-                <div class="bg-gray-700 p-6 rounded-lg mb-8 shadow-lg">
-                    <h3 class="text-lg font-bold text-gray-300 mb-4 border-l-4 border-orange-500 pl-3">Khởi Tạo Linh Thú Mới</h3>
-                    
-                    <div class="flex flex-col md:flex-row gap-8">
-                        
-                        <div class="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div class="col-span-2 md:col-span-1">
-                                <label class="text-xs text-gray-400 mb-1 block">Tên Linh Thú</label>
-                                <input type="text" id="pet-name" oninput="updatePreview()" placeholder="Vd: Phượng Hoàng Lửa" 
-                                    class="w-full bg-gray-800 text-white border border-gray-600 rounded px-3 py-2 focus:border-orange-500 outline-none">
-                            </div>
-
-                            <div class="col-span-2 md:col-span-1">
-                                <label class="text-xs text-gray-400 mb-1 block">Link Ảnh (URL)</label>
-                                <input type="text" id="pet-image" oninput="updatePreview()" placeholder="https://..." 
-                                    class="w-full bg-gray-800 text-white border border-gray-600 rounded px-3 py-2 focus:border-orange-500 outline-none">
-                            </div>
-
-                            <div>
-                                <label class="text-xs text-gray-400 mb-1 block">Loại Buff</label>
-                                <select id="pet-buff-type" class="w-full bg-gray-800 text-white border border-gray-600 rounded px-3 py-2 outline-none cursor-pointer">
-                                    <option value="ATK">Tăng Công (Điểm)</option>
-                                    <option value="HP">Tăng Máu (Điểm)</option>
-                                    <option value="EXP">Tăng EXP (%)</option>
-                                </select>
-                            </div>
-
-                            <div>
-                                <label class="text-xs text-gray-400 mb-1 block">Giá trị Buff</label>
-                                <input type="number" id="pet-buff-value" placeholder="Vd: 500" 
-                                    class="w-full bg-gray-800 text-white border border-gray-600 rounded px-3 py-2 focus:border-orange-500 outline-none">
-                            </div>
-
-                            <div>
-                                <label class="text-xs text-gray-400 mb-1 block">Phẩm Chất</label>
-                                <select id="pet-rarity" onchange="updatePreview()" class="w-full bg-gray-800 text-white border border-gray-600 rounded px-3 py-2 outline-none font-bold cursor-pointer">
-                                    <option value="R" class="text-gray-400">Thường (R)</option>
-                                    <option value="SR" class="text-yellow-400">Hiếm (SR)</option>
-                                    <option value="SSR" class="text-purple-400">Siêu Hiếm (SSR)</option>
-                                </select>
-                            </div>
-
-                            <div>
-                                <label class="text-xs text-orange-400 mb-1 block font-bold"><i class="fas fa-magic"></i> Hiệu Ứng Động</label>
-                                <select id="pet-effect" onchange="updatePreview()" class="w-full bg-gray-900 text-white border border-orange-500 rounded px-3 py-2 outline-none cursor-pointer font-bold">
-                                    <option value="NONE">-- Không --</option>
-                                    <option value="FIRE">🔥 Lửa Cháy (Fire)</option>
-                                    <option value="SNOW">❄️ Tuyết Rơi (Snow)</option>
-                                    <option value="LIGHTNING">⚡ Sấm Sét (Lightning)</option>
-                                    <option value="GHOST">👻 Bóng Ma (Ghost)</option>
-                                </select>
-                            </div>
-                            <div class="col-span-2 border-t border-gray-600 pt-3 mt-2">
-                                <div class="flex items-center justify-between">
-                                    <label class="flex items-center cursor-pointer group">
-                                        <div class="relative">
-                                            <input type="checkbox" id="is-fragment" onchange="updatePreview()" class="sr-only">
-                                            <div class="block bg-gray-600 w-10 h-6 rounded-full group-hover:bg-gray-500 transition"></div>
-                                            <div id="toggle-dot" class="dot absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition transform duration-300"></div>
-                                        </div>
-                                        <span class="ml-3 text-sm font-bold text-gray-300 group-hover:text-white">Đây là Mảnh Ghép?</span>
-                                    </label>
-
-                                    <div id="frag-qty-group" class="hidden flex items-center gap-2 bg-gray-900 px-3 py-1 rounded border border-gray-600">
-                                        <span class="text-xs text-gray-400">Cần ghép:</span>
-                                        <input type="number" id="frag-req" value="10" class="w-12 bg-transparent text-orange-400 font-bold text-center outline-none border-b border-gray-500 focus:border-orange-500">
-                                        <span class="text-xs text-gray-400">mảnh</span>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-span-2 mt-4">
-                                <button onclick="createNewPet()" class="w-full bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-500 hover:to-red-500 text-white font-bold py-3 rounded shadow-lg transform active:scale-95 transition-all">
-                                    <i class="fas fa-bolt mr-2"></i> TRIỆU HỒI LINH THÚ
-                                </button>
-                            </div>
-                        </div>
-
-                        <div class="w-full md:w-1/3 flex flex-col items-center justify-center bg-gray-800/50 rounded-lg p-4 border border-gray-600 border-dashed">
-                            <span class="text-gray-400 text-xs mb-3 uppercase tracking-wider">Xem trước thẻ bài</span>
-                            
-                            <div id="preview-card" class="relative w-48 h-72 bg-gray-900 rounded-xl border-4 border-gray-600 shadow-xl transition-all duration-300 overflow-hidden group">
-                                <div id="preview-badge" class="absolute top-2 left-2 bg-gray-600 text-white text-xs font-bold px-2 py-1 rounded shadow z-30">R</div>
-                                
-                                <img id="preview-img-src" src="https://via.placeholder.com/300?text=PET" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110 z-0">
-                                
-                                <div id="fragment-overlay-text" class="hidden absolute inset-0 z-10 flex flex-col items-center justify-center pointer-events-none">
-                                    <span class="text-3xl font-black text-white uppercase tracking-widest opacity-80 border-4 border-white px-2 py-1 transform -rotate-12" style="text-shadow: 0 0 10px black;">
-                                        MẢNH
-                                    </span>
-                                    <span class="text-xs font-bold text-gray-300 mt-1 bg-black/50 px-2 rounded">Cần: <span id="preview-frag-req">10</span></span>
-                                </div>
-                                <div id="effect-overlay" class="absolute inset-0 pointer-events-none z-20 overflow-hidden rounded-xl"></div>
-
-                                <div class="absolute bottom-0 w-full bg-gradient-to-t from-black via-black/80 to-transparent p-3 pt-8 text-center z-30">
-                                    <h4 id="preview-name-text" class="text-white font-bold text-lg leading-tight truncate">Tên Linh Thú</h4>
-                                    <p class="text-orange-400 text-xs mt-1"><i class="fas fa-star"></i> Lv.1</p>
-                                </div>
-                            </div>
-                            
-                            <p class="text-gray-500 text-xs mt-4 text-center italic">"Hiệu ứng sẽ thay đổi theo phẩm chất"</p>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="table-container overflow-x-auto rounded-lg border border-gray-700">
-                    <table class="w-full text-left border-collapse">
-                        <thead class="bg-gray-900 text-gray-300 uppercase text-sm leading-normal">
-                            <tr>
-                                <th class="py-3 px-6 text-left">ID</th>
-                                <th class="py-3 px-6 text-left">Ảnh</th>
-                                <th class="py-3 px-6 text-left">Tên Linh Thú</th>
-                                <th class="py-3 px-6 text-center">Phẩm Chất</th>
-                                <th class="py-3 px-6 text-left">Mô Tả (Hiệu ứng)</th>
-                                <th class="py-3 px-6 text-center">Hành Động</th>
-                            </tr>
-                        </thead>
-                        <tbody id="pet-list-body" class="text-gray-300 text-sm font-light">
-                            </tbody>
-                    </table>
-                </div>
-
-                <div class="bg-gray-800 border border-gray-600 p-6 rounded-lg mb-8 shadow-lg relative overflow-hidden">
-                    <div class="absolute top-0 right-0 p-4 opacity-10">
-                        <i class="fas fa-dice-d20 text-9xl text-orange-500"></i>
-                    </div>
-
-                    <h3 class="text-xl font-bold text-orange-400 mb-6 flex items-center">
-                        <i class="fas fa-cogs mr-2"></i> Cấu Hình Tỷ Lệ Gacha (Global Config)
+                <div class="bg-gray-800 p-6 rounded-xl border border-gray-700 shadow-xl md:col-span-1">
+                    <h3 class="text-lg font-bold mb-2 text-white flex items-center">
+                        <i class="fa-solid fa-microchip mr-2 text-blue-400"></i> Quét Dữ Liệu Gốc
                     </h3>
-
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-
-                        <div class="bg-gray-900 rounded-lg p-4 border-t-4 border-gray-500 relative group hover:bg-gray-700 transition-colors">
-                            <div class="absolute -top-3 left-4 bg-gray-500 text-white text-xs font-bold px-2 py-1 rounded shadow">R - THƯỜNG</div>
-                            
-                            <div class="mt-2 space-y-4">
-                                <div>
-                                    <label class="text-xs text-gray-400 block mb-1">Tỷ lệ xuất hiện (Total %)</label>
-                                    <div class="flex items-center">
-                                        <input type="number" id="rate-r-appear" value="70" class="w-full bg-black text-white border border-gray-600 rounded-l px-3 py-2 focus:border-gray-400 outline-none font-bold">
-                                        <span class="bg-gray-700 text-gray-300 px-3 py-2 rounded-r border border-l-0 border-gray-600">%</span>
-                                    </div>
-                                </div>
-                                <div class="border-t border-gray-700 pt-2">
-                                    <label class="text-xs text-gray-400 block mb-1">Trong đó: Tỷ lệ ra Thẻ (Card)</label>
-                                    <div class="flex items-center">
-                                        <input type="number" id="rate-r-card" value="30" class="w-full bg-black text-green-400 border border-gray-600 rounded-l px-3 py-2 focus:border-green-500 outline-none font-bold">
-                                        <span class="bg-gray-700 text-gray-300 px-3 py-2 rounded-r border border-l-0 border-gray-600">%</span>
-                                    </div>
-                                    <p class="text-[10px] text-gray-500 mt-1 italic">=> Tỷ lệ ra Mảnh: <span id="text-r-frag">70</span>%</p>
-                                </div>
-                            </div>
+                    <p class="text-xs text-gray-400 mb-4 text-justify">
+                        Hệ thống sẽ tự động quét thư mục <code class="text-yellow-500">/assets/card/</code> (r, sr, ssr, usr) để tạo Phôi thẻ mới.
+                    </p>
+                    <div class="bg-black/30 p-3 rounded mb-4 border border-gray-600">
+                        <div class="flex justify-between text-xs mb-1">
+                            <span class="text-gray-400">Tổng phôi:</span>
+                            <span class="text-white font-bold" id="total-templates">0</span>
                         </div>
-
-                        <div class="bg-gray-900 rounded-lg p-4 border-t-4 border-yellow-500 relative group hover:bg-gray-700 transition-colors">
-                            <div class="absolute -top-3 left-4 bg-yellow-600 text-white text-xs font-bold px-2 py-1 rounded shadow">SR - HIẾM</div>
-                            
-                            <div class="mt-2 space-y-4">
-                                <div>
-                                    <label class="text-xs text-gray-400 block mb-1">Tỷ lệ xuất hiện (Total %)</label>
-                                    <div class="flex items-center">
-                                        <input type="number" id="rate-sr-appear" value="25" class="w-full bg-black text-yellow-400 border border-gray-600 rounded-l px-3 py-2 focus:border-yellow-400 outline-none font-bold">
-                                        <span class="bg-gray-700 text-gray-300 px-3 py-2 rounded-r border border-l-0 border-gray-600">%</span>
-                                    </div>
-                                </div>
-                                <div class="border-t border-gray-700 pt-2">
-                                    <label class="text-xs text-gray-400 block mb-1">Trong đó: Tỷ lệ ra Thẻ (Card)</label>
-                                    <div class="flex items-center">
-                                        <input type="number" id="rate-sr-card" value="10" class="w-full bg-black text-green-400 border border-gray-600 rounded-l px-3 py-2 focus:border-green-500 outline-none font-bold">
-                                        <span class="bg-gray-700 text-gray-300 px-3 py-2 rounded-r border border-l-0 border-gray-600">%</span>
-                                    </div>
-                                    <p class="text-[10px] text-gray-500 mt-1 italic">=> Tỷ lệ ra Mảnh: <span id="text-sr-frag">90</span>%</p>
-                                </div>
-                            </div>
+                        <div class="flex justify-between text-xs">
+                            <span class="text-gray-400">Trạng thái:</span>
+                            <span class="text-emerald-400" id="scan-status">Sẵn sàng</span>
                         </div>
-
-                        <div class="bg-gray-900 rounded-lg p-4 border-t-4 border-purple-500 relative group hover:bg-gray-700 transition-colors shadow-[0_0_15px_rgba(168,85,247,0.1)]">
-                            <div class="absolute -top-3 left-4 bg-purple-600 text-white text-xs font-bold px-2 py-1 rounded shadow">SSR - SIÊU HIẾM</div>
-                            
-                            <div class="mt-2 space-y-4">
-                                <div>
-                                    <label class="text-xs text-gray-400 block mb-1">Tỷ lệ xuất hiện (Total %)</label>
-                                    <div class="flex items-center">
-                                        <input type="number" id="rate-ssr-appear" value="5" class="w-full bg-black text-purple-400 border border-gray-600 rounded-l px-3 py-2 focus:border-purple-400 outline-none font-bold">
-                                        <span class="bg-gray-700 text-gray-300 px-3 py-2 rounded-r border border-l-0 border-gray-600">%</span>
-                                    </div>
-                                </div>
-                                <div class="border-t border-gray-700 pt-2">
-                                    <label class="text-xs text-gray-400 block mb-1">Trong đó: Tỷ lệ ra Thẻ (Card)</label>
-                                    <div class="flex items-center">
-                                        <input type="number" id="rate-ssr-card" value="2" class="w-full bg-black text-green-400 border border-gray-600 rounded-l px-3 py-2 focus:border-green-500 outline-none font-bold">
-                                        <span class="bg-gray-700 text-gray-300 px-3 py-2 rounded-r border border-l-0 border-gray-600">%</span>
-                                    </div>
-                                    <p class="text-[10px] text-gray-500 mt-1 italic">=> Tỷ lệ ra Mảnh: <span id="text-ssr-frag">98</span>%</p>
-                                </div>
-                            </div>
-                        </div>
-
                     </div>
+                    <button onclick="scanCompanions()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 rounded transition flex justify-center items-center gap-2">
+                        <i class="fa-solid fa-arrows-rotate"></i> Bắt đầu Quét
+                    </button>
+                </div>
 
-                    <div class="mt-6 flex flex-col md:flex-row justify-between items-center border-t border-gray-700 pt-4">
-                        <div class="text-sm mb-4 md:mb-0">
-                            <span class="text-gray-400">Tổng tỷ lệ xuất hiện: </span>
-                            <span id="total-rate-display" class="font-bold text-green-400 text-lg">100%</span>
-                            <span id="rate-warning" class="text-red-500 text-xs ml-2 hidden"><i class="fas fa-exclamation-triangle"></i> Phải bằng 100%</span>
-                        </div>
-                        
-                        <button onclick="saveGachaConfig()" class="bg-blue-600 hover:bg-blue-500 text-white px-6 py-2 rounded font-bold shadow-lg transform active:scale-95 transition-all">
-                            <i class="fas fa-save mr-2"></i> LƯU CẤU HÌNH GACHA
+                <div class="bg-gray-800 p-6 rounded-xl border border-gray-700 shadow-xl md:col-span-2">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-lg font-bold text-white"><i class="fa-solid fa-sliders mr-2 text-purple-400"></i> Thiết Lập Chỉ Số & Cường Hóa</h3>
+                        <button onclick="saveCompanionConfig()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1 rounded text-xs font-bold">
+                            <i class="fa-solid fa-save mr-1"></i> Lưu Cấu Hình
                         </button>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs text-gray-400 mb-1">Nguyên liệu cần để Tăng Sao (Số thẻ):</label>
+                            <input type="number" id="fodder-required" value="3" class="w-full bg-gray-900 border border-gray-600 rounded px-3 py-2 text-white focus:border-emerald-500 outline-none mb-4">
+                            
+                            <div class="text-xs text-gray-500 italic border-l-2 border-gray-600 pl-2">
+                                * Ví dụ: Nhập 3 => Cần 1 thẻ chính + 3 thẻ phụ cùng loại để lên sao.
+                            </div>
+                        </div>
+
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-xs text-left text-gray-300">
+                                <thead class="bg-gray-900 text-gray-400">
+                                    <tr>
+                                        <th class="p-2">Cấp</th>
+                                        <th class="p-2">HP (Min-Max)</th>
+                                        <th class="p-2">ATK (Min-Max)</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="stats-config-body">
+                                    <tr>
+                                        <td class="p-2 font-bold text-gray-400">R</td>
+                                        <td class="p-1"><input type="text" id="stat-r-hp" placeholder="100-300" class="w-full bg-gray-700 border-none rounded px-1 py-1 text-center"></td>
+                                        <td class="p-1"><input type="text" id="stat-r-atk" placeholder="10-30" class="w-full bg-gray-700 border-none rounded px-1 py-1 text-center"></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="p-2 font-bold text-blue-400">SR</td>
+                                        <td class="p-1"><input type="text" id="stat-sr-hp" placeholder="500-800" class="w-full bg-gray-700 border-none rounded px-1 py-1 text-center"></td>
+                                        <td class="p-1"><input type="text" id="stat-sr-atk" placeholder="50-80" class="w-full bg-gray-700 border-none rounded px-1 py-1 text-center"></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="p-2 font-bold text-yellow-400">SSR</td>
+                                        <td class="p-1"><input type="text" id="stat-ssr-hp" placeholder="1200-1800" class="w-full bg-gray-700 border-none rounded px-1 py-1 text-center"></td>
+                                        <td class="p-1"><input type="text" id="stat-ssr-atk" placeholder="120-180" class="w-full bg-gray-700 border-none rounded px-1 py-1 text-center"></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="p-2 font-bold text-red-500">USR</td>
+                                        <td class="p-1"><input type="text" id="stat-usr-hp" placeholder="3000-5000" class="w-full bg-gray-700 border-none rounded px-1 py-1 text-center"></td>
+                                        <td class="p-1"><input type="text" id="stat-usr-atk" placeholder="300-500" class="w-full bg-gray-700 border-none rounded px-1 py-1 text-center"></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-gray-800 rounded-xl border border-gray-700 shadow-xl overflow-hidden">
+                <div class="p-4 bg-gray-750 border-b border-gray-700 flex justify-between items-center">
+                    <h3 class="text-lg font-bold text-white"><i class="fa-solid fa-layer-group mr-2"></i> Kho Phôi Thẻ (Templates)</h3>
+                    <div class="flex gap-2">
+                        <select id="filter-rarity" onchange="loadTemplates()" class="bg-gray-900 border border-gray-600 rounded px-2 py-1 text-xs text-white outline-none">
+                            <option value="ALL">Tất cả cấp độ</option>
+                            <option value="R">R (Thường)</option>
+                            <option value="SR">SR (Hiếm)</option>
+                            <option value="SSR">SSR (Siêu Hiếm)</option>
+                            <option value="USR">USR (Cực Phẩm)</option>
+                        </select>
+                        <button onclick="loadTemplates()" class="bg-gray-700 hover:bg-gray-600 text-white px-3 py-1 rounded text-xs">
+                            <i class="fa-solid fa-rotate"></i> Tải lại
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="overflow-y-auto max-h-[500px] custom-scrollbar p-4">
+                    <div id="template-grid" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                        <div class="text-gray-500 text-sm col-span-full text-center py-10">
+                            Chưa có dữ liệu. Hãy bấm "Bắt đầu Quét" ở trên.
+                        </div>
                     </div>
                 </div>
             </div>
@@ -2061,12 +1950,11 @@
             }
 
             // --- 3. XỬ LÝ ACTIVE BUTTON (Cách an toàn hơn) ---
-            // Tìm nút có data-tab trùng với tabName, hoặc check onclick như cũ nếu lười sửa HTML
             const navButtons = document.querySelectorAll('.nav-item');
             
             navButtons.forEach(btn => {
                 // Reset style cũ
-                btn.classList.remove('active-tab', 'bg-gray-700', 'border-yellow-500', 'text-white');
+                btn.classList.remove('active-tab', 'bg-gray-700', 'border-yellow-500', 'text-white', 'border-emerald-500'); // Thêm border-emerald-500 để reset màu của tab companion
                 btn.classList.add('text-gray-300', 'border-transparent');
 
                 // Lấy tên tab từ data-tab (Ưu tiên) hoặc parse từ onclick (Dự phòng)
@@ -2078,21 +1966,21 @@
                                 (!btnTab && clickAttr && clickAttr.includes(`'${tabName}'`));
 
                 if (isMatch) {
-                    btn.classList.add('active-tab', 'bg-gray-700', 'border-yellow-500', 'text-white');
+                    btn.classList.add('active-tab', 'bg-gray-700', 'text-white');
                     btn.classList.remove('text-gray-300', 'border-transparent');
+                    
+                    // Highlight màu viền riêng cho từng loại tab
+                    if (tabName === 'companion') {
+                        btn.classList.add('border-emerald-500'); // Màu xanh ngọc cho Đồng hành
+                    } else {
+                        btn.classList.add('border-yellow-500'); // Màu vàng mặc định
+                    }
                 }
             });
 
             // --- 4. LAZY LOAD DATA (Dùng switch case cho gọn & dễ đọc) ---
-            // Helper function để gọi hàm an toàn
-            const safeCall = (fnName) => {
-                if (typeof window[fnName] === 'function') window[fnName](); // Gọi hàm global
-                else if (typeof eval(fnName) === 'function') eval(fnName)(); // Fallback nếu hàm cục bộ (ít dùng eval hơn)
-            };
-
-            // Cách thủ công nhưng an toàn và dễ debug hơn eval:
             switch (tabName) {
-                case 'arena': // 👈 Thêm case này cho Lôi Đài
+                case 'arena':
                     if (typeof loadAdminArenaData === 'function') loadAdminArenaData();
                     break;
                 case 'boss':
@@ -2114,25 +2002,28 @@
                 case 'pet':
                     if (typeof loadPets === 'function') loadPets();
                     break;
-                case 'skills': // Tên tabId mà bạn đã đặt cho nút bấm và div nội dung
+                case 'skills':
                     if (typeof loadAdminSkills === 'function') loadAdminSkills();
                     break;
                 case 'notifications': 
                     if (typeof loadNotifications === 'function') loadNotifications();
                     break;
-                case 'charm-settings': // 👈 Tên tab mới
-                    if (typeof loadSystemConfig === 'function') {
-                        loadSystemConfig(); // Gọi hàm load API Admin mà ta vừa viết
-                    }
+                case 'charm-settings':
+                    if (typeof loadSystemConfig === 'function') loadSystemConfig();
                     break;
-                case 'chat': // 👈 [MỚI] Thêm case này vào
-                    if (typeof initAdminChat === 'function') {
-                        initAdminChat();
-                    }
+                case 'chat':
+                    if (typeof initAdminChat === 'function') initAdminChat();
                     break;
                 case 'gradebook': 
                     console.log("Tab Sổ Điểm đã sẵn sàng");
                     break;
+                    
+                // --- [MỚI] TAB ĐỒNG HÀNH ---
+                case 'companion':
+                    if (typeof loadTemplates === 'function') loadTemplates();
+                    if (typeof loadCompanionConfig === 'function') loadCompanionConfig();
+                    break;
+                    
                 default:
                     console.log("Tab này chưa có hàm load dữ liệu riêng.");
             }
@@ -4831,219 +4722,6 @@
                 }
             } catch (e) { alert("Lỗi kết nối!"); }
         }
-        
-        //39 ===============================================
-        //   LOGIC QUẢN LÝ PET (Sử dụng API Shop/Item)
-        //   ===============================================
-
-        // 1. Hàm load danh sách Pet
-        async function loadPets() {
-            try {
-                // Gọi API lấy toàn bộ Item
-                const res = await fetch('/admin/shop/items');
-                const items = await res.json();
-                
-                const tbody = document.getElementById('pet-list-body');
-                tbody.innerHTML = '';
-
-                // Lọc chỉ lấy những Item có category là "PET" hoặc "PET_SHARD"
-                // (Ở đây ta tạm quy ước category="PET" là thú cưng)
-                const pets = items.filter(i => i.category === 'PET');
-
-                if (pets.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center">Chưa có linh thú nào. Hãy tạo mới!</td></tr>';
-                    return;
-                }
-
-                pets.forEach(p => {
-                    const row = `
-                        <tr>
-                            <td>${p.id}</td>
-                            <td><img src="${p.image_url}" style="width:50px; height:50px; object-fit:cover; border-radius:5px;"></td>
-                            <td style="font-weight:bold; color: #d35400;">${p.name}</td>
-                            <td><span class="badge badge-${p.rarity}">${p.rarity}</span></td>
-                            <td>${p.description}</td>
-                            <td>
-                                <button onclick="deleteItem(${p.id})" style="background:#e74c3c; color:white; border:none; padding:5px 10px; border-radius:4px; cursor:pointer;">
-                                    <i class="fas fa-trash"></i> Xóa
-                                </button>
-                            </td>
-                        </tr>
-                    `;
-                    tbody.innerHTML += row;
-                });
-
-            } catch (error) {
-                console.error("Lỗi tải Pet:", error);
-            }
-        }
-
-        // 2. Hàm tạo Pet mới
-        // Hàm tự động điền mô tả khi chọn loại Buff
-        function autoUpdateDesc() {
-            const type = document.getElementById('pet-buff-type').value;
-            const val = document.getElementById('pet-buff-value').value;
-            const descInput = document.getElementById('pet-desc');
-
-            if (!val) return;
-
-            let text = "";
-            if (type === 'EXP') text = `Tăng ${val}% kinh nghiệm (EXP) khi kích hoạt`;
-            else if (type === 'ATK') text = `Cộng ${val} sức tấn công cho chủ nhân`;
-            else if (type === 'HP') text = `Cộng ${val} máu tối đa cho chủ nhân`;
-
-            descInput.value = text;
-        }
-
-        // Hàm cập nhật Preview - PHIÊN BẢN OVERLAY (Ổn định nhất)
-        function updatePreview() {
-            // 1. Lấy dữ liệu
-            const name = document.getElementById('pet-name').value || "Tên Linh Thú";
-            const imgUrl = document.getElementById('pet-image').value;
-            const rarity = document.getElementById('pet-rarity').value;
-            const effect = document.getElementById('pet-effect').value;
-            
-            // 👇 Lấy dữ liệu Mảnh
-            const isFragment = document.getElementById('is-fragment').checked;
-            const fragReq = document.getElementById('frag-req').value;
-
-            // 2. DOM Elements
-            const previewCard = document.getElementById('preview-card');
-            const previewImg = document.getElementById('preview-img-src');
-            const previewBadge = document.getElementById('preview-badge');
-            const previewName = document.getElementById('preview-name-text');
-            const effectOverlay = document.getElementById('effect-overlay');
-            
-            // 👇 DOM Mới cho Mảnh
-            const fragText = document.getElementById('fragment-overlay-text');
-            const fragInputGroup = document.getElementById('frag-qty-group');
-            const fragReqDisplay = document.getElementById('preview-frag-req');
-
-            // Cập nhật nội dung cơ bản
-            previewName.innerText = name;
-            previewImg.src = imgUrl || "https://placehold.co/300x450/374151/white?text=NO+IMAGE";
-            previewBadge.innerText = rarity;
-
-            // 3. Xử lý Chế độ Mảnh (QUAN TRỌNG)
-            if (isFragment) {
-                // Hiện input nhập số lượng
-                fragInputGroup.classList.remove('hidden');
-                
-                // Hiện chữ MẢNH GHÉP đè lên
-                fragText.classList.remove('hidden');
-                fragReqDisplay.innerText = fragReq;
-
-                // Làm mờ ảnh & Chuyển đen trắng nhẹ
-                previewImg.className = "w-full h-full object-cover z-0 relative filter blur-[2px] grayscale-[50%]";
-            } else {
-                // Tắt chế độ mảnh
-                fragInputGroup.classList.add('hidden');
-                fragText.classList.add('hidden');
-                
-                // Ảnh bình thường
-                previewImg.className = "w-full h-full object-cover z-0 relative";
-            }
-
-            // 4. Xử lý Rarity (Khung viền) - GIỮ NGUYÊN CODE CŨ
-            previewCard.className = "relative w-48 h-72 rounded-xl overflow-hidden group border-4 transition-all duration-300";
-            previewCard.style.boxShadow = ""; 
-            previewCard.classList.remove("ssr-active");
-
-            if (rarity === 'R') {
-                previewCard.classList.add("bg-gray-900", "border-gray-500");
-                previewBadge.className = "absolute top-2 left-2 text-white text-xs font-bold px-2 py-1 rounded shadow z-30 bg-gray-600";
-            } 
-            else if (rarity === 'SR') {
-                previewCard.classList.add("bg-gray-900", "border-yellow-400");
-                previewCard.style.boxShadow = "0 0 15px rgba(250, 204, 21, 0.6)";
-                previewBadge.className = "absolute top-2 left-2 text-white text-xs font-bold px-2 py-1 rounded shadow z-30 bg-yellow-600";
-            } 
-            else if (rarity === 'SSR') {
-                previewCard.className = "relative w-48 h-72 rounded-xl group ssr-active"; 
-                previewBadge.className = "absolute top-2 left-2 text-white text-xs font-bold px-2 py-1 rounded shadow z-30 bg-purple-600 shadow-lg";
-                // Nếu là SSR mà lại là Mảnh -> Vẫn cần bo góc ảnh
-                if (isFragment) {
-                    previewImg.className = "w-full h-full object-cover rounded-lg z-10 relative filter blur-[2px] grayscale-[50%]";
-                } else {
-                    previewImg.className = "w-full h-full object-cover rounded-lg z-10 relative"; 
-                }
-            }
-
-            // 5. Hiệu ứng Overlay (Giữ nguyên)
-            effectOverlay.className = "absolute inset-0 pointer-events-none z-20 overflow-hidden rounded-xl";
-            if (effect === 'FIRE') effectOverlay.classList.add("effect-fire");
-            else if (effect === 'SNOW') effectOverlay.classList.add("effect-snow");
-            else if (effect === 'LIGHTNING') effectOverlay.classList.add("effect-lightning");
-            else if (effect === 'GHOST') effectOverlay.classList.add("effect-ghost");
-        }
-        
-        //40 Hàm tạo Pet mới (Updated)
-        async function createNewPet() {
-            const name = document.getElementById('pet-name').value;
-            const image = document.getElementById('pet-image').value || "https://placehold.co/300x450/374151/white?text=PET";
-            const rarity = document.getElementById('pet-rarity').value;
-            
-            const buffType = document.getElementById('pet-buff-type').value;
-            const buffValue = document.getElementById('pet-buff-value').value || 0;
-            const visualEffect = document.getElementById('pet-effect').value;
-            
-            // 👇 Lấy thông tin Mảnh
-            const isFragment = document.getElementById('is-fragment').checked;
-            const fragReq = parseInt(document.getElementById('frag-req').value) || 10;
-
-            if (!name) return alert("Vui lòng nhập tên Linh Thú!");
-
-            // Tự động tạo mô tả
-            let autoDesc = "";
-            if (isFragment) {
-                autoDesc = `Mảnh ghép của ${name}. Cần thu thập đủ ${fragReq} mảnh để triệu hồi.`;
-            } else {
-                autoDesc = `Linh thú hệ ${rarity}. `;
-                if (buffType === 'ATK') autoDesc += `Tăng ${buffValue} tấn công.`;
-                else if (buffType === 'HP') autoDesc += `Tăng ${buffValue} máu.`;
-                else if (buffType === 'EXP') autoDesc += `Tăng ${buffValue}% kinh nghiệm.`;
-                if (visualEffect !== 'NONE') autoDesc += ` [Hiệu ứng: ${visualEffect}]`;
-            }
-
-            // Đóng gói Config
-            const petConfig = {
-                buff_type: buffType,
-                buff_value: parseInt(buffValue),
-                visual_effect: visualEffect,
-                // 👇 Lưu thêm cờ hiệu Mảnh
-                is_fragment: isFragment,
-                fusion_required: isFragment ? fragReq : 0
-            };
-
-            const newPet = {
-                name: isFragment ? `[Mảnh] ${name}` : name, // Thêm prefix cho dễ quản lý
-                image_url: image,
-                description: autoDesc, 
-                rarity: rarity,
-                category: isFragment ? "PET_FRAGMENT" : "PET", // Phân loại rõ ràng
-                price: 0,
-                currency_type: "NONE",
-                config: JSON.stringify(petConfig)
-            };
-
-            try {
-                const res = await fetch('/admin/shop/items/add', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(newPet)
-                });
-
-                if (res.ok) {
-                    alert(`✅ Đã tạo thành công: ${newPet.name}`);
-                    loadPets(); 
-                } else {
-                    alert("❌ Lỗi khi tạo!");
-                }
-            } catch (e) {
-                console.error(e);
-                alert("Lỗi kết nối!");
-            }
-        }
 
         //41 --- LOGIC QUẢN LÝ GACHA CONFIG ---
 
@@ -6252,11 +5930,188 @@
             }, 250); // Giảm tần suất một chút cho Admin đỡ lag (0.25s)
         }
 
+        // ==========================================
+        // LOGIC QUẢN LÝ ĐỒNG HÀNH (COMPANION SYSTEM)
+        // ==========================================
+
+        // 1. Hàm Quét Phôi Ảnh (Scan)
+        async function scanCompanions() {
+            const btn = event.target; // Lấy nút đang bấm
+            const originalText = btn.innerHTML;
+            
+            // Hiệu ứng đang tải
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang quét...';
+            btn.disabled = true;
+            document.getElementById('scan-status').innerText = "Đang xử lý...";
+            document.getElementById('scan-status').className = "text-yellow-500 blink";
+
+            try {
+                const token = localStorage.getItem('admin_token');
+                const res = await fetch('/api/admin/companions/scan', {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                const data = await res.json();
+                
+                if (res.ok) {
+                    alert(`✅ ${data.message}`);
+                    document.getElementById('scan-status').innerText = "Hoàn tất";
+                    document.getElementById('scan-status').className = "text-green-500 font-bold";
+                    // Tải lại danh sách ngay lập tức
+                    loadTemplates();
+                } else {
+                    alert("Lỗi: " + data.detail);
+                }
+            } catch (err) {
+                console.error(err);
+                alert("Lỗi kết nối Server!");
+            } finally {
+                // Trả lại nút bấm
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+        }
+
+        // 2. Hàm Tải Danh Sách Phôi (Load Templates)
+        async function loadTemplates() {
+            const rarityFilter = document.getElementById('filter-rarity').value;
+            const grid = document.getElementById('template-grid');
+            grid.innerHTML = '<div class="col-span-full text-center text-gray-500"><i class="fa-solid fa-spinner fa-spin"></i> Đang tải dữ liệu...</div>';
+
+            try {
+                const token = localStorage.getItem('admin_token');
+                const res = await fetch(`/api/admin/companions/templates?rarity=${rarityFilter}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const templates = await res.json();
+
+                // Cập nhật số lượng tổng
+                document.getElementById('total-templates').innerText = templates.length;
+
+                grid.innerHTML = ''; // Xóa loading
+                
+                if (templates.length === 0) {
+                    grid.innerHTML = '<div class="col-span-full text-center text-gray-500 py-10">Không tìm thấy thẻ nào. Hãy thử Quét lại.</div>';
+                    return;
+                }
+
+                // Vẽ từng thẻ
+                templates.forEach(t => {
+                    // Xác định màu sắc theo cấp độ
+                    let borderClass = 'border-gray-600';
+                    let textClass = 'text-gray-400';
+                    let bgBadge = 'bg-gray-600';
+
+                    if (t.rarity === 'R') { borderClass = 'border-gray-500'; textClass = 'text-gray-300'; bgBadge='bg-gray-500'; }
+                    else if (t.rarity === 'SR') { borderClass = 'border-blue-500'; textClass = 'text-blue-400'; bgBadge='bg-blue-600'; }
+                    else if (t.rarity === 'SSR') { borderClass = 'border-yellow-500'; textClass = 'text-yellow-400'; bgBadge='bg-yellow-600'; }
+                    else if (t.rarity === 'USR') { borderClass = 'border-red-500'; textClass = 'text-red-500'; bgBadge='bg-red-600'; }
+
+                    const cardHtml = `
+                    <div class="relative bg-gray-900 border-2 ${borderClass} rounded-lg overflow-hidden group hover:scale-105 transition duration-200 cursor-pointer shadow-lg">
+                        <div class="w-full h-48 overflow-hidden bg-black">
+                            <img src="${t.image_path}" class="w-full h-full object-cover opacity-90 group-hover:opacity-100 transition" onerror="this.src='https://placehold.co/150x200?text=No+Image'">
+                        </div>
+                        
+                        <div class="absolute top-2 right-2 ${bgBadge} text-white text-[10px] font-bold px-2 py-0.5 rounded shadow">
+                            ${t.rarity}
+                        </div>
+
+                        <div class="absolute bottom-0 w-full bg-black/80 backdrop-blur-sm p-2 border-t border-gray-700">
+                            <div class="font-bold text-xs ${textClass} truncate">${t.name}</div>
+                            <div class="text-[9px] text-gray-500 font-mono">${t.template_id}</div>
+                        </div>
+                    </div>`;
+                    
+                    grid.innerHTML += cardHtml;
+                });
+
+            } catch (err) {
+                console.error(err);
+                grid.innerHTML = '<div class="col-span-full text-center text-red-500">Lỗi tải dữ liệu.</div>';
+            }
+        }
+
+        // 3. Hàm Load & Save Cấu hình (Config)
+        async function loadCompanionConfig() {
+            try {
+                const token = localStorage.getItem('admin_token');
+                const res = await fetch('/api/admin/companions/config', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await res.json();
+                
+                if (data) {
+                    // Điền số nguyên liệu
+                    document.getElementById('fodder-required').value = data.fodder_required || 3;
+                    
+                    // Parse JSON stats để điền vào bảng
+                    const stats = JSON.parse(data.stats_config || '{}');
+                    const rarities = ['R', 'SR', 'SSR', 'USR'];
+                    
+                    rarities.forEach(r => {
+                        if (stats[r]) {
+                            // stats[r].hp là mảng [100, 300] -> chuyển thành chuỗi "100-300"
+                            document.getElementById(`stat-${r.toLowerCase()}-hp`).value = `${stats[r].hp[0]}-${stats[r].hp[1]}`;
+                            document.getElementById(`stat-${r.toLowerCase()}-atk`).value = `${stats[r].atk[0]}-${stats[r].atk[1]}`;
+                        }
+                    });
+                }
+            } catch (err) { console.error("Lỗi tải config:", err); }
+        }
+
+        async function saveCompanionConfig() {
+            const fodder = parseInt(document.getElementById('fodder-required').value);
+            
+            // Gom dữ liệu từ bảng -> Object
+            const rarities = ['R', 'SR', 'SSR', 'USR'];
+            let statsObj = {};
+
+            rarities.forEach(r => {
+                const hpStr = document.getElementById(`stat-${r.toLowerCase()}-hp`).value; // "100-300"
+                const atkStr = document.getElementById(`stat-${r.toLowerCase()}-atk`).value; // "10-30"
+                
+                // Hàm tách chuỗi "100-300" thành mảng [100, 300]
+                const parseRange = (str) => {
+                    const parts = str.split('-').map(x => parseInt(x.trim()));
+                    return parts.length === 2 ? parts : [0, 0];
+                };
+
+                statsObj[r] = {
+                    hp: parseRange(hpStr),
+                    atk: parseRange(atkStr)
+                };
+            });
+
+            // Gửi lên server
+            try {
+                const token = localStorage.getItem('admin_token');
+                const res = await fetch('/api/admin/companions/config', {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}` 
+                    },
+                    body: JSON.stringify({
+                        fodder_required: fodder,
+                        stats_config: JSON.stringify(statsObj) // Stringify lần nữa để lưu vào DB text
+                    })
+                });
+
+                if (res.ok) alert("✅ Đã lưu cấu hình thành công!");
+                else alert("❌ Lỗi khi lưu cấu hình.");
+                
+            } catch (err) { console.error(err); alert("Lỗi kết nối."); }
+        }
+
+
+
         // --- KHỞI TẠO KHI TRANG LOAD XONG ---
         document.addEventListener('DOMContentLoaded', () => {
             console.log("🚀 Admin Panel Loaded");
 
-            // 1. GÁN SỰ KIỆN CHO FORM TIỆM TẠP HÓA (Đã gộp vào đây để tránh lỗi null)
+            // 1. GÁN SỰ KIỆN CHO FORM TIỆM TẠP HÓA
             const itemForm = document.getElementById('item-form');
             if (itemForm) {
                 itemForm.onsubmit = async function(e) {
@@ -6302,9 +6157,13 @@
 
                     // Gửi dữ liệu lên Server
                     try {
+                        const token = localStorage.getItem('admin_token'); // Thêm lấy token để bảo mật
                         const res = await fetch('/admin/shop/items/add', {
                             method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
+                            headers: { 
+                                'Content-Type': 'application/json',
+                                'Authorization': `Bearer ${token}`
+                            },
                             body: JSON.stringify(itemData)
                         });
                         
@@ -6312,8 +6171,12 @@
                             alert(actionType === 'gacha_open' ? "📦 Đã đóng gói Rương thành công!" : "✅ Đã tạo Vật phẩm thành công!");
                             closeItemModal();
                             if (typeof loadShopItems === 'function') loadShopItems();
+                        } else {
+                            const errData = await res.json();
+                            alert("Lỗi: " + (errData.detail || "Không xác định"));
                         }
                     } catch (err) {
+                        console.error(err);
                         alert("Lỗi kết nối Server!");
                     }
                 };
@@ -6336,15 +6199,30 @@
             if (typeof loadItemsForBossSelect === 'function') loadItemsForBossSelect();
             if (typeof loadSavedTowerConfig === 'function') loadSavedTowerConfig();
             if (typeof loadAdminSkills === 'function') loadAdminSkills();
+            
             if (typeof loadOverview === 'function') {
                 loadOverview(); 
             } else {
                 console.warn("⚠️ Chưa tìm thấy hàm loadOverview!");
             }
+            
             if (typeof bindRateInputs === 'function') bindRateInputs();
 
+            // --- [MỚI] KHỞI TẠO TAB ĐỒNG HÀNH ---
+            // Kiểm tra nếu đang ở trang có tab đồng hành thì load luôn
+            if (document.getElementById('tab-companion')) {
+                if (typeof loadTemplates === 'function') loadTemplates();
+                if (typeof loadCompanionConfig === 'function') loadCompanionConfig();
+            }
+
             // 4. MẶC ĐỊNH VỀ DASHBOARD
-            if (typeof switchTab === 'function') switchTab('dashboard');
+            // Kiểm tra URL hash để mở đúng tab nếu người dùng F5 trang (ví dụ admin.html#companion)
+            const hash = window.location.hash.substring(1); // Lấy phần sau dấu #
+            if (hash && document.getElementById(`tab-${hash}`)) {
+                if (typeof switchTab === 'function') switchTab(hash);
+            } else {
+                if (typeof switchTab === 'function') switchTab('dashboard');
+            }
         });
 
 
@@ -6440,6 +6318,10 @@
                         <option value="charm_gen_magic">Triệu hồi: Charm Ma Thuật (1 dòng)</option>
                         <option value="charm_gen_epic">Triệu hồi: Charm Sử Thi (2 dòng)</option>
                         <option value="charm_gen_legend">Triệu hồi: Charm Huyền Thoại (2 dòng)</option>
+                        <option value="card_gen_r">Sản xuất: Thẻ R</option>
+                        <option value="card_gen_sr">Sản xuất: Thẻ SR</option>
+                        <option value="card_gen_ssr">Sản xuất: Thẻ SSR</option>
+                        <option value="card_gen_usr">Sản xuất: Thẻ USR</option>
                     </select>
 
                     <div id="logic-fields" class="space-y-3 pt-2">

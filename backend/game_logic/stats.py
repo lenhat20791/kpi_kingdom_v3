@@ -1,6 +1,6 @@
 import json
 from sqlmodel import Session, select
-from database import Player, PlayerItem
+from database import Player, PlayerItem, Item, Companion
 
 def recalculate_player_stats(db: Session, player: Player, heal_mode: str = "MAINTAIN_PERCENT"):
     """
@@ -22,11 +22,16 @@ def recalculate_player_stats(db: Session, player: Player, heal_mode: str = "MAIN
         .where(PlayerItem.player_id == player.id)
         .where(PlayerItem.is_equipped == True)
     ).all()
-
-    # 2. Tính tổng bonus mới
-    new_atk_bonus = 0
+    # Lấy Thẻ Đồng Hành (MỚI)
+    equipped_companions = db.exec(
+        select(Companion)
+        .where(Companion.player_id == player.id)
+        .where(Companion.is_equipped == True)
+    ).all()
+    # 2. TÍNH TỔNG BONUS MỚI
+    new_atk_bonus = 0 
     new_hp_bonus = 0
-
+    # A. Cộng từ Charm
     for item in equipped_items:
         if item.stats_data:
             try:
@@ -34,7 +39,11 @@ def recalculate_player_stats(db: Session, player: Player, heal_mode: str = "MAIN
                 new_atk_bonus += int(stats.get("atk", 0))
                 new_hp_bonus += int(stats.get("hp", 0))
             except: pass
-
+    # B. Cộng từ Thẻ Đồng Hành (MỚI)
+    for comp in equipped_companions:
+        new_atk_bonus += comp.atk
+        new_hp_bonus += comp.hp
+        
     # 3. Lấy lại chỉ số gốc (Base Stats)
     # Logic: Base = Tổng hiện tại - Bonus cũ đang lưu trong DB
     current_base_atk = player.atk - (player.item_atk_bonus or 0)

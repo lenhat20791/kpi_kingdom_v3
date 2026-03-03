@@ -1,7 +1,7 @@
 import os
 import json
-from sqlmodel import SQLModel, Field, create_engine, Session, select, Column, Text, TEXT
-from typing import Optional
+from sqlmodel import SQLModel, Field, create_engine, Session, select, Column, Text, TEXT, Relationship
+from typing import Optional, List
 from unidecode import unidecode 
 from datetime import datetime, timezone
 
@@ -86,9 +86,9 @@ class Player(SQLModel, table=True):
     lsdl_hk2: Optional[float] = Field(default=0.0)
     
     # --- 4. KINH TẾ ---
-    tri_thuc: int = Field(default=0)   # Vàng (Gold)
-    chien_tich: int = Field(default=0) # Ruby
-    vinh_du: int = Field(default=0)    # Badge
+    tri_thuc: int = Field(default=0)   
+    chien_tich: int = Field(default=0) 
+    vinh_du: int = Field(default=0)    
 
     # --- 5. THÔNG TIN KHÁC (Metadata) ---
     team_id: int = Field(default=0)
@@ -106,6 +106,10 @@ class Player(SQLModel, table=True):
     equip_slot_2: Optional[int] = Field(default=None)
     equip_slot_3: Optional[int] = Field(default=None)
     equip_slot_4: Optional[int] = Field(default=None)
+
+    companion_slot_1: Optional[str] = Field(default=None)
+    companion_slot_2: Optional[str] = Field(default=None)
+    companion_slot_3: Optional[str] = Field(default=None)
 # 4
 class Inventory(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
@@ -413,6 +417,41 @@ class ChatBan(SQLModel, table=True):
 class ChatKeyword(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     word: str
+
+# --- PHẦN MỚI: HỆ THỐNG ĐỒNG HÀNH (COMPANION) ---
+
+# 1. Bảng Cấu hình Admin (Lưu range stats và số lượng nguyên liệu)
+class CompanionConfig(SQLModel, table=True):
+    id: int = Field(default=1, primary_key=True)
+    fodder_required: int = Field(default=3) # Số thẻ nguyên liệu cần để lên sao
+    # Lưu cấu hình chỉ số dưới dạng JSON string để linh hoạt
+    # Ví dụ: {"R": {"hp": [100, 300], "atk": [10, 30]}}
+    stats_config: str = Field(default='{}') 
+
+# 2. Bảng Phôi Thẻ (Template - Khuôn đúc)
+class CompanionTemplate(SQLModel, table=True):
+    template_id: str = Field(primary_key=True) # Ví dụ: SR_VNG
+    name: str  # Tên nhân vật (Võ Nguyên Giáp)
+    rarity: str # R, SR, SSR, USR
+    image_path: str # Đường dẫn ảnh
+    companions: List["Companion"] = Relationship(back_populates="template")
+
+# 3. Bảng Thẻ bài thực tế của Player (Instance)
+class Companion(SQLModel, table=True):
+    id: str = Field(primary_key=True) # Mã định danh duy nhất (Unique ID)
+    player_id: int = Field(foreign_key="player.id", index=True)
+    template_id: str = Field(foreign_key="companiontemplate.template_id")
+    
+    star: int = Field(default=1) # Cấp sao hiện tại (Mặc định 1)
+    hp: int = Field(default=0)   # Chỉ số HP (Đã random)
+    atk: int = Field(default=0)  # Chỉ số ATK (Đã random)
+    temp_name: str | None = Field(default=None)
+    # Để biết thẻ này bị khóa hay không (tránh xóa nhầm)
+    is_locked: bool = Field(default=False)
+    template: Optional["CompanionTemplate"] = Relationship(back_populates="companions")
+    is_equipped: bool = Field(default=False)
+    slot_index: int = Field(default=0)
+
 if __name__ == "__main__":
     create_db_and_tables()
     print(f"✅ Đã khởi tạo thành công Database tại: {DB_PATH}")

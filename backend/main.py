@@ -11,7 +11,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import JSONResponse, FileResponse
 from typing import Optional
 from database import create_db_and_tables, engine, Player, get_db, Item, Inventory, Title, TowerProgress, Boss, QuestionBank, BossLog, ArenaMatch, ArenaParticipant, SystemStatus, ChatLog
-from routes import admin, users, shop, tower, pets, inventory_api, arena_api, auth, skills, market_api, notifications, chat_api
+from routes import admin, users, shop, tower, pets, inventory_api, arena_api, auth, skills, market_api, notifications, chat_api, companion
 from pydantic import BaseModel
 from sqlalchemy import func, desc, or_
 from game_logic.level import add_exp_to_player
@@ -105,6 +105,7 @@ app.include_router(skills.router, prefix="/api/skills", tags=["Skills System"])
 app.include_router(market_api.router)
 app.include_router(notifications.router, prefix="/api/noti", tags=["Notifications"])
 app.include_router(chat_api.router, prefix="/api/chat", tags=["Chat"])
+app.include_router(companion.router, prefix="/api", tags=["Companion"])
 # --- CẤU HÌNH ĐƯỜNG DẪN FILE (Phiên bản Tuyệt Đối - Chống Lỗi) ---
 
 # 1. Lấy đường dẫn tuyệt đối của file main.py đang chạy

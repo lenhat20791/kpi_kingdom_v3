@@ -1,9 +1,11 @@
 import json
 import random
 import os
+import uuid
+import time
 import datetime
 from sqlmodel import Session, select
-from database import Inventory, Item, Player, PlayerItem, SystemConfig, ChatLog
+from database import Inventory, Item, Player, PlayerItem, SystemConfig, ChatLog, Companion, CompanionTemplate, CompanionConfig
 # =====================================================
 # CẤU HÌNH MẶC ĐỊNH (FALLBACK)
 # =====================================================
@@ -52,16 +54,29 @@ def calculate_max_hp_limit(player):
 # =====================================================
 def apply_item_effects(player: Player, item: Item, db: Session):
     try:
-        # 1. Parse Config an toàn
-        if not item.config: return False, "Item lỗi config", {}
+        # --- 1. LẤY CONFIG AN TOÀN ---
+        raw_config = item.config
+        if not raw_config: 
+            return False, "Item lỗi config: Trống dữ liệu", {}
         
-        try:
-            config = json.loads(item.config)
-        except:
-            config = {"action": item.config.strip()}
+        # Nếu config là chuỗi (String) thì mới cần parse JSON, nếu là Dict rồi thì dùng luôn
+        if isinstance(raw_config, str):
+            try:
+                config = json.loads(raw_config)
+            except Exception:
+                # Nếu admin nhập text thường (không phải JSON), coi đó là tên action luôn
+                config = {"action": raw_config.strip()}
+        else:
+            config = raw_config
 
+        # --- 2. XÁC ĐỊNH HÀNH ĐỘNG (ACTION) ---
+        # Ưu tiên lấy 'action' từ config, nếu không có mới lấy 'type'
         action = config.get("action") or config.get("type")
         value = config.get("value", 0)
+        
+        # Thêm dòng in để bạn kiểm soát ở màn hình đen (Console)
+        print(f"🎯 Đang sử dụng vật phẩm: '{item.name}' | Action nhận diện: '{action}'")
+
 
         # =====================================================
         # CASE 1: RƯƠNG GACHA (ĐÃ NÂNG CẤP & GỘP ĐỒ)
@@ -133,6 +148,62 @@ def apply_item_effects(player: Player, item: Item, db: Session):
                                 db.add(system_msg)
                         continue 
                     # --- KẾT THÚC ĐOẠN KIỂM TRA CHARM ---
+
+                    # --- LOGIC MỚI: XỬ LÝ THẺ BÀI (CARD) ---
+                    if item_action in ["card_gen_r", "card_gen_sr", "card_gen_ssr", "card_gen_usr"]:
+                        # 1. Map action sang độ hiếm
+                        card_rarity_map = {
+                            "card_gen_r": "R",
+                            "card_gen_sr": "SR",
+                            "card_gen_ssr": "SSR",
+                            "card_gen_usr": "USR"
+                        }
+                        rarity_type = card_rarity_map.get(item_action)
+
+                        # 2. Chạy vòng lặp sinh thẻ
+                        for _ in range(qty):
+                            # Gọi hàm logic thật đã viết ở trên
+                            new_card = generate_companion_card(db, player.id, rarity_type)
+                            
+                            if new_card:
+                                # Lấy tên từ thuộc tính tạm temp_name hoặc ID nếu lỗi
+                                card_name = getattr(new_card, 'temp_name', 'Thẻ Ẩn Danh')
+                                
+                                # Tạo tên hiển thị kèm chỉ số để người chơi biết mình nhận được hàng ngon hay dở
+                                clean_name = f"{card_name} ({rarity_type}) [HP:{new_card.hp} ATK:{new_card.atk}]"
+                                
+                                # Cộng vào map hiển thị "Bạn nhận được..."
+                                received_map[clean_name] = received_map.get(clean_name, 0) + 1
+
+                                # 3. Loa thông báo (Chỉ báo nếu là SSR hoặc USR)
+                                if rarity_type in ["SSR", "USR"]:
+                                    now = datetime.datetime.now().strftime("%H:%M")
+                                    
+                                    # CSS: USR màu đỏ, SSR màu vàng cam
+                                    rarity_color = "text-red-500" if rarity_type == "USR" else "text-yellow-400"
+                                    
+                                    announcement_content = (
+                                        f"📢 Chúc mừng <b>{player.username}</b> nhân phẩm bùng nổ! "
+                                        f"Vừa triệu hồi được: <span class='{rarity_color} font-bold'>[{card_name}]</span> "
+                                        f"(Sức mạnh: {new_card.atk} - Máu: {new_card.hp})!"
+                                    )
+                                    
+                                    # [cite_start]Lưu vào ChatLog [cite: 50]
+                                    system_msg = ChatLog(
+                                        player_name="HỆ THỐNG",
+                                        content=announcement_content,
+                                        role="SYSTEM",
+                                        time=now
+                                    )
+                                    db.add(system_msg)
+                            else:
+                                # Trường hợp Admin chưa tạo Phôi trong database
+                                print(f"Lỗi: Không tìm thấy phôi thẻ loại {rarity_type}")
+
+                        # Skip đoạn cộng item thường, vì đã sinh thẻ rồi
+                        continue
+                    # --- KẾT THÚC LOGIC THẺ BÀI ---
+                    
 
                     # --- CỘNG VÀO KHO (AN TOÀN) - Chỉ chạy cho Item thường ---
                     inv_item = db.exec(select(Inventory).where(
@@ -449,3 +520,66 @@ def forge_item(db: Session, item_id: int, player_id: int, stone_item_id: int = N
     db.refresh(charm) # Refresh để đảm bảo dữ liệu mới nhất
     
     return result_data
+
+def generate_companion_card(db: Session, player_id: int, rarity: str):
+    """
+    Hàm sinh thẻ đồng hành (Companion) dựa trên cấu trúc bạn cung cấp.
+    """
+    # 1. Lấy danh sách Phôi (Template) theo độ hiếm (R, SR, SSR, USR)
+    templates = db.exec(select(CompanionTemplate).where(CompanionTemplate.rarity == rarity)).all()
+    
+    if not templates:
+        return None # Không có phôi nào thì chịu, trả về None
+
+    # 2. Chọn ngẫu nhiên 1 phôi
+    template = random.choice(templates)
+
+    # 3. Lấy Cấu hình chỉ số (Stats Range) từ bảng Config (ID=1)
+    config_record = db.get(CompanionConfig, 1)
+    
+    # Mặc định stats nếu chưa config (Phòng trường hợp admin quên set)
+    hp_range = [100, 200]
+    atk_range = [10, 20]
+
+    if config_record and config_record.stats_config:
+        try:
+            # Parse JSON: {"R": {"hp": [100, 300], "atk": [10, 30]}, "SSR": ...}
+            full_config = json.loads(config_record.stats_config)
+            rarity_config = full_config.get(rarity, {})
+            
+            if "hp" in rarity_config: hp_range = rarity_config["hp"]
+            if "atk" in rarity_config: atk_range = rarity_config["atk"]
+        except:
+            print("Lỗi parse JSON config stats, dùng mặc định.")
+
+    # 4. Random chỉ số thực tế cho thẻ này
+    final_hp = random.randint(hp_range[0], hp_range[1])
+    final_atk = random.randint(atk_range[0], atk_range[1])
+
+    # 5. Tạo ID duy nhất (Unique ID)
+    # Format: {RARITY}_{TIMESTAMP}_{RANDOM} -> VD: SSR_170763_X9Y2
+    # Cách này đảm bảo không trùng với Item ID và không trùng giữa các thẻ
+    unique_suffix = uuid.uuid4().hex[:4].upper()
+    timestamp_code = int(time.time())
+    new_card_id = f"{rarity}_{timestamp_code}_{unique_suffix}"
+
+    # 6. Tạo đối tượng Companion để lưu xuống DB
+    new_companion = Companion(
+        id=new_card_id,
+        player_id=player_id,
+        template_id=template.template_id, # Link tới phôi gốc
+        star=1,                           # Mặc định 1 sao
+        hp=final_hp,
+        atk=final_atk,
+        temp_name=template.name,
+        is_locked=False
+    )
+
+    db.add(new_companion)
+    db.commit()
+    db.refresh(new_companion)
+    
+    # Trả về đối tượng vừa tạo để hàm gọi lấy tên hiển thị
+    # Gắn tạm tên template vào object để tiện hiển thị (vì bảng Companion ko lưu tên)
+    new_companion.temp_name = template.name 
+    return new_companion

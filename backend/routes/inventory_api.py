@@ -1,7 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlmodel import Session, select, desc
+from sqlalchemy.orm import joinedload
 from typing import List, Optional
-from database import get_db, Player, Item, Inventory, MarketListing, PlayerItem, SystemConfig
+from database import get_db, Player, Item, Inventory, MarketListing, PlayerItem, SystemConfig, Companion
 from pydantic import BaseModel
 from game_logic import item_processor  # Import bộ xử lý
 from game_logic.stats import recalculate_player_stats
@@ -39,6 +40,14 @@ class BuyRequest(BaseModel):
 class ForgeRequest(BaseModel):
     username: str
     charm_id: int
+class EquipCompanionRequest(BaseModel):
+    username: str
+    companion_id: str  # ID của thẻ bài (Chuỗi)
+    slot_index: int    # Từ 1 đến 3
+
+class UnequipCompanionRequest(BaseModel):
+    username: str
+    slot_index: int
 
 # ==========================================
 # 1. API LẤY DỮ LIỆU KHO ĐỒ
@@ -124,39 +133,66 @@ def get_inventory(username: str, db: Session = Depends(get_db)):
         })
 
     # =======================================================
-    # PHẦN 3: LẤY TRANG BỊ ĐANG MẶC (CODE MỚI ĐÂY)
+    # PHẦN 3: LẤY TRANG BỊ ĐANG MẶC
     # =======================================================
-    equipped_data = {}
+    equipped_data = {} 
     
-    # Lấy Charm đang mặc (is_equipped = True)
-    equipped_charms = db.exec(
-        select(PlayerItem)
-        .where(PlayerItem.player_id == player.id)
-        .where(PlayerItem.is_equipped == True)
-    ).all()
+    # A. Lấy Charm đang mặc (Giữ nguyên của bạn) 
+    equipped_charms = db.exec( 
+        select(PlayerItem) 
+        .where(PlayerItem.player_id == player.id) 
+        .where(PlayerItem.is_equipped == True) 
+    ).all() 
 
-    for charm in equipped_charms:
-        # Lấy vị trí slot từ DB. 
-        # Nếu DB đang lưu 0 hoặc None thì ép về slot 1
-        current_slot = charm.slot_index if charm.slot_index and charm.slot_index > 0 else 1
-        
-        slot_key = f"slot_{current_slot}"
-        
-        equipped_data[slot_key] = {
-            "id": charm.id,
-            "name": charm.name,
-            "image_url": charm.image_url,
-            "image": charm.image_url, # Frontend đôi khi dùng field này
-            "rarity": charm.rarity,          
+    for charm in equipped_charms: 
+        current_slot = charm.slot_index if charm.slot_index and charm.slot_index > 0 else 1 
+        slot_key = f"slot_{current_slot}" 
+        equipped_data[slot_key] = { 
+            "id": charm.id, 
+            "name": charm.name, 
+            "image_url": charm.image_url, 
+            "image": charm.image_url, 
+            "rarity": charm.rarity, 
             "stats_data": charm.stats_data, 
-            "enhance_level": charm.enhance_level
+            "enhance_level": charm.enhance_level, 
+            "type": "charm"  # Đánh dấu loại để Frontend phân biệt
         }
 
-    # 4. Trả về kết quả đầy đủ
-    return {
-        "bag": inventory_list,       # Danh sách đồ trong túi (Item + Charm chưa mặc)
-        "equipment": equipped_data,  # Danh sách đồ đang mặc (Để vẽ lên 4 ô slot)
-        "inventory": inventory_list
+    # B. Lấy Thẻ Đồng Hành đang mặc (MỚI)
+    # Import joinedload nếu chưa có ở đầu file: from sqlalchemy.orm import joinedload
+    equipped_companions = db.exec(
+        select(Companion)
+        .options(joinedload(Companion.template)) # Lấy luôn info ảnh/tên từ template
+        .where(Companion.player_id == player.id)
+        .where(Companion.is_equipped == True)
+    ).all()
+
+    for comp in equipped_companions:
+        # Lưu vào key dạng comp_slot_1, comp_slot_2... để không đụng hàng với Charm
+        current_slot = comp.slot_index if comp.slot_index and comp.slot_index > 0 else 1
+        slot_key = f"comp_slot_{current_slot}"
+        
+        # Lấy thông tin an toàn
+        c_name = comp.temp_name or (comp.template.name if comp.template else "Lỗi Thẻ")
+        c_image = comp.template.image_path if comp.template else "/assets/card/back.png"
+        c_rarity = comp.template.rarity if comp.template else "N/A"
+
+        equipped_data[slot_key] = {
+            "id": comp.id,
+            "name": c_name,
+            "image_url": c_image,
+            "image": c_image,
+            "rarity": c_rarity,
+            "star": comp.star,
+            "stats_data": {"atk": comp.atk, "hp": comp.hp}, # Đóng gói lại cho giống Charm
+            "type": "companion" # Đánh dấu loại
+        }
+
+    # 4. Trả về kết quả đầy đủ (Giữ nguyên)
+    return { 
+        "bag": inventory_list, 
+        "equipment": equipped_data, 
+        "inventory": inventory_list 
     }
 
 # ==========================================
@@ -280,7 +316,6 @@ async def equip_item(req: EquipRequest, db: Session = Depends(get_db)):
 
     return {"status": "success", "message": f"Đã trang bị và cập nhật lực chiến!"}
 
-
 # ==========================================================
 # API THÁO TRANG BỊ
 # ==========================================================
@@ -347,3 +382,117 @@ async def get_system_config(db: Session = Depends(get_db)):
             return {"status": "default", "config": None}
     except Exception as e:
         return {"status": "error", "message": str(e)}
+
+# ==========================================
+# API TRANG BỊ THẺ ĐỒNG HÀNH (BẢN LƯỚI QUÉT)
+# ==========================================
+@router.post("/inventory/equip-companion")
+async def equip_companion(req: EquipCompanionRequest, db: Session = Depends(get_db)):
+    player = db.exec(select(Player).where(Player.username == req.username)).first()
+    if not player:
+        raise HTTPException(status_code=404, detail="Không tìm thấy người chơi")
+
+    if req.slot_index < 1 or req.slot_index > 3:
+        raise HTTPException(status_code=400, detail="Slot thẻ bài chỉ từ 1 đến 3")
+
+    # --- BẮT ĐẦU LOGIC "LƯỚI QUÉT" THÔNG MINH ---
+    companion_to_equip = None
+    req_id_clean = str(req.companion_id).strip().lower() # Dọn dẹp khoảng trắng, đưa về chữ thường
+    
+    # Lấy tất cả thẻ của người chơi ra để tự soi bằng Python
+    all_comps = db.exec(select(Companion).where(Companion.player_id == player.id)).all()
+    
+    print(f"\n🔍 ĐANG TÌM THẺ GỬI LÊN TỪ WEB: '{req_id_clean}'")
+    
+    for c in all_comps:
+        db_id_clean = str(c.id).strip().lower()
+        db_template_clean = str(c.template_id).strip().lower()
+        
+        # 1. Khớp chính xác ID hoặc Template ID
+        if db_id_clean == req_id_clean or db_template_clean == req_id_clean:
+            companion_to_equip = c
+            break
+            
+        # 2. Logic bóc tách: So sánh phần "Đuôi" của ID
+        # Web gửi: 'r_r_11_7b94' -> Lấy đuôi '7b94'
+        # DB lưu: 'r_1770802315_7b94' -> Lấy đuôi '7b94'
+        req_suffix = req_id_clean.split('_')[-1]
+        db_suffix = db_id_clean.split('_')[-1]
+        
+        if req_suffix == db_suffix:
+            companion_to_equip = c
+            break
+
+    # Nếu lưới quét vẫn không tìm thấy -> Báo lỗi
+    if not companion_to_equip:
+        print("❌ KẾT QUẢ: KHÔNG TÌM THẤY THẺ NÀY!")
+        raise HTTPException(status_code=404, detail="Không tìm thấy thẻ này trong kho")
+
+    print(f"✅ TÌM THẤY! Đang trang bị thẻ có ID gốc: {companion_to_equip.id}")
+    # --- KẾT THÚC LOGIC LƯỚI QUÉT ---
+
+    # 3. Tháo thẻ cũ ở slot hiện tại
+    current_companion_in_slot = db.exec(select(Companion).where(
+        Companion.player_id == player.id,
+        Companion.is_equipped == True,
+        Companion.slot_index == req.slot_index
+    )).first()
+
+    if current_companion_in_slot:
+        current_companion_in_slot.is_equipped = False
+        current_companion_in_slot.slot_index = 0
+        db.add(current_companion_in_slot)
+
+    # 4. Mặc thẻ mới
+    companion_to_equip.is_equipped = True
+    companion_to_equip.slot_index = req.slot_index
+    db.add(companion_to_equip)
+    
+    # 5. Lưu ID thẻ vào Player 
+    if req.slot_index == 1: player.companion_slot_1 = str(companion_to_equip.id)
+    elif req.slot_index == 2: player.companion_slot_2 = str(companion_to_equip.id)
+    elif req.slot_index == 3: player.companion_slot_3 = str(companion_to_equip.id)
+    
+    db.add(player)
+    db.commit()
+
+    # 6. Tính lại Stats
+    recalculate_player_stats(db, player, heal_mode="MAINTAIN_PERCENT")
+
+    return {"status": "success", "message": "Đã trang bị Thẻ Đồng Hành thành công!"}
+
+# ==========================================
+# API THÁO THẺ ĐỒNG HÀNH
+# ==========================================
+@router.post("/inventory/unequip-companion")
+async def unequip_companion(req: UnequipCompanionRequest, db: Session = Depends(get_db)):
+    player = db.exec(select(Player).where(Player.username == req.username)).first()
+    if not player:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    companion_in_slot = db.exec(select(Companion).where(
+        Companion.player_id == player.id,
+        Companion.is_equipped == True,
+        Companion.slot_index == req.slot_index
+    )).first()
+
+    if not companion_in_slot:
+        raise HTTPException(status_code=404, detail="Không có thẻ nào ở slot này")
+
+    # Tháo ra
+    companion_in_slot.is_equipped = False
+    companion_in_slot.slot_index = 0
+    db.add(companion_in_slot)
+    
+    # Xóa khỏi Player
+    if req.slot_index == 1: player.companion_slot_1 = None
+    elif req.slot_index == 2: player.companion_slot_2 = None
+    elif req.slot_index == 3: player.companion_slot_3 = None
+    
+    db.add(player)
+    db.commit()
+
+    # 🔥 TÍNH LẠI STATS
+    recalculate_player_stats(db, player, heal_mode="MAINTAIN_PERCENT")
+
+    return {"status": "success", "message": "Đã tháo Thẻ Đồng Hành!"}

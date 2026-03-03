@@ -1,12 +1,12 @@
 import json
 from fastapi import APIRouter, Depends, HTTPException
 from sqlmodel import Session, select
-from database import get_db, MarketListing, Player, Inventory, Item, PlayerItem
+from database import get_db, MarketListing, Player, Inventory, Item, PlayerItem, Companion, CompanionTemplate
 from pydantic import BaseModel
 from typing import List, Optional
 from datetime import datetime
 from routes.auth import get_current_user
-from datetime import datetime
+from sqlalchemy.orm import joinedload
 
 router = APIRouter(prefix="/api/market", tags=["Market"])
 
@@ -28,6 +28,13 @@ class BuyRequest(BaseModel):
 class CancelRequest(BaseModel):
     buyer_username: str
     listing_id: int
+
+# 1. Định nghĩa Class yêu cầu riêng cho Thẻ bài
+class SellCompanionRequest(BaseModel):
+    companion_id: str  # Dùng đúng ID số nguyên từ bảng companion
+    price: int
+    currency: str
+
 # Model nhận dữ liệu cho Charm (Cập nhật thêm currency)
 class CharmActionRequest(BaseModel):
     username: str
@@ -39,41 +46,75 @@ class CharmActionRequest(BaseModel):
 # =======================================================
 @router.get("/list")
 async def get_market_list(db: Session = Depends(get_db)):
-    listings = db.exec(select(MarketListing)).all()
+    # Lấy danh sách mới nhất
+    listings = db.exec(select(MarketListing).order_by(MarketListing.created_at.desc())).all()
     result = []
+    
     for l in listings:
         seller = db.get(Player, l.seller_id)
+        seller_name = seller.username if seller else "Ẩn danh"
         
-        # Nếu là Charm (999999)
-        if l.item_id == 999999 and l.item_data_json:
-            c_data = json.loads(l.item_data_json) # 👈 MỞ GÓI TẠI ĐÂY
-            result.append({
-                "id": l.id,
-                "item_name": c_data.get("name"),
-                "item_image": c_data.get("image_url"),
-                "rarity": c_data.get("rarity"),
-                "enhance_level": c_data.get("enhance_level"),
-                "stats_data": c_data.get("stats_data"),
-                "price": l.price,
-                "currency": l.currency,
-                "seller_name": seller.username if seller else "Ẩn danh",
+        # Mở gói JSON (nếu có) dùng chung cho Charm và Thẻ bài
+        json_data = {}
+        if l.item_data_json:
+            try:
+                json_data = json.loads(l.item_data_json)
+            except:
+                pass
+
+        item_res = {
+            "id": l.id,
+            "seller_id": l.seller_id,
+            "seller_name": seller_name,
+            "item_id": l.item_id,      # 👈 QUAN TRỌNG: Frontend cần cái này để if/else
+            "price": l.price,
+            "currency": l.currency,
+            "amount": l.amount,        # 👈 Đừng quên số lượng
+            "item_data_json": l.item_data_json, # Frontend cần cái này để parse lại
+            
+            # Các giá trị mặc định
+            "item_name": "Vật phẩm lỗi",
+            "item_image": "/assets/items/default.png",
+            "is_charm": False,
+            "is_companion": False
+        }
+
+        # 👉 CASE 1: CHARM (999999)
+        if l.item_id == 999999:
+            item_res.update({
+                "item_name": json_data.get("name", "Charm Lỗi"),
+                "item_image": json_data.get("image_url", "/assets/items/default.png"),
+                "rarity": json_data.get("rarity"),
+                "enhance_level": json_data.get("enhance_level", 0),
                 "is_charm": True
             })
+
+        # 👉 CASE 2: THẺ BÀI (999998) - QUAN TRỌNG
+        elif l.item_id == 999998:
+            item_res.update({
+                "item_name": json_data.get("name", "Thẻ bài ẩn"),
+                "item_image": json_data.get("image", "/assets/card/back.png"), # JSON thẻ bài dùng key 'image'
+                "rarity": json_data.get("rarity"),
+                "star": json_data.get("star", 1),
+                "is_companion": True # Cờ đánh dấu cho Frontend dễ xử lý
+            })
+
+        # 👉 CASE 3: ĐỒ THƯỜNG (1, 2, 3...)
         else:
-            # Xử lý đồ thường (như cũ)
             item = db.get(Item, l.item_id)
             if item:
-                result.append({
-                    "id": l.id,
+                item_res.update({
                     "item_name": item.name,
                     "item_image": item.image_url,
-                    "price": l.price,
-                    "currency": l.currency,
-                    "seller_name": seller.username if seller else "Ẩn danh",
                     "is_charm": False
                 })
-    return result
+            else:
+                # Nếu không tìm thấy item trong DB (dữ liệu rác), bỏ qua vòng lặp này
+                continue 
 
+        result.append(item_res)
+
+    return result
 # =======================================================
 # 2. API ĐĂNG BÁN
 # =======================================================
@@ -366,3 +407,53 @@ async def sell_charm(
     db.commit()
 
     return {"status": "success", "message": "Đã treo bán Charm thành công!"}
+
+# 2. Tạo Router bán Thẻ bài riêng biệt
+@router.post("/sell-companion")
+async def sell_companion(
+    req: SellCompanionRequest, 
+    current_user: Player = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    # Tìm thẻ bài trong bảng companion (Logic này của bạn ĐANG ĐÚNG)
+    companion = db.query(Companion).options(joinedload(Companion.template)).filter(
+        Companion.id == req.companion_id, # Bây giờ đã nhận chuỗi OK
+        Companion.player_id == current_user.id
+    ).first()
+
+    if not companion:
+        return {"status": "error", "message": "Không tìm thấy thẻ bài hoặc bạn không sở hữu nó."}
+
+    try:
+        # Tạm thời chuyển dữ liệu thẻ bài thành JSON để lưu lên Chợ (Giữ nguyên stats của bạn)
+        item_data = {
+            "name": companion.temp_name or companion.template.name,
+            "rarity": companion.template.rarity,  # 👈 Lấy độ hiếm thật (R, SR...) thay vì "N/A" 
+            "image": companion.template.image_path, # 👈 Thêm đường dẫn ảnh (VD: /assets/card/r/...)
+            "star": companion.star,
+            "stats": {
+                "hp": companion.hp, 
+                "atk": companion.atk
+            },
+            "ui_id": req.companion_id # Lưu lại ID gốc để debug nếu cần
+        }
+
+        # Tạo bản ghi niêm yết (Đã sửa lỗi gạch đỏ ở item_name và category)
+        # Chúng ta đưa 'name' vào JSON thay vì cột riêng để tránh lỗi DB
+        new_listing = MarketListing(
+            seller_id=current_user.id,
+            item_id=999998, # Mã riêng cho Companion trên chợ
+            item_data_json=json.dumps(item_data), # Toàn bộ thông tin thẻ nằm ở đây
+            price=req.price,
+            currency=req.currency
+        )
+        db.add(new_listing)
+        
+        # Xóa thẻ khỏi túi người chơi (Quan trọng: Đã mang lên chợ thì không còn trong túi)
+        db.delete(companion)
+        db.commit()
+        
+        return {"status": "success", "message": f"Đã treo thẻ {companion.temp_name} lên Chợ Đen!"}
+    except Exception as e:
+        db.rollback()
+        return {"status": "error", "message": str(e)}
