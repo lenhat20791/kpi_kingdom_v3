@@ -1,0 +1,60 @@
+import sqlite3
+import os
+
+# Tự động tìm đường dẫn file game.db
+# os.path.abspath(__file__) sẽ lấy vị trí file update_db_server.py (trong backend)
+# Lùi lại 1 cấp ('..') rồi chui vào 'data' -> 'game.db'
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DB_FILE = os.path.join(BASE_DIR, '..', 'data', 'game.db')
+
+def upgrade_server_database():
+    print(f"🛠️ Đang kết nối tới Database Server tại:\n👉 {DB_FILE}\n")
+    
+    # Kiểm tra xem file có tồn tại không
+    if not os.path.exists(DB_FILE):
+        print("❌ LỖI: KHÔNG TÌM THẤY FILE DATABASE!")
+        print("Bạn hãy kiểm tra lại cấu trúc thư mục xem có đúng data nằm ngang hàng backend không nhé.")
+        return
+
+    conn = sqlite3.connect(DB_FILE)
+    cursor = conn.cursor()
+
+    # 1. Bổ sung 3 cột vào bảng Player
+    player_columns = [
+        "companion_slot_1 TEXT",
+        "companion_slot_2 TEXT",
+        "companion_slot_3 TEXT"
+    ]
+    
+    print("--- ĐANG CẬP NHẬT BẢNG PLAYER ---")
+    for col in player_columns:
+        col_name = col.split()[0]
+        try:
+            cursor.execute(f"ALTER TABLE player ADD COLUMN {col};")
+            print(f"✅ Đã thêm cột: {col_name}")
+        except Exception as e:
+            print(f"⚠️ Bỏ qua cột '{col_name}' (Đã tồn tại hoặc lỗi: {e})")
+
+    # 2. Bổ sung cờ trang bị vào bảng Companion
+    companion_columns = [
+        "is_equipped BOOLEAN DEFAULT 0",
+        "slot_index INTEGER DEFAULT 0"
+    ]
+
+    print("\n--- ĐANG CẬP NHẬT BẢNG COMPANION ---")
+    for col in companion_columns:
+        col_name = col.split()[0]
+        try:
+            cursor.execute(f"ALTER TABLE companion ADD COLUMN {col};")
+            print(f"✅ Đã thêm cột: {col_name}")
+        except Exception as e:
+            # Lưu ý: Nếu Server của bạn chưa từng chạy code mới, bảng 'companion' có thể chưa tồn tại.
+            # Lỗi "no such table: companion" là bình thường. Tý bật Server lên SQLModel sẽ tự tạo bảng full cột.
+            print(f"⚠️ Bỏ qua cột '{col_name}' (Lý do: {e})")
+
+    conn.commit()
+    conn.close()
+    print("\n🎉 HOÀN TẤT NÂNG CẤP DATABASE TRÊN SERVER! BẠN CÓ THỂ KHỞI ĐỘNG LẠI SERVER.")
+
+if __name__ == "__main__":
+    upgrade_server_database()
