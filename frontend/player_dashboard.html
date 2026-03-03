@@ -1436,11 +1436,16 @@
     
                 <div class="mb-6 flex flex-col md:flex-row justify-between items-center gap-4">
                     <div>
-                        <h2 class="text-3xl font-bold text-amber-900 font-rpg"><i class="fas fa-paw mr-2 text-orange-500"></i> Đồng Hành Kề Vai</h2>
+                        <h2 class="text-3xl font-bold text-amber-900 font-sans tracking-wide">
+                            <i class="fas fa-users mr-2 text-orange-500"></i> Đồng Hành Kề Vai
+                        </h2>
                         <p class="text-gray-500 italic text-sm mt-1">"Nơi hội tụ của những anh hùng hào kiệt sát cánh bên bạn"</p>
                     </div>
                     
                     <div class="flex bg-white rounded-xl shadow-sm p-1 border border-gray-200" id="companion-filter-bar">
+                        <button id="tab-guide" onclick="showCompanionGuide()" class="companion-tab-btn px-4 py-2 bg-white text-gray-700 border border-yellow-200 rounded-lg font-bold shadow-sm hover:bg-yellow-50 transition-colors flex items-center">
+                            <i class="fas fa-book-open mr-2 text-yellow-600"></i> Hướng dẫn
+                        </button>
                         <button onclick="filterCompanions('ALL')" class="px-4 py-2 rounded-lg font-bold text-amber-900 bg-amber-100 shadow-sm transition-all filter-btn-active">Tất cả</button>
                         <button onclick="filterCompanions('USR')" class="px-4 py-2 rounded-lg font-bold text-gray-600 hover:bg-red-50 hover:text-red-600 transition-all">USR</button>
                         <button onclick="filterCompanions('SSR')" class="px-4 py-2 rounded-lg font-bold text-gray-600 hover:bg-orange-50 hover:text-orange-600 transition-all">SSR</button>
@@ -1451,15 +1456,70 @@
 
                 <div class="flex-1 bg-white rounded-2xl shadow-sm border border-[#e2d1a3] p-6 relative bg-[url('assets/bg_paper.jpg')] bg-cover min-h-[500px]">
                     
-                    <div id="companion-collection-grid" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6">
+                    <div id="companion-guide-container" class="hidden w-full bg-white/90 backdrop-blur-sm rounded-2xl border-2 border-yellow-300 shadow-[0_4px_20px_rgba(234,179,8,0.15)] p-6 md:p-10 animate-fade-in text-gray-800 mb-6">
+                        
+                        <h3 class="text-2xl md:text-3xl font-bold font-sans text-center text-transparent bg-clip-text bg-gradient-to-r from-yellow-600 to-orange-500 mb-8 tracking-wider uppercase">
+                            <i class="fas fa-scroll mr-2 text-yellow-500"></i> CẨM NANG ĐỒNG HÀNH
+                        </h3>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
+                            
+                            <div class="flex flex-col gap-8">
+                                <div class="bg-blue-50/50 p-5 rounded-xl border border-blue-100 hover:shadow-md transition-shadow">
+                                    <div class="flex items-center mb-3">
+                                        <div class="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center text-white font-bold text-lg shadow-sm"><i class="fas fa-shield-alt"></i></div>
+                                        <h4 class="text-xl font-bold text-blue-800 ml-3">Trang Bị</h4>
+                                    </div>
+                                    <p class="text-sm text-gray-600 leading-relaxed">
+                                        Người chơi có thể trang bị tối đa <b>3 Thẻ Đồng Hành</b> vào đội hình. Khi trang bị, toàn bộ chỉ số <span class="text-red-500 font-bold">Sinh Lực (HP)</span> và <span class="text-blue-500 font-bold">Sức Mạnh (ATK)</span> của thẻ sẽ được cộng dồn trực tiếp vào nhân vật chính của bạn.
+                                    </p>
+                                </div>
+
+                                <div class="bg-gray-100 p-5 rounded-xl border border-gray-200 hover:shadow-md transition-shadow">
+                                    <div class="flex items-center mb-3">
+                                        <div class="w-10 h-10 rounded-full bg-gray-500 flex items-center justify-center text-white font-bold text-lg shadow-sm"><i class="fas fa-trash-alt"></i></div>
+                                        <h4 class="text-xl font-bold text-gray-800 ml-3">Vứt Bỏ</h4>
+                                    </div>
+                                    <p class="text-sm text-gray-600 leading-relaxed">
+                                        Tính năng giúp dọn dẹp túi đồ. Khi ấn Vứt bỏ, thẻ bài sẽ bị <b>xóa vĩnh viễn</b> khỏi hệ thống và không hoàn lại bất kỳ tài nguyên nào. Hãy cẩn thận khi sử dụng!
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div class="flex flex-col gap-8">
+                                <div class="bg-purple-50/50 p-5 rounded-xl border border-purple-100 hover:shadow-md transition-shadow">
+                                    <div class="flex items-center mb-3">
+                                        <div class="w-10 h-10 rounded-full bg-purple-500 flex items-center justify-center text-white font-bold text-lg shadow-sm"><i class="fas fa-bolt"></i></div>
+                                        <h4 class="text-xl font-bold text-purple-800 ml-3">Đột Phá</h4>
+                                    </div>
+                                    <p class="text-sm text-gray-600 leading-relaxed">
+                                        Nâng cấp sức mạnh vô hạn! Bạn cần <b>1 Thẻ Chính</b> và <b>2 Thẻ Phôi</b> giống hệt nhau (Cùng nhân vật, cùng Cấp Sao). Đột phá thành công sẽ tiêu hủy phôi, tăng thêm 1 ⭐ cho Thẻ Chính và <b>+5% tổng chỉ số</b> hiện tại. <br><br>
+                                        <b>*Mẹo:</b> Mỗi thẻ đồng hành đều có điểm chỉ số ngẫu nhiên ban đầu khác nhau, hãy ưu tiên chọn thẻ có chỉ số gốc cao hơn để đột phá, giúp tối ưu sức mạnh tối đa.
+                                    </p>
+                                </div>
+
+                                <div class="bg-green-50/50 p-5 rounded-xl border border-green-100 hover:shadow-md transition-shadow">
+                                    <div class="flex items-center mb-3">
+                                        <div class="w-10 h-10 rounded-full bg-green-500 flex items-center justify-center text-white font-bold text-lg shadow-sm"><i class="fas fa-coins"></i></div>
+                                        <h4 class="text-xl font-bold text-green-800 ml-3">Bán</h4>
+                                    </div>
+                                    <p class="text-sm text-gray-600 leading-relaxed">
+                                        Chuyển hóa thẻ không cần thiết thành tài nguyên. Bạn có thể bán thẻ để thu về <b>Tiền tệ</b> hoặc dùng tiền đó mua các thẻ từ người chơi khác để làm nguyên liệu đột phá.
+                                    </p>
+                                </div>
+                            </div>
+
                         </div>
+                    </div>
+
+                    <div id="companion-collection-grid" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6">
+                    </div>
 
                     <div id="companion-empty-state" class="hidden flex flex-col items-center justify-center h-full py-20 opacity-40">
                         <i class="fas fa-ghost text-6xl text-amber-900 mb-4"></i>
                         <p class="font-rpg text-xl text-amber-900">Chưa có anh hùng nào gia nhập đội ngũ...</p>
                     </div>
                 </div>
-            </div>
             
             <div id="main-view-skills" class="hidden flex-col h-full w-full animate-fade-in p-6 lg:p-8 bg-gray-900 relative overflow-hidden">
     
@@ -1970,10 +2030,12 @@
         let bossCurrentCorrectAns = "";
         let bossCurrentExplanation = ""; // Biến lưu lời giải
 
-        // Biến lưu trữ tạm thời để filter đồng hành không cần gọi lại API
+        // Biến toàn cục cho đồng hành
         let allMyCompanions = [];
         const currentUser = localStorage.getItem('username')
         let currentCardToSell = null;
+        let currentBreakthroughMainId = null;
+        let selectedFodderIds = [];
         // --- LOGIC QUẢN LÝ TỔ (U1) ---
         let selectedStudentIds = new Set();
     // -----------------------------------------------------------
@@ -8474,24 +8536,29 @@
                     break;
 
                 case 'discard':
-                    if (!confirm("⚠️ CẢNH BÁO: Bạn có chắc chắn muốn XÓA VĨNH VIỄN thẻ này?")) return;
+                    if (!confirm("⚠️ CẢNH BÁO: Bạn có chắc chắn muốn XÓA VĨNH VIỄN thẻ này? Hành động này không thể khôi phục!")) return;
                     try {
-                        // Lưu ý: Nếu username lưu trong localStorage, nên lấy từ đó cho chắc ăn
+                        // Lấy username đang đăng nhập
                         const uname = window.username || localStorage.getItem('username') || localStorage.getItem('kpi_username');
                         
-                        const discardRes = await fetch('/api/market/discard-charm', {
+                        // Gọi API vứt bỏ thẻ vừa tạo
+                        const discardRes = await fetch('/api/inventory/discard-companion', {
                             method: 'POST',
                             headers: {'Content-Type': 'application/json'},
                             body: JSON.stringify({ 
                                 username: uname, 
-                                charm_id: currentViewingCardId 
+                                companion_id: currentViewingCardId 
                             })
                         });
                         const discardData = await discardRes.json();
                         
                         if (discardRes.ok || discardData.status === 'success') {
-                            alert("🗑️ Đã vứt bỏ thẻ!");
-                            // Dùng hàm reload thông minh thay vì location.reload()
+                            // Đóng modal chi tiết thẻ
+                            if (typeof closeCardDetail === 'function') closeCardDetail();
+                            
+                            alert("🗑️ Đã vứt bỏ thẻ thành công!");
+                            
+                            // Reload lại giao diện túi đồ
                             if (typeof reloadWithTab === 'function') {
                                 reloadWithTab('bag'); 
                             } else {
@@ -8507,10 +8574,220 @@
                     break;
 
                 case 'breakthrough':
-                    alert("⏳ Tính năng Đột phá đang được nghiên cứu!");
+                    // Gọi hàm mở Modal Đột Phá
+                    openBreakthroughModal(card);
                     break;
                     
-                // ❌ Đoạn case 'equip': Đã xóa đi vì chúng ta đã dùng hàm triggerEquipFromModal
+            }
+        }
+
+        // code logic đột phá thẻ bài
+        // ==========================================
+        // 1. MỞ MODAL ĐỘT PHÁ
+        // ==========================================
+        function openBreakthroughModal(card) {
+            currentBreakthroughMainId = card.id;
+            selectedFodderIds = []; // Reset phôi
+
+            // Set UI Thẻ Chính
+            document.getElementById('bt-main-img').src = card.image;
+            document.getElementById('bt-main-stars').innerText = '⭐'.repeat(card.star);
+            document.getElementById('bt-main-hp').innerText = card.hp;
+            document.getElementById('bt-main-atk').innerText = card.atk;
+
+            // Reset giao diện 2 Slot Phôi về trạng thái "Trống"
+            resetFodderSlots();
+
+            // Hiện modal đột phá
+            document.getElementById('breakthrough-modal').classList.remove('hidden');
+            
+            // Ẩn modal chi tiết thẻ hiện tại cho đỡ vướng
+            if (typeof closeCardDetail === 'function') closeCardDetail();
+        }
+
+        function closeBreakthroughModal() {
+            document.getElementById('breakthrough-modal').classList.add('hidden');
+            currentBreakthroughMainId = null;
+            selectedFodderIds = [];
+        }
+
+        function resetFodderSlots() {
+            const emptyHTML = `<span class="text-3xl mb-1 opacity-50">?</span><span class="text-[10px] uppercase">Trống</span>`;
+            const slot1 = document.getElementById('bt-slot-1');
+            const slot2 = document.getElementById('bt-slot-2');
+
+            slot1.innerHTML = emptyHTML;
+            slot1.className = "w-32 aspect-[3/4] rounded-xl border-2 border-dashed border-gray-600 bg-gray-800/50 flex flex-col items-center justify-center text-gray-500 relative overflow-hidden";
+
+            slot2.innerHTML = emptyHTML;
+            slot2.className = "w-32 aspect-[3/4] rounded-xl border-2 border-dashed border-gray-600 bg-gray-800/50 flex flex-col items-center justify-center text-gray-500 relative overflow-hidden";
+
+            // Khóa nút Đột Phá
+            const btn = document.getElementById('bt-confirm-btn');
+            btn.disabled = true;
+            btn.className = "px-8 py-3 bg-gray-800 text-gray-500 border border-gray-700 rounded-xl font-black uppercase tracking-widest transition-all cursor-not-allowed";
+        }
+
+        // ==========================================
+        // 2. LOGIC TỰ ĐỘNG TÌM & CHỌN PHÔI
+        // ==========================================
+        function autoSelectFodder() {
+            if (!currentBreakthroughMainId) return;
+
+            // Tìm thẻ chính từ kho
+            const mainCard = allMyCompanions.find(c => c.id === currentBreakthroughMainId);
+            if (!mainCard) return;
+
+            // Lọc tìm phôi với 3 điều kiện:
+            // 1. Cùng tên (cùng nhân vật) và cùng số Sao.
+            // 2. Không được chọn chính nó làm phôi.
+            // 3. Không bị khóa.
+            const availableFodders = allMyCompanions.filter(c =>
+                c.id !== mainCard.id &&
+                c.name === mainCard.name &&
+                c.star === mainCard.star &&
+                !c.is_locked &&
+                !c.is_equipped
+            );
+
+            if (availableFodders.length < 2) {
+                alert(`❌ Không đủ nguyên liệu! Bạn cần thêm ${2 - availableFodders.length} thẻ "${mainCard.name}" cấp ${mainCard.star}⭐ nữa mới có thể đột phá.`);
+                return;
+            }
+
+            // Chọn 2 thẻ đầu tiên tìm được
+            selectedFodderIds = [availableFodders[0].id, availableFodders[1].id];
+
+            // Cập nhật giao diện Slot 1 (Hiệu ứng đỏ rực báo hiệu sẽ bị tiêu hủy)
+            // Cập nhật giao diện Slot 1 (Hiệu ứng xanh lá báo hiệu Đã Chọn)
+            const slot1 = document.getElementById('bt-slot-1');
+            slot1.innerHTML = `
+                <img src="${availableFodders[0].image}" class="w-full h-full object-cover">
+                <div class="absolute bottom-1 w-full text-center text-xs text-yellow-400">⭐${availableFodders[0].star}</div>
+                <div class="absolute inset-0 bg-green-900/60 flex items-center justify-center backdrop-blur-[2px]">
+                    <span class="text-white font-bold transform -rotate-45 border-2 border-green-500 px-2 rounded bg-black/80 text-xs shadow-lg tracking-widest text-green-400">ĐÃ CHỌN</span>
+                </div>`;
+            slot1.className = "w-32 aspect-[3/4] rounded-xl border-2 border-green-500 shadow-[0_0_20px_rgba(34,197,94,0.5)] relative overflow-hidden transition-transform animate-pulse";
+
+            // Cập nhật giao diện Slot 2
+            const slot2 = document.getElementById('bt-slot-2');
+            slot2.innerHTML = `
+                <img src="${availableFodders[1].image}" class="w-full h-full object-cover">
+                <div class="absolute bottom-1 w-full text-center text-xs text-yellow-400">⭐${availableFodders[1].star}</div>
+                <div class="absolute inset-0 bg-green-900/60 flex items-center justify-center backdrop-blur-[2px]">
+                    <span class="text-white font-bold transform -rotate-45 border-2 border-green-500 px-2 rounded bg-black/80 text-xs shadow-lg tracking-widest text-green-400">ĐÃ CHỌN</span>
+                </div>`;
+            slot2.className = "w-32 aspect-[3/4] rounded-xl border-2 border-green-500 shadow-[0_0_20px_rgba(34,197,94,0.5)] relative overflow-hidden transition-transform animate-pulse";
+
+            // Mở khóa nút Xác nhận Đột Phá cho sáng rực lên
+            const btn = document.getElementById('bt-confirm-btn');
+            btn.disabled = false;
+            btn.className = "px-8 py-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white shadow-[0_0_30px_rgba(59,130,246,0.6)] border border-blue-400 rounded-xl font-black uppercase tracking-widest transition-all transform hover:scale-105 active:scale-95 animate-bounce";
+        }
+
+        // ==========================================
+        // HIỂN THỊ MÀN HÌNH CHÚC MỪNG
+        // ==========================================
+        function showBreakthroughSuccess(data) {
+            // Lấy ảnh của thẻ chính đang đột phá hiện tại để tái sử dụng
+            const mainCardImg = document.getElementById('bt-main-img').src;
+            
+            // Bơm dữ liệu mới từ Server trả về vào màn hình chúc mừng
+            document.getElementById('bt-success-img').src = mainCardImg;
+            document.getElementById('bt-success-stars').innerText = '⭐'.repeat(data.new_star);
+            document.getElementById('bt-success-hp').innerText = data.new_hp;
+            document.getElementById('bt-success-atk').innerText = data.new_atk;
+
+            // Bật overlay lên
+            document.getElementById('bt-success-overlay').classList.remove('hidden');
+        }
+
+        // Hàm tắt màn hình chúc mừng và reload lại túi đồ
+        function closeBreakthroughSuccess() {
+            document.getElementById('bt-success-overlay').classList.add('hidden');
+            
+            // Đóng luôn cái modal Lò Đột Phá phía sau
+            closeBreakthroughModal();
+            
+            // Cuối cùng mới reload lại data để cập nhật thẻ mới
+            if (typeof reloadWithTab === 'function') {
+                reloadWithTab('bag');
+            } else {
+                location.reload();
+            }
+        }
+
+        // Hàm hiển thị trang Hướng Dẫn đồng hành
+        function showCompanionGuide() {
+            // 1. Giấu lưới thẻ bài và trạng thái trống đi
+            document.getElementById('companion-collection-grid').classList.add('hidden');
+            document.getElementById('companion-empty-state').classList.add('hidden');
+            
+            // 2. Hiện Cẩm nang lên
+            document.getElementById('companion-guide-container').classList.remove('hidden');
+
+            // 3. Đổi màu nút (Làm sáng nút Hướng dẫn, làm mờ các nút lọc khác)
+            const filterBar = document.getElementById('companion-filter-bar');
+            if(filterBar) {
+                const buttons = filterBar.querySelectorAll('button');
+                buttons.forEach(btn => {
+                    // Gỡ highlight của các nút Tất cả, SSR, SR...
+                    btn.classList.remove('text-amber-900', 'bg-amber-100', 'filter-btn-active');
+                    btn.classList.add('text-gray-600'); 
+                });
+                
+                // Bôi vàng nút Hướng dẫn
+                const guideBtn = document.getElementById('tab-guide');
+                if(guideBtn) {
+                    guideBtn.classList.remove('bg-white', 'text-gray-700');
+                    guideBtn.classList.add('bg-amber-100', 'text-amber-900', 'filter-btn-active');
+                }
+            }
+        }
+
+        // ==========================================
+        // GỌI API ĐỘT PHÁ (Đã sửa lại luồng thành công)
+        // ==========================================
+        async function executeBreakthrough() {
+            if (selectedFodderIds.length !== 2 || !currentBreakthroughMainId) return;
+
+            // Nút xác nhận cuối cùng
+            if (!confirm("Tiến hành Đột Phá? 2 Thẻ nguyên liệu đã chọn sẽ bị tiêu hủy.")) return;
+
+            const uname = window.username || localStorage.getItem('username') || localStorage.getItem('kpi_username');
+
+            // Khóa nút lại trong lúc chờ Server xử lý (chống bấm đúp)
+            const confirmBtn = document.getElementById('bt-confirm-btn');
+            const originalBtnText = confirmBtn.innerHTML;
+            confirmBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Đang Đột Phá...';
+            confirmBtn.disabled = true;
+
+            try {
+                const res = await fetch('/api/inventory/breakthrough-companion', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        username: uname,
+                        main_card_id: currentBreakthroughMainId,
+                        fodder_ids: selectedFodderIds
+                    })
+                });
+
+                const data = await res.json();
+                
+                if (res.ok || data.status === 'success') {
+                    // THÀNH CÔNG: Mở màn hình ăn mừng cực gắt!
+                    showBreakthroughSuccess(data);
+                } else {
+                    alert("❌ Lỗi Đột Phá: " + (data.detail || data.message));
+                }
+            } catch (err) {
+                console.error(err);
+                alert("Lỗi kết nối máy chủ! Đột phá thất bại.");
+            } finally {
+                // Nhả nút ra nếu bị lỗi
+                confirmBtn.innerHTML = originalBtnText;
+                confirmBtn.disabled = false;
             }
         }
 
@@ -8640,15 +8917,39 @@
 
         // Logic Filter
         function filterCompanions(rarity) {
-            // Update nút filter (active style)
+            // ==========================================
+            // 1. XỬ LÝ ẨN/HIỆN CẨM NANG HƯỚNG DẪN
+            // ==========================================
+            const guideContainer = document.getElementById('companion-guide-container');
+            if (guideContainer) guideContainer.classList.add('hidden'); // Giấu cẩm nang
+            
+            const gridContainer = document.getElementById('companion-collection-grid');
+            if (gridContainer) gridContainer.classList.remove('hidden'); // Hiện lại lưới thẻ
+            
+            // Nếu rỗng thẻ thì hiện trạng thái ma (Ghost), cái này renderCompanionGrid thường tự xử lý 
+            // nhưng ta cứ mở container ra để nó có chỗ hiển thị.
+
+            // ==========================================
+            // 2. CẬP NHẬT MÀU NÚT BẤM (ACTIVE STYLE)
+            // ==========================================
             const btns = document.querySelectorAll('#companion-filter-bar button');
             btns.forEach(b => {
+                // Gỡ bỏ màu cam/vàng đang active của TẤT CẢ các nút (bao gồm cả nút Hướng dẫn)
                 b.classList.remove('bg-amber-100', 'text-amber-900', 'shadow-sm');
+                // Đưa về trạng thái xám mặc định
                 b.classList.add('text-gray-600', 'hover:bg-gray-100');
             });
-            event.currentTarget.classList.add('bg-amber-100', 'text-amber-900', 'shadow-sm');
 
-            // Filter data
+            // Bôi màu cam/vàng cho nút vừa được click
+            // (Thêm if check event để lỡ bạn có gọi hàm này lúc mới load trang web thì không bị lỗi)
+            if (typeof event !== 'undefined' && event.currentTarget) {
+                event.currentTarget.classList.remove('text-gray-600', 'hover:bg-gray-100');
+                event.currentTarget.classList.add('bg-amber-100', 'text-amber-900', 'shadow-sm');
+            }
+
+            // ==========================================
+            // 3. LỌC VÀ RENDER DỮ LIỆU
+            // ==========================================
             if (rarity === 'ALL') {
                 renderCompanionGrid(allMyCompanions);
             } else {
@@ -9162,6 +9463,86 @@
                 <button onclick="closeSellModal()" class="flex-1 py-2 bg-gray-200 rounded-lg font-bold">Hủy</button>
                 <button onclick="confirmSellCompanionToMarket()" class="flex-1 py-2 bg-green-600 text-white rounded-lg font-bold shadow-lg">Đăng Bán</button>
             </div>
+        </div>
+    </div>
+
+    <div id="breakthrough-modal" class="fixed inset-0 z-[70] hidden flex items-center justify-center">
+        <div class="absolute inset-0 bg-black/95 backdrop-blur-xl" onclick="closeBreakthroughModal()"></div>
+        
+        <div class="relative z-10 w-full max-w-4xl p-6 flex flex-col items-center animate-scale-up">
+            <h2 class="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500 mb-8 tracking-widest uppercase text-center drop-shadow-[0_0_10px_rgba(59,130,246,0.5)]">
+                ⚡ Lò Đột Phá ⚡
+            </h2>
+
+            <div class="flex flex-col md:flex-row gap-8 md:gap-16 items-center justify-center w-full">
+                
+                <div class="flex flex-col items-center">
+                    <p class="text-blue-400 font-bold mb-3 uppercase tracking-wider text-sm">Thẻ Chính</p>
+                    <div class="relative w-48 aspect-[3/4] rounded-xl overflow-hidden border-2 border-blue-500 shadow-[0_0_30px_rgba(59,130,246,0.4)] transition-transform hover:scale-105">
+                        <img id="bt-main-img" src="" class="w-full h-full object-cover">
+                        <div id="bt-main-stars" class="absolute bottom-2 left-0 w-full text-center text-yellow-400 text-lg tracking-widest drop-shadow-md">⭐</div>
+                    </div>
+                    <div class="mt-4 text-center bg-gray-900/80 px-4 py-2 rounded-lg border border-gray-700 w-full">
+                        <div class="text-red-400 text-sm font-bold">HP: <span id="bt-main-hp">0</span> <span class="text-green-400 text-xs animate-pulse">+5%</span></div>
+                        <div class="text-blue-400 text-sm font-bold">ATK: <span id="bt-main-atk">0</span> <span class="text-green-400 text-xs animate-pulse">+5%</span></div>
+                    </div>
+                </div>
+
+                <div class="text-4xl text-gray-500 font-black animate-pulse">+</div>
+
+                <div class="flex flex-col items-center">
+                    <p class="text-purple-400 font-bold mb-3 uppercase tracking-wider text-sm">Nguyên Liệu (Cùng số ⭐)</p>
+                    <div class="flex gap-4">
+                        <div id="bt-slot-1" class="w-32 aspect-[3/4] rounded-xl border-2 border-dashed border-gray-600 bg-gray-800/50 flex flex-col items-center justify-center text-gray-500 relative overflow-hidden">
+                            <span class="text-3xl mb-1 opacity-50">?</span>
+                            <span class="text-[10px] uppercase">Trống</span>
+                        </div>
+                        <div id="bt-slot-2" class="w-32 aspect-[3/4] rounded-xl border-2 border-dashed border-gray-600 bg-gray-800/50 flex flex-col items-center justify-center text-gray-500 relative overflow-hidden">
+                            <span class="text-3xl mb-1 opacity-50">?</span>
+                            <span class="text-[10px] uppercase">Trống</span>
+                        </div>
+                    </div>
+
+                    <button onclick="autoSelectFodder()" class="mt-6 px-6 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 rounded-full font-bold text-white shadow-lg transition-all transform hover:scale-105 active:scale-95 border border-purple-400/50">
+                        <i class="fas fa-magic mr-2"></i> Chọn Nhanh
+                    </button>
+                </div>
+            </div>
+
+            <div class="mt-12 flex gap-4">
+                <button onclick="closeBreakthroughModal()" class="px-8 py-3 bg-gray-700 hover:bg-gray-600 rounded-xl font-bold text-white transition-colors">
+                    Hủy Bỏ
+                </button>
+                <button id="bt-confirm-btn" onclick="executeBreakthrough()" disabled class="px-8 py-3 bg-gray-800 text-gray-500 border border-gray-700 rounded-xl font-black uppercase tracking-widest transition-all cursor-not-allowed">
+                    Đột Phá Ngay
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="bt-success-overlay" class="fixed inset-0 z-[100] hidden flex items-center justify-center cursor-pointer" onclick="closeBreakthroughSuccess()">
+        <div class="absolute inset-0 bg-black/90 backdrop-blur-lg"></div>
+        
+        <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+            <div class="w-96 h-96 bg-yellow-500/20 rounded-full blur-[100px] animate-pulse"></div>
+        </div>
+
+        <div class="relative z-10 flex flex-col items-center animate-scale-up">
+            <h2 class="text-4xl md:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-b from-yellow-300 to-yellow-600 mb-8 drop-shadow-[0_0_20px_rgba(234,179,8,0.8)] uppercase text-center tracking-widest">
+                Đột Phá Thành Công!
+            </h2>
+            
+            <div class="relative w-56 md:w-64 aspect-[3/4] rounded-xl overflow-hidden border-4 border-yellow-400 shadow-[0_0_50px_rgba(234,179,8,0.6)] transform transition-transform hover:scale-105">
+                <img id="bt-success-img" src="" class="w-full h-full object-cover">
+                <div id="bt-success-stars" class="absolute bottom-3 left-0 w-full text-center text-yellow-400 text-2xl tracking-widest drop-shadow-lg">⭐⭐</div>
+            </div>
+            
+            <div class="mt-8 flex gap-8 text-2xl font-black bg-black/60 px-8 py-4 rounded-2xl border border-yellow-500/50 backdrop-blur-md shadow-[0_0_15px_rgba(0,0,0,0.5)]">
+                <div class="text-red-400 drop-shadow-md">HP: <span id="bt-success-hp">0</span></div>
+                <div class="text-blue-400 drop-shadow-md">ATK: <span id="bt-success-atk">0</span></div>
+            </div>
+
+            <p class="mt-8 text-gray-400 text-sm animate-pulse tracking-widest">(Nhấn vào bất kỳ đâu để tiếp tục)</p>
         </div>
     </div>
 

@@ -49,6 +49,15 @@ class UnequipCompanionRequest(BaseModel):
     username: str
     slot_index: int
 
+class DiscardCompanionRequest(BaseModel):
+    username: str
+    companion_id: str
+
+class BreakthroughRequest(BaseModel):
+    username: str
+    main_card_id: str
+    fodder_ids: List[str]
+
 # ==========================================
 # 1. API LẤY DỮ LIỆU KHO ĐỒ
 # ==========================================
@@ -496,3 +505,130 @@ async def unequip_companion(req: UnequipCompanionRequest, db: Session = Depends(
     recalculate_player_stats(db, player, heal_mode="MAINTAIN_PERCENT")
 
     return {"status": "success", "message": "Đã tháo Thẻ Đồng Hành!"}
+# ==========================================
+# API VỨT BỎ THẺ ĐỒNG HÀNH
+# ==========================================
+@router.post("/inventory/discard-companion")
+async def discard_companion(req: DiscardCompanionRequest, db: Session = Depends(get_db)):
+    player = db.exec(select(Player).where(Player.username == req.username)).first()
+    if not player:
+        raise HTTPException(status_code=404, detail="Không tìm thấy người chơi")
+
+    # --- DÙNG LẠI LƯỚI QUÉT ID THÔNG MINH ---
+    companion_to_discard = None
+    req_id_clean = str(req.companion_id).strip().lower()
+    
+    all_comps = db.exec(select(Companion).where(Companion.player_id == player.id)).all()
+    
+    for c in all_comps:
+        db_id_clean = str(c.id).strip().lower()
+        # So sánh khớp hoàn toàn HOẶC khớp phần đuôi ID
+        if db_id_clean == req_id_clean or db_id_clean.split('_')[-1] == req_id_clean.split('_')[-1]:
+            companion_to_discard = c
+            break
+
+    if not companion_to_discard:
+        raise HTTPException(status_code=404, detail="Không tìm thấy thẻ này trong kho")
+
+    # 1. Chặn xóa nếu thẻ đang bị khóa (is_locked)
+    if companion_to_discard.is_locked:
+        raise HTTPException(status_code=400, detail="Thẻ này đang bị khóa, không thể vứt bỏ!")
+
+    # 2. Nếu thẻ đang được trang bị -> Phải tháo ra trước
+    was_equipped = companion_to_discard.is_equipped
+    if was_equipped:
+        if player.companion_slot_1 == companion_to_discard.id: player.companion_slot_1 = None
+        elif player.companion_slot_2 == companion_to_discard.id: player.companion_slot_2 = None
+        elif player.companion_slot_3 == companion_to_discard.id: player.companion_slot_3 = None
+        db.add(player)
+
+    # 3. Tiến hành "hóa vàng" thẻ
+    db.delete(companion_to_discard)
+    db.commit()
+
+    # 4. Tính lại lực chiến nếu vừa vứt cái thẻ đang mặc trên người
+    if was_equipped:
+        recalculate_player_stats(db, player, heal_mode="MAINTAIN_PERCENT")
+
+    return {"status": "success", "message": "Đã vứt bỏ thẻ thành công!"}
+
+# ==========================================
+# API ĐỘT PHÁ THẺ ĐỒNG HÀNH (+5% STATS)
+# ==========================================
+@router.post("/inventory/breakthrough-companion")
+async def breakthrough_companion(req: BreakthroughRequest, db: Session = Depends(get_db)):
+    player = db.exec(select(Player).where(Player.username == req.username)).first()
+    if not player:
+        raise HTTPException(status_code=404, detail="Không tìm thấy người chơi")
+
+    # Lấy toàn bộ thẻ của Player ra để lọc qua lưới ID thông minh
+    all_comps = db.exec(select(Companion).where(Companion.player_id == player.id)).all()
+
+    def find_smart_card(ui_id):
+        clean_ui = str(ui_id).strip().lower()
+        for c in all_comps:
+            clean_db = str(c.id).strip().lower()
+            if clean_db == clean_ui or clean_db.split('_')[-1] == clean_ui.split('_')[-1]:
+                return c
+        return None
+
+    # 1. Tìm thẻ chính
+    main_comp = find_smart_card(req.main_card_id)
+    if not main_comp:
+        raise HTTPException(status_code=404, detail="Không tìm thấy thẻ chính.")
+
+    # 2. Tìm và kiểm tra các thẻ nguyên liệu (Phôi)
+    if len(req.fodder_ids) != 2:
+        raise HTTPException(status_code=400, detail="Cần đúng 2 thẻ nguyên liệu để đột phá.")
+
+    fodder_comps = []
+    for fid in req.fodder_ids:
+        f = find_smart_card(fid)
+        if not f:
+            raise HTTPException(status_code=404, detail="Không tìm thấy thẻ nguyên liệu trong kho.")
+        if f.id == main_comp.id:
+            raise HTTPException(status_code=400, detail="Không thể dùng thẻ chính làm nguyên liệu.")
+        if f.is_locked:
+            raise HTTPException(status_code=400, detail="Thẻ nguyên liệu đang bị khóa.")
+        if f.is_equipped:
+            raise HTTPException(status_code=400, detail="Không thể dùng thẻ đang được trang bị làm nguyên liệu!")
+        if f.template_id != main_comp.template_id:
+            raise HTTPException(status_code=400, detail="Thẻ nguyên liệu khác loại với thẻ chính.")
+        if f.star != main_comp.star:
+            raise HTTPException(status_code=400, detail="Thẻ nguyên liệu không cùng cấp sao.")
+        
+        fodder_comps.append(f)
+
+    # Đảm bảo 2 thẻ nguyên liệu không phải là cùng 1 thẻ bị trùng lặp ID
+    if fodder_comps[0].id == fodder_comps[1].id:
+        raise HTTPException(status_code=400, detail="Hai thẻ nguyên liệu không được trùng nhau.")
+
+    # ==========================================
+    # 3. THỰC THI ĐỘT PHÁ (TĂNG SAO & +5% CHỈ SỐ)
+    # ==========================================
+    
+    # Xóa 2 thẻ nguyên liệu khỏi cơ sở dữ liệu
+    db.delete(fodder_comps[0])
+    db.delete(fodder_comps[1])
+
+    # Tăng sao cho thẻ chính
+    main_comp.star += 1
+    
+    # Tính toán +5% Stats (Làm tròn số nguyên)
+    main_comp.hp = int(main_comp.hp * 1.05)
+    main_comp.atk = int(main_comp.atk * 1.05)
+    
+    db.add(main_comp)
+    db.commit()
+
+    # Nếu thẻ này đang được mặc trên người, phải báo hệ thống cộng thêm sức mạnh
+    if main_comp.is_equipped:
+        recalculate_player_stats(db, player, heal_mode="MAINTAIN_PERCENT")
+
+    return {
+        "status": "success", 
+        "message": f"Đột phá thành công! Thẻ lên {main_comp.star} sao.",
+        "new_star": main_comp.star,
+        "new_hp": main_comp.hp,
+        "new_atk": main_comp.atk
+    }

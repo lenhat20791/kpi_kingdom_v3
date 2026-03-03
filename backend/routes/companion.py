@@ -110,7 +110,6 @@ def get_templates(rarity: str = None, db: Session = Depends(get_db)):
     templates = db.exec(query).all()
     return templates
 
-# ... (Giữ nguyên code cũ phần Scan và Templates) ...
 
 # ==========================================
 # 3. ADMIN: QUẢN LÝ CẤU HÌNH (CONFIG)
