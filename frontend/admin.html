@@ -579,10 +579,26 @@
                     <div class="space-y-5">
                         <div>
                             <label class="text-xs text-gray-400 mb-1 block uppercase font-bold">Người nhận / Bị thu hồi</label>
-                            <div class="relative">
-                                <select id="gift-player-id" class="player-select w-full bg-gray-900 border border-gray-600 rounded p-2.5 text-sm text-white outline-none focus:border-purple-500 transition">
-                                    <option value="">-- Đang tải danh sách... --</option>
-                                </select>
+                            
+                            <div class="relative" id="gift-player-dropdown">
+                                <button type="button" onclick="toggleGiftDropdown()" class="w-full bg-gray-900 border border-gray-600 rounded p-2.5 text-sm text-white outline-none focus:border-purple-500 transition text-left flex justify-between items-center cursor-pointer hover:bg-gray-800">
+                                    <span id="gift-player-text" class="truncate font-medium text-gray-300">-- Chọn học sĩ --</span>
+                                    <i class="fas fa-chevron-down text-gray-400 text-xs"></i>
+                                </button>
+                                
+                                <div id="gift-player-list" class="hidden absolute z-[60] w-full mt-1 bg-gray-800 border border-gray-600 rounded shadow-2xl max-h-64 overflow-y-auto">
+                                    
+                                    <div class="p-2 border-b border-gray-700 sticky top-0 bg-gray-800 z-10">
+                                        <label class="flex items-center space-x-3 text-sm text-white cursor-pointer hover:bg-gray-700 p-2 rounded transition">
+                                            <input type="checkbox" id="gift-select-all" onclick="toggleAllGiftPlayers(this)" class="w-4 h-4 text-purple-500 bg-gray-900 border-gray-500 rounded focus:ring-purple-500 cursor-pointer">
+                                            <span class="font-bold text-yellow-500 text-xs uppercase tracking-wider"><i class="fas fa-bullhorn mr-1"></i> ÁP DỤNG CHO TOÀN LỚP</span>
+                                        </label>
+                                    </div>
+
+                                    <div id="gift-checkbox-container" class="p-2 flex flex-col gap-1">
+                                        <div class="text-gray-500 text-xs text-center p-3 italic">-- Đang tải danh sách... --</div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
@@ -2053,7 +2069,7 @@
                 console.error("Không tìm thấy ID 'player-list-area' trong HTML");
             }
         }
-        // HÀM TẢI DỮ LIỆU (Đã sửa lỗi lệch cột)
+        // HÀM TẢI DỮ LIỆU (Đã sửa lỗi lệch cột + Bổ sung Dropdown Checkbox cho Quà tặng)
         async function loadOverview() {
             try {
                 // 1. Gọi API lấy dữ liệu
@@ -2063,16 +2079,20 @@
                 const tableBody = document.getElementById('player-table-body');
                 const playerSelects = document.querySelectorAll('.player-select');
                 
-                // Xóa dữ liệu cũ trong bảng
-                if(tableBody) tableBody.innerHTML = '';
+                // Vùng chứa Checkbox của mục Quà Tặng (Mới thêm)
+                const giftCheckboxContainer = document.getElementById('gift-checkbox-container');
                 
-                // Cập nhật Dropdown (Giữ nguyên)
+                // Xóa dữ liệu cũ
+                if(tableBody) tableBody.innerHTML = '';
+                if(giftCheckboxContainer) giftCheckboxContainer.innerHTML = ''; // Xóa chữ "Đang tải"
+                
+                // Cập nhật Dropdown Select truyền thống (Giữ nguyên cho mục KPI)
                 playerSelects.forEach(select => {
                     select.innerHTML = '<option value="">-- Chọn học sĩ --</option>' +
-                                     '<option value="ALL" class="font-bold text-yellow-400 bg-gray-700">--- 📢 ÁP DỤNG CHO TOÀN LỚP ---</option>';
+                                    '<option value="ALL" class="font-bold text-yellow-400 bg-gray-700">--- 📢 ÁP DỤNG CHO TOÀN LỚP ---</option>';
                 });
 
-                // 2. Vẽ bảng danh sách
+                // 2. Vẽ bảng danh sách và các Dropdown
                 allPlayers.forEach(p => {
                     // Xử lý hiển thị tên Tổ cho đẹp
                     let teamDisplay = '';
@@ -2124,17 +2144,31 @@
                     
                     if(tableBody) tableBody.innerHTML += row;
 
-                    // Thêm option vào dropdown
+                    // --- NẠP DỮ LIỆU CHO CÁC DROPDOWN ---
+                    
+                    // 1. Nạp cho Dropdown Select truyền thống (Mục KPI...)
                     playerSelects.forEach(select => {
                         select.innerHTML += '<option value="' + p.id + '">' + p.full_name + '</option>';
                     });
+
+                    // 2. Nạp cho Dropdown Checkbox mới (Mục Quà Tặng)
+                    if (giftCheckboxContainer) {
+                        giftCheckboxContainer.innerHTML += 
+                            '<label class="flex items-center space-x-3 text-sm text-gray-200 cursor-pointer hover:bg-gray-700 hover:text-white p-2 rounded transition">' +
+                                '<input type="checkbox" value="' + p.id + '" onchange="updateGiftButtonText()" class="gift-player-checkbox w-4 h-4 text-purple-600 bg-gray-900 border-gray-600 rounded focus:ring-purple-500 cursor-pointer">' +
+                                '<span>' + p.full_name + '</span>' +
+                            '</label>';
+                    }
                 });
                 
-                // Vẽ lại sơ đồ 4 tổ (Nếu hàm này tồn tại)
+                // Reset lại hiển thị số lượng người đã chọn ở mục Quà tặng
+                if(typeof updateGiftButtonText === 'function') updateGiftButtonText();
+
+                // Vẽ lại các UI phụ khác
                 if(typeof refreshTeamUI === 'function') refreshTeamUI(allPlayers);
                 loadResetDropdown();
                 loadSecurityTable();
-                loadCurrentBoss()
+                loadCurrentBoss();
             } catch (error) { console.error("Lỗi nạp danh sách:", error); }
         }
 
@@ -2259,131 +2293,115 @@
 
 
 
-        // 3. Hàm Xử lý Tiền tệ (Tri thức, Vinh dự...) - PHIÊN BẢN KẾT NỐI API & AN TOÀN
+        // 3. Hàm Xử lý Tiền tệ (Tri thức, Vinh dự...) - ĐÃ CẬP NHẬT CHỌN NHIỀU NGƯỜI
         async function sendGiftCurrency(multiplier) {
-            const id = document.getElementById('gift-player-id').value;
+            // Lấy danh sách ID của tất cả các checkbox đang được tick
+            const checkboxes = document.querySelectorAll('.gift-player-checkbox:checked');
+            const selectedIds = Array.from(checkboxes).map(function(cb) { return cb.value; });
+
             const type = document.getElementById('currency-type').value;
             const amountStr = document.getElementById('currency-amount').value;
             let amount = parseInt(amountStr);
 
             // Kiểm tra dữ liệu đầu vào
-            if (!id || !type || isNaN(amount) || amount <= 0) {
-                alert("Vui lòng chọn học sinh, loại tài nguyên và nhập số lượng!");
+            if (selectedIds.length === 0 || !type || isNaN(amount) || amount <= 0) {
+                alert("Vui lòng tick chọn ít nhất 1 học sinh, chọn loại tài nguyên và nhập số lượng!");
                 return;
             }
 
             amount = amount * multiplier; // Dương là tặng, Âm là thu hồi
             const actionName = multiplier > 0 ? "Tặng" : "Thu hồi";
 
-            // Xác nhận hành động (Dùng nháy đơn + cộng chuỗi)
-            if (id === 'ALL') {
-                const confirmMsg = '⚠️ Xác nhận: ' + actionName + ' ' + Math.abs(amount) + ' [' + type + '] cho TẤT CẢ học sinh?';
-                if (!confirm(confirmMsg)) return;
-            }
+            // Xác nhận hành động
+            const confirmMsg = '⚠️ Xác nhận: ' + actionName + ' ' + Math.abs(amount) + ' [' + type + '] cho ' + selectedIds.length + ' học sinh đã chọn?';
+            if (!confirm(confirmMsg)) return;
 
             try {
-                if (typeof logSystem === 'function') logSystem('Đang xử lý...', 'info');
+                if (typeof logSystem === 'function') logSystem('Đang xử lý ' + actionName + ' hàng loạt...', 'info');
 
                 const paramName = type + '_change';
-                
-                // Tạo URL: /admin/players/{id}/stats?{loại_tiền}_change={số_lượng}
-                const url = '/admin/players/' + id + '/stats?' + paramName + '=' + amount;
+                let successCount = 0;
 
-                const res = await fetch(url, {
-                    method: 'PATCH',
-                    headers: { 'Content-Type': 'application/json' }
-                });
+                // Vòng lặp gọi API cho từng học sinh được chọn
+                for (let i = 0; i < selectedIds.length; i++) {
+                    const playerId = selectedIds[i];
+                    
+                    // Tạo URL: /admin/players/{id}/stats?{loại_tiền}_change={số_lượng}
+                    const url = '/admin/players/' + playerId + '/stats?' + paramName + '=' + amount;
 
-                const data = await res.json();
+                    const res = await fetch(url, {
+                        method: 'PATCH',
+                        headers: { 'Content-Type': 'application/json' }
+                    });
 
-                if (data.success) {
-                    if (typeof logSystem === 'function') logSystem('✅ ' + data.message, 'success');
+                    const data = await res.json();
+                    if (data.success) {
+                        successCount++;
+                    }
+                }
+
+                // Thông báo kết quả sau khi lặp xong
+                if (successCount > 0) {
+                    if (typeof logSystem === 'function') logSystem('✅ Đã ' + actionName + ' thành công cho ' + successCount + ' học sinh.', 'success');
                     if (typeof loadOverview === 'function') loadOverview(); // Load lại bảng ngay
                 } else {
-                    alert('Lỗi: ' + (data.detail || 'Không xác định'));
+                    alert('Lỗi: Không thể thực hiện giao dịch!');
                 }
+
             } catch (error) {
                 console.error(error);
                 alert("Lỗi kết nối server!");
             }
         }
 
-        // 4. Hàm Xử lý Vật phẩm (Item) - PHIÊN BẢN AN TOÀN & LOOP FRONTEND
+
+        // ==========================================
+        // 2. HÀM TẶNG VẬT PHẨM (Item) - HỖ TRỢ CHỌN NHIỀU NGƯỜI
+        // ==========================================
         async function sendGiftItem(multiplier) {
-            const id = document.getElementById('gift-player-id').value;
+            // Lấy danh sách ID đã tick chọn
+            const selectedIds = Array.from(document.querySelectorAll('.gift-player-checkbox:checked')).map(cb => cb.value);
+            
             const itemId = document.getElementById('item-template-select').value;
             const qtyStr = document.getElementById('item-qty').value;
-            let qty = parseInt(qtyStr);
+            const qty = parseInt(qtyStr);
 
-            // Kiểm tra đầu vào
-            if (!id || !itemId || isNaN(qty) || qty <= 0) {
-                alert("Vui lòng chọn người nhận, vật phẩm và nhập số lượng!");
+            if (selectedIds.length === 0) {
+                alert("Vui lòng tick chọn ít nhất 1 học sinh để tặng!");
+                return;
+            }
+            if (!itemId || isNaN(qty) || qty <= 0) {
+                alert("Vui lòng chọn vật phẩm và nhập số lượng hợp lệ!");
                 return;
             }
 
-            // Tính toán số lượng thực (Dương: Gửi, Âm: Xóa)
             const finalQty = qty * multiplier;
             const actionName = multiplier > 0 ? "Gửi" : "Xóa";
 
-            // --- TRƯỜNG HỢP 1: ÁP DỤNG CHO TOÀN LỚP (ALL) ---
-            if (id === 'ALL') {
-                const confirmMsg = '📦 Xác nhận: ' + actionName + ' ' + qty + ' vật phẩm này cho TOÀN BỘ LỚP?';
-                if (!confirm(confirmMsg)) return;
+            const confirmMsg = '📦 Xác nhận: ' + actionName + ' ' + qty + ' vật phẩm cho ' + selectedIds.length + ' học sinh đã chọn?';
+            if (!confirm(confirmMsg)) return;
 
-                if (typeof logSystem === 'function') logSystem('Đang xử lý hàng loạt...', 'info');
+            if (typeof logSystem === 'function') logSystem('Đang xử lý vật phẩm hàng loạt...', 'info');
 
-                try {
-                    // Bước 1: Lấy danh sách ID học sinh về trước
-                    const resList = await fetch('/admin/players/overview');
-                    const players = await resList.json();
-
-                    let count = 0;
-                    // Bước 2: Chạy vòng lặp gửi từng người
-                    for (var i = 0; i < players.length; i++) {
-                        const p = players[i];
-                        const url = '/admin/players/' + p.id + '/items?item_id=' + itemId + '&amount=' + finalQty;
-                        
-                        // Gửi lệnh (không cần await để chạy song song cho nhanh, hoặc await để an toàn)
-                        await fetch(url, { method: 'POST' });
-                        count++;
-                    }
-
-                    if (typeof logSystem === 'function') logSystem('✅ Đã xử lý xong cho ' + count + ' học sinh.', 'success');
-                    if (typeof loadOverview === 'function') loadOverview();
-
-                } catch (e) {
-                    console.error(e);
-                    alert('Lỗi trong quá trình xử lý hàng loạt!');
-                }
-                return; // Kết thúc hàm
-            }
-
-            // --- TRƯỜNG HỢP 2: ÁP DỤNG CÁ NHÂN ---
+            let count = 0;
             try {
-                if (typeof logSystem === 'function') logSystem('Đang ' + actionName + '...', 'info');
-
-                // Tạo URL với query parameters
-                const url = '/admin/players/' + id + '/items?item_id=' + itemId + '&amount=' + finalQty;
-
-                const res = await fetch(url, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' }
-                });
-
-                const data = await res.json();
-
-                if (data.success) {
-                    if (typeof logSystem === 'function') logSystem('✅ ' + data.message, 'success');
-                    if (typeof loadOverview === 'function') loadOverview();
-                } else {
-                    alert('Lỗi: ' + (data.detail || 'Không xác định'));
+                // Chạy vòng lặp qua các ID được chọn
+                for (let i = 0; i < selectedIds.length; i++) {
+                    const playerId = selectedIds[i];
+                    const url = '/admin/players/' + playerId + '/items?item_id=' + itemId + '&amount=' + finalQty;
+                    
+                    await fetch(url, { method: 'POST' });
+                    count++;
                 }
-            } catch (error) {
-                console.error("Fetch Error:", error);
-                alert("Lỗi kết nối server!");
+
+                if (typeof logSystem === 'function') logSystem('✅ Đã ' + actionName + ' xong cho ' + count + ' học sinh.', 'success');
+                if (typeof loadOverview === 'function') loadOverview();
+
+            } catch (e) {
+                console.error(e);
+                alert('Lỗi kết nối Server trong quá trình xử lý!');
             }
         }
-
         // --- CÁC HÀM XỬ LÝ MỚI CHO TỔ ĐỘI & EXCEL (PHIÊN BẢN AN TOÀN) ---
 
         // 1. Hàm Log Debug (Ghi nhật ký hệ thống ra màn hình)
@@ -6105,7 +6123,50 @@
             } catch (err) { console.error(err); alert("Lỗi kết nối."); }
         }
 
+        // ==========================================
+        // LOGIC CHO DROPDOWN CHỌN NHIỀU HỌC SINH
+        // ==========================================
 
+        // Bật/Tắt Dropdown
+        function toggleGiftDropdown() {
+            document.getElementById('gift-player-list').classList.toggle('hidden');
+        }
+
+        // Bấm ra ngoài vùng Dropdown thì tự động đóng lại
+        document.addEventListener('click', function(event) {
+            const dropdown = document.getElementById('gift-player-dropdown');
+            if (dropdown && !dropdown.contains(event.target)) {
+                document.getElementById('gift-player-list').classList.add('hidden');
+            }
+        });
+
+        // Chức năng tick "ÁP DỤNG TOÀN LỚP"
+        function toggleAllGiftPlayers(source) {
+            // Tìm tất cả các checkbox của học sinh
+            const checkboxes = document.querySelectorAll('.gift-player-checkbox');
+            checkboxes.forEach(cb => {
+                cb.checked = source.checked; // Tick theo trạng thái của nút Toàn Lớp
+            });
+            updateGiftButtonText();
+        }
+
+        // Cập nhật lại dòng chữ hiển thị khi chọn học sinh
+        function updateGiftButtonText() {
+            const checkboxes = document.querySelectorAll('.gift-player-checkbox:checked');
+            const totalCheckboxes = document.querySelectorAll('.gift-player-checkbox').length;
+            const btnText = document.getElementById('gift-player-text');
+            
+            if (checkboxes.length === 0) {
+                btnText.innerHTML = '<span class="text-gray-400">-- Chọn học sĩ --</span>';
+                btnText.className = "truncate font-medium";
+            } else if (checkboxes.length === totalCheckboxes && totalCheckboxes > 0) {
+                btnText.innerHTML = '<i class="fas fa-users text-yellow-400 mr-2"></i> Đã chọn: TOÀN BỘ LỚP';
+                btnText.className = "truncate font-bold text-yellow-400";
+            } else {
+                btnText.innerHTML = `<i class="fas fa-user-check text-green-400 mr-2"></i> Đã chọn: ${checkboxes.length} học sĩ`;
+                btnText.className = "truncate font-bold text-green-400";
+            }
+        }
 
         // --- KHỞI TẠO KHI TRANG LOAD XONG ---
         document.addEventListener('DOMContentLoaded', () => {
