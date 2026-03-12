@@ -1250,7 +1250,44 @@ def march_troops_by_code(campaign_id: int, req: MarchByCodeRequest, db: Session 
         
         if not player or not target_node:
             return {"success": False, "message": "Dữ liệu chiến dịch hoặc cứ điểm không hợp lệ!"}
+        
+        # =====================================================================
+        # BƯỚC 2.5: KIỂM TRA LUẬT ĐẨY ĐƯỜNG (MOBA RULES)
+        # =====================================================================
+        # Nếu mục tiêu không thuộc phe mình -> Đang đi Tấn công / Xâm lược
+        if target_node.owner_faction != player.faction:
+            target_code = target_node.node_code
+            my_prefix = "TL" if player.faction == "THANH_LONG" else "BH"
             
+            # Chỉ áp dụng luật đẩy đường gắt gao khi ĐÁNH SANG PHẦN ĐẤT CỦA ĐỊCH
+            if not target_code.startswith(my_prefix):
+                # Sổ tay quy tắc: Mục Tiêu -> [Danh sách Cứ Điểm cần phải chiếm trước]
+                push_rules = {
+                    "BH_TOP_2": ["BH_TOP_1"], "BH_MID_2": ["BH_MID_1"], "BH_BOT_2": ["BH_BOT_1"],
+                    "TL_TOP_2": ["TL_TOP_1"], "TL_MID_2": ["TL_MID_1"], "TL_BOT_2": ["TL_BOT_1"],
+                    "BH_BASE": ["BH_TOP_2", "BH_MID_2", "BH_BOT_2"],
+                    "TL_BASE": ["TL_TOP_2", "TL_MID_2", "TL_BOT_2"]
+                }
+                
+                if target_code in push_rules:
+                    req_codes = push_rules[target_code]
+                    
+                    # Truy vấn xem phe ta đang sở hữu bao nhiêu Cứ Điểm trong điều kiện
+                    owned_reqs = db.exec(select(MapNode).where(
+                        MapNode.campaign_id == campaign_id,
+                        MapNode.node_code.in_(req_codes),
+                        MapNode.owner_faction == player.faction
+                    )).all()
+                    
+                    # Nếu phe ta chưa sở hữu Cứ Điểm nào trong danh sách yêu cầu -> Chặn lại
+                    if len(owned_reqs) == 0:
+                        if "BASE" in target_code:
+                            return {"success": False, "message": "🛡️ Cứ Điểm Chính đang được bảo vệ! Phải chiếm ít nhất 1 Cứ Điểm 2 của địch mới có thể mở đường."}
+                        else:
+                            lane_name = "Đường Trên" if "TOP" in target_code else "Đường Giữa" if "MID" in target_code else "Đường Dưới"
+                            return {"success": False, "message": f"🚧 Tuyến đường bị chặn! Bạn phải hạ Cứ Điểm 1 {lane_name} trước khi tiến sâu hơn."}
+        # =====================================================================
+
         # 3. KIỂM TRA ÁN PHẠT TỬ TRẬN (Giữ lại từ code cũ của bạn)
         if player.respawn_at and datetime.now() < player.respawn_at:
             wait_mins = int((player.respawn_at - datetime.now()).total_seconds() / 60)

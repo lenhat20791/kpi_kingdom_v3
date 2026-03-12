@@ -1,0 +1,137 @@
+[
+{
+"question": "Kinh đô của nước Văn Lang được đặt tại khu vực nào?",
+"options": ["Phong Khê (Đông Anh, Hà Nội)", "Phong Châu (Việt Trì, Phú Thọ)", "Vùng cửa sông Tô Lịch (Hà Nội)", "Vùng Phú Xuân (Thừa Thiên Huế)"],
+"answer": "Phong Châu (Việt Trì, Phú Thọ)"
+},
+{
+"question": "Kinh đô của nước Âu Lạc được đặt tại địa điểm nào?",
+"options": ["Vùng cửa sông Tô Lịch (Hà Nội)", "Vùng Phú Xuân (Thừa Thiên Huế)", "Phong Châu (Việt Trì, Phú Thọ)", "Phong Khê (Đông Anh, Hà Nội)"],
+"answer": "Phong Khê (Đông Anh, Hà Nội)"
+},
+{
+"question": "Nhà nước cổ đại đầu tiên được hình thành ở Việt Nam có tên gọi là gì?",
+"options": ["Nhà nước cổ đại Vương quốc Phù Nam", "Nhà nước cổ đại Vương quốc Chăm-pa", "Nhà nước cổ đại của quốc gia Văn Lang", "Nhà nước cổ đại của quốc gia Âu Lạc"],
+"answer": "Nhà nước cổ đại của quốc gia Văn Lang"
+},
+{
+"question": "Nhân vật lịch sử nào nắm giữ vị trí đứng đầu trong bộ máy nhà nước Văn Lang?",
+"options": ["Người đứng đầu nắm quyền là Vua Hùng", "Người đứng đầu nắm quyền là Lạc hầu", "Người đứng đầu nắm quyền là Lạc tướng", "Người đứng đầu là vua An Dương Vương"],
+"answer": "Người đứng đầu nắm quyền là Vua Hùng"
+},
+{
+"question": "Nhà nước cổ đại Văn Lang chính thức được ra đời vào khoảng thời gian nào?",
+"options": ["Được thành lập vào thế kỉ thứ V TCN", "Được thành lập vào thế kỉ thứ VI TCN", "Được thành lập vào thế kỉ thứ VII TCN", "Được thành lập vào thế kỉ thứ VIII TCN"],
+"answer": "Được thành lập vào thế kỉ thứ VII TCN"
+},
+{
+"question": "Về mặt quân sự, quân đội dưới thời kỳ Văn Lang có đặc điểm gì nổi bật?",
+"options": ["Được chia thành lực lượng cấm quân và địa phương", "Được chia thành quân đội triều đình và các lộ lớn", "Trong giai đoạn lịch sử này vẫn chưa có quân đội", "Được chia thành lực lượng cấm binh và hương binh"],
+"answer": "Trong giai đoạn lịch sử này vẫn chưa có quân đội"
+},
+{
+"question": "Dưới thời kỳ thuộc Đường, chức quan đứng đầu An Nam Đô hộ phủ được gọi là gì?",
+"options": ["Chức quan được gọi với tên là Thái thú", "Chức quan được gọi với tên là Thứ sử", "Chức quan được gọi với tên là Huyện lệnh", "Chức quan được gọi với tên Tiết độ sứ"],
+"answer": "Chức quan được gọi với tên Tiết độ sứ"
+},
+{
+"question": "Sau khi chiếm được Âu Lạc, nhà Hán đã thi hành chính sách hành chính nào để cai trị?",
+"options": ["Chia Âu Lạc thành hai quận rồi sáp nhập Nam Việt", "Chia Âu Lạc thành nhiều châu để dễ dàng bề quản lý", "Chia Âu Lạc thành ba quận sáp nhập vào Trung Quốc", "Cử quan lại người Hán đến trực tiếp cai trị cấp huyện"],
+"answer": "Chia Âu Lạc thành ba quận sáp nhập vào Trung Quốc"
+},
+{
+"question": "Các triều đại phong kiến phương Bắc đã tiến hành truyền bá tôn giáo nào vào nước ta?",
+"options": ["Tiến hành truyền bá hệ tư tưởng của đạo Phật giáo", "Tiến hành truyền bá hệ tư tưởng của đạo Nho giáo", "Tiến hành truyền bá hệ tư tưởng của đạo Đạo giáo", "Tiến hành truyền bá hệ tư tưởng của đạo Kitô giáo"],
+"answer": "Tiến hành truyền bá hệ tư tưởng của đạo Nho giáo"
+},
+{
+"question": "Nhằm thực hiện chính sách đồng hóa, chính quyền phong kiến phương Bắc đã làm gì?",
+"options": ["Tiến hành kìm hãm sự phát triển của công cụ đồ sắt", "Đưa người dân tộc Hán sang sống cùng người Việt", "Đưa người dân tộc Hán sang đảm nhận chức Huyện lệnh", "Bắt buộc nhân dân ta phải đóng góp nhiều loại thuế"],
+"answer": "Đưa người dân tộc Hán sang sống cùng người Việt"
+},
+{
+"question": "Đặc điểm loại hình nhà ở phổ biến nhất của cư dân thời kỳ Văn Lang, Âu Lạc là gì?",
+"options": ["Nhà được xây bằng gạch nung, lợp ngói hình âm dương", "Nhà trệt làm bằng lá cọ, phần móng được làm bằng đá", "Nhà sàn được làm bằng các nguyên liệu như gỗ, tre, nứa", "Nhà vách đất và đá vôi, được xây dựng sát với mặt đất"],
+"answer": "Nhà sàn được làm bằng các nguyên liệu như gỗ, tre, nứa"
+},
+{
+"question": "Loại lương thực giữ vai trò chủ đạo trong bữa ăn của cư dân Văn Lang, Âu Lạc là gì?",
+"options": ["Bữa ăn sử dụng chủ yếu là các loại lúa mạch, lúa mì", "Bữa ăn sử dụng chủ yếu là các loại ngô, khoai và sắn", "Bữa ăn sử dụng chủ yếu là các loại ngũ cốc nhập ngoại", "Bữa ăn sử dụng chủ yếu là các loại gạo nếp và gạo tẻ"],
+"answer": "Bữa ăn sử dụng chủ yếu là các loại gạo nếp và gạo tẻ"
+},
+{
+"question": "Chính quyền đô hộ phương Bắc đã thiết lập nền độc quyền ở mặt hàng nào để bóc lột?",
+"options": ["Thiết lập đặc quyền kiểm soát buôn bán gạo lúa", "Thiết lập đặc quyền kiểm soát sản xuất vải vóc", "Thiết lập đặc quyền kiểm soát buôn bán muối, sắt", "Thiết lập đặc quyền kiểm soát kinh doanh gốm sứ"],
+"answer": "Thiết lập đặc quyền kiểm soát buôn bán muối, sắt"
+},
+{
+"question": "Dưới thời kỳ Bắc thuộc, một trong những bước chuyển biến lớn của ngành nông nghiệp là gì?",
+"options": ["Tiến hành áp dụng kỹ thuật chăn nuôi gia cầm quy mô lớn", "Bắt đầu sử dụng lực kéo của máy móc trong sản xuất nông", "Việc sử dụng công cụ cày trong nông nghiệp đã phổ biến", "Tập trung mở rộng diện tích trồng nhiều loại cây công nghiệp"],
+"answer": "Việc sử dụng công cụ cày trong nông nghiệp đã phổ biến"
+},
+{
+"question": "Loại hình nghề thủ công nghiệp mới nào đã bắt đầu xuất hiện ở nước ta thời kỳ Bắc thuộc?",
+"options": ["Phát triển mạnh mẽ nghề đúc đồng đen làm đồ mỹ nghệ", "Bắt đầu xuất hiện nghề đúc tiền kim loại và làm giấy", "Mở rộng quy mô của nghề dệt vải bằng chất liệu tơ tằm", "Hình thành nên nghề làm gốm sứ có trang trí tráng men"],
+"answer": "Bắt đầu xuất hiện nghề đúc tiền kim loại và làm giấy"
+},
+{
+"question": "Nhân dân ta đã kiên trì đấu tranh bảo vệ bản sắc văn hóa của dân tộc bằng phương pháp nào?",
+"options": ["Chủ động học chữ Hán và tiếp thu sâu sắc tư tưởng Nho giáo", "Luôn kiên trì trong việc giữ gìn tiếng nói của dân tộc mình", "Hoàn toàn tuân theo và thực hành các phong tục của người Hán", "Chấp nhận từ bỏ các hệ thống tín ngưỡng truyền thống lâu đời"],
+"answer": "Luôn kiên trì trong việc giữ gìn tiếng nói của dân tộc mình"
+},
+{
+"question": "Tập tục văn hóa nào từ thời Văn Lang, Âu Lạc vẫn được nhân dân ta duy trì cho đến ngày nay?",
+"options": ["Duy trì tập tục nhuộm tóc với nhiều màu sắc rực rỡ", "Duy trì tập tục xăm hình kín trên toàn bộ khuôn mặt", "Duy trì tập tục ăn trầu cau và thờ cúng vị tổ tiên", "Duy trì tập tục thờ cúng các vị thần linh của phương Tây"],
+"answer": "Duy trì tập tục ăn trầu cau và thờ cúng vị tổ tiên"
+},
+{
+"question": "Ý nghĩa cốt lõi trong lời căn dặn của Chủ tịch Hồ Chí Minh đối với công lao của các Vua Hùng là gì?",
+"options": ["Ngợi ca vẻ đẹp hoàn mỹ của kiến trúc đền thờ các Vua Hùng", "Khuyến khích nhân dân thường xuyên đi tham quan du lịch", "Nhấn mạnh về các kỹ thuật xây dựng đền đài trong lịch sử", "Nhắc nhở trách nhiệm to lớn trong việc bảo vệ chủ quyền nước"],
+"answer": "Nhắc nhở trách nhiệm to lớn trong việc bảo vệ chủ quyền nước"
+},
+{
+"question": "Quốc gia nào được lịch sử đánh giá là bước kế tục và phát triển ở mức độ cao hơn của Văn Lang?",
+"options": ["Nhà nước cổ đại của Vương quốc Phù Nam", "Nhà nước cổ đại của Vương quốc Chăm-pa", "Nhà nước cổ đại của quốc gia Nam Việt", "Nhà nước cổ đại của quốc gia Âu Lạc"],
+"answer": "Nhà nước cổ đại của quốc gia Âu Lạc"
+},
+{
+"question": "Người đứng đầu đảm nhận vai trò quản lý các đơn vị hành chính cấp chiềng, chạ thời Văn Lang là ai?",
+"options": ["Người được giao nắm giữ chức danh Lạc hầu", "Người được giao nắm giữ chức danh Lạc tướng", "Người được giao nắm giữ chức danh Bồ chính", "Người được giao nắm giữ chức danh Huyện lệnh"],
+"answer": "Người được giao nắm giữ chức danh Bồ chính"
+},
+{
+"question": "Nhân vật lịch sử nào là người đứng đầu và nắm quyền cai trị cao nhất của nhà nước Âu Lạc?",
+"options": ["Người đứng đầu nhà nước là vua Lý Nam Đế", "Người đứng đầu nhà nước là An Dương Vương", "Người đứng đầu nhà nước là vua Mai Hắc Đế", "Người đứng đầu nhà nước Triệu Việt Vương"],
+"answer": "Người đứng đầu nhà nước là An Dương Vương"
+},
+{
+"question": "Phạm vi cư trú chủ yếu của bộ lạc Văn Lang nằm ở khu vực địa lý nào trên đất nước ta?",
+"options": ["Trải dài từ Lạng Sơn cho đến vùng Thanh Hóa", "Trải dài từ Nghệ An cho đến vùng Thuận Hóa", "Trải dài từ Việt Trì cho đến chân núi Ba Vì", "Trải dài từ Quảng Ninh cho đến khu Hải Phòng"],
+"answer": "Trải dài từ Việt Trì cho đến chân núi Ba Vì"
+},
+{
+"question": "Lãnh thổ của nhà nước Âu Lạc chủ yếu thuộc khu vực nào của đất nước Việt Nam hiện nay?",
+"options": ["Khu vực vùng Bắc Bộ và vùng Bắc Trung Bộ", "Khu vực vùng Nam Bộ và vùng Nam Trung Bộ", "Khu vực vùng Tây Bắc và vùng Đồng Bằng C", "Khu vực vùng Tây Nguyên và vùng Đông Nam"],
+"answer": "Khu vực vùng Bắc Bộ và vùng Bắc Trung Bộ"
+},
+{
+"question": "Sự ra đời của nhà nước Văn Lang mang lại ý nghĩa to lớn nào đối với lịch sử dân tộc ta?",
+"options": ["Mở ra thời kì thịnh vượng nhất của phong kiến", "Mở ra thời kì đấu tranh chống giặc ngoại xâm", "Mở ra thời kì dựng nước đầu tiên của dân tộc", "Mở ra thời kì giao lưu văn hóa với phương Tây"],
+"answer": "Mở ra thời kì dựng nước đầu tiên của dân tộc"
+},
+{
+"question": "Hoạt động thương nghiệp của nước ta dưới thời kì Bắc thuộc có đặc điểm gì đáng chú ý?",
+"options": ["Chính quyền đô hộ mở rộng quyền buôn bán tự do", "Chính quyền đô hộ nắm độc quyền về ngoại thương", "Chính quyền đô hộ cấm đoán giao thương quốc tế", "Chính quyền đô hộ mở rộng thị trường xuất khẩu"],
+"answer": "Chính quyền đô hộ nắm độc quyền về ngoại thương"
+},
+{
+"question": "Theo sách Lĩnh Nam Chích Quái, cư dân thời Văn Lang - Âu Lạc đã biết sử dụng nguyên liệu gì để chế biến thành mắm?",
+"options": ["Sử dụng lúa gạo nếp tẻ để chế biến thành mắm", "Sử dụng các loại rau củ để chế biến thành mắm", "Sử dụng các loại củ quả để chế biến thành mắm", "Sử dụng tôm cá cầm thú để chế biến thành mắm"],
+"answer": "Sử dụng tôm cá cầm thú để chế biến thành mắm"
+},
+{
+"question": "Tại khu vực Di chỉ Làng Cả (Việt Trì), nghề thủ công nào được xác định là đã phát triển sớm và dân cư đông đúc?",
+"options": ["Nghề làm đồ gốm phát triển từ sớm", "Nghề rèn đồ sắt phát triển từ sớm", "Nghề đúc đồ đồng phát triển từ sớm", "Nghề dệt đồ lụa phát triển từ sớm"],
+"answer": "Nghề đúc đồ đồng phát triển từ sớm"
+}
+]
