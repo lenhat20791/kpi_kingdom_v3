@@ -380,6 +380,11 @@
                 <i class="fa-solid fa-swords w-6 text-center"></i> Lôi đài
             </button>
 
+            <button onclick="switchTab('campaign')" data-tab="campaign" 
+                class="nav-item w-full text-left px-6 py-3 transition border-l-4 border-transparent text-gray-400 hover:bg-gray-700 hover:text-white hover:border-red-500">
+                <i class="fa-solid fa-chess-board w-6 text-center text-red-500"></i> Quần Anh Tranh Tài
+            </button>
+
             <button onclick="switchTab('market')" data-tab="market" 
                 class="nav-item w-full text-left px-6 py-3 transition border-l-4 border-transparent text-gray-300 hover:bg-gray-700 hover:text-white hover:border-green-500">
                 <i class="fa-solid fa-ghost w-6 text-center"></i> Chợ đen
@@ -1120,6 +1125,71 @@
                             </table>
                         </div>
                     </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="tab-campaign" class="tab-content hidden p-6 animate-fade-in">
+    
+            <div class="flex space-x-4 mb-6 border-b border-gray-700 pb-2">
+                <button onclick="switchSubTab('campaign-control')" id="btn-sub-campaign-control" class="sub-tab-btn text-red-400 border-b-2 border-red-400 font-bold px-4 py-2">
+                    <i class="fas fa-gamepad mr-2"></i>Điều Hành Mùa Giải
+                </button>
+                <button onclick="switchSubTab('campaign-history')" id="btn-sub-campaign-history" class="sub-tab-btn text-gray-400 hover:text-white px-4 py-2 transition">
+                    <i class="fas fa-history mr-2"></i>Lịch Sử Trận Đánh
+                </button>
+            </div>
+
+            <div id="sub-campaign-control" class="sub-content">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    
+                    <div class="bg-gray-800 p-6 rounded-lg border border-gray-700 hover:border-blue-500 transition group">
+                        <i class="fas fa-bullhorn text-4xl text-blue-500 mb-4 group-hover:scale-110 transition-transform"></i>
+                        <h3 class="text-lg font-bold text-white mb-2">1. Mở Phòng Báo Danh</h3>
+                        <p class="text-gray-400 text-xs mb-4">Tạo mùa giải mới. Học sinh sẽ thấy màn hình Lobby để chọn phe Thanh Long hoặc Bạch Hổ.</p>
+                        <button onclick="adminTriggerCreateCampaign()" class="w-full bg-blue-700 hover:bg-blue-600 text-white font-bold py-3 px-6 rounded shadow-lg transition flex items-center justify-center">
+                            <i class="fas fa-door-open mr-2"></i>MỞ MÙA GIẢI MỚI
+                        </button>
+                    </div>
+
+                    <div class="bg-gray-900 p-6 rounded-lg border border-red-800 relative overflow-hidden group">
+                        <div class="absolute top-0 right-0 bg-red-600 text-white text-[10px] font-bold px-2 py-1 uppercase">Hành động nguy hiểm</div>
+                        <div class="text-center">
+                            <i class="fas fa-fire-flame-curved text-4xl text-red-500 mb-4 group-hover:animate-pulse"></i>
+                            <h3 class="text-lg font-bold text-white mb-2">2. Bắt Đầu Khai Chiến</h3>
+                            <p class="text-gray-400 text-xs mb-4">Chốt danh sách báo danh, sinh ra 12 cứ điểm và mở Bản đồ chiến thuật cho học sinh tiến công.</p>
+                            
+                            <button onclick="adminTriggerStartCampaign()" class="w-full bg-red-700 hover:bg-red-600 text-white font-bold py-3 px-6 rounded shadow-lg transition flex items-center justify-center">
+                                <i class="fas fa-khanda mr-2"></i>KHAI CHIẾN (VÀO MAP)
+                            </button>
+                        </div>
+                    </div>
+                    <div class="border border-gray-700 p-4 rounded-xl mt-6 bg-gray-800/30">
+                        <h4 class="text-lg font-bold text-gray-400 mb-2">3. Kết Thúc Mùa Giải</h4>
+                        <p class="text-sm text-gray-500 mb-4">Đóng băng toàn bộ hoạt động của mùa giải hiện tại, chốt sổ điểm số và chuẩn bị cho mùa giải mới.</p>
+                        <button onclick="closeCampaign()" class="w-full bg-gray-600 hover:bg-gray-500 text-white font-bold py-3 rounded border-b-4 border-gray-800 active:translate-y-1 active:border-b-0 transition-all flex items-center justify-center">
+                            <i class="fa-solid fa-flag-checkered mr-2"></i> KẾT THÚC MÙA GIẢI
+                        </button>
+                    </div>
+                </div>
+
+                <div class="mt-8 bg-gray-800 rounded-lg p-4 border border-gray-700">
+                    <h3 class="text-yellow-400 font-bold mb-3 uppercase text-sm border-b border-gray-700 pb-2">
+                        <i class="fas fa-info-circle mr-2"></i>Quy Trình Vận Hành
+                    </h3>
+                    <div class="text-gray-300 text-sm space-y-2">
+                        <p><span class="text-blue-400 font-bold">Bước 1:</span> Bấm "Mở Mùa Giải Mới" để học sinh tiến hành đăng ký phe.</p>
+                        <p><span class="text-red-400 font-bold">Bước 2:</span> Đợi học sinh báo danh xong (ví dụ: đến 20h00 tối).</p>
+                        <p><span class="text-green-400 font-bold">Bước 3:</span> Bấm "Khai Chiến" để hệ thống tự động đẩy tất cả học sinh vào Bản đồ.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div id="sub-campaign-history" class="sub-content hidden">
+                <div class="bg-gray-800 p-6 rounded-lg border border-gray-700 text-center">
+                    <i class="fa-solid fa-person-digging text-5xl text-gray-600 mb-4"></i>
+                    <h3 class="text-gray-400 font-bold">Tính năng đang xây dựng</h3>
+                    <p class="text-gray-500 text-sm mt-2">Nơi đây sẽ hiển thị log xuất quân của tất cả học sinh.</p>
                 </div>
             </div>
         </div>
@@ -6167,6 +6237,57 @@
                 btnText.className = "truncate font-bold text-green-400";
             }
         }
+
+        // ==========================================
+        // API GỌI LỆNH ĐIỀU HÀNH CHIẾN DỊCH
+        // ==========================================
+
+        async function adminTriggerCreateCampaign() {
+            if(!confirm("📢 Bạn có chắc muốn MỞ BÁO DANH mùa giải mới không? Học sinh sẽ bắt đầu chọn phe.")) return;
+            try {
+                const res = await fetch('/api/admin/campaign/create', { method: 'POST' });
+                const data = await res.json();
+                alert(data.message); // Báo thành công
+            } catch (error) {
+                alert("Lỗi kết nối tới Server!");
+                console.error(error);
+            }
+        }
+
+        async function adminTriggerStartCampaign() {
+            if(!confirm("⚔️ Bạn có chắc muốn KHAI CHIẾN? Hệ thống sẽ chốt danh sách, tạo Cứ điểm và cho phép học sinh đem quân ra đánh!")) return;
+            try {
+                const res = await fetch('/api/admin/campaign/start', { method: 'POST' });
+                const data = await res.json();
+                alert(data.message); // Báo Khai chiến thành công
+            } catch (error) {
+                alert("Lỗi kết nối tới Server!");
+                console.error(error);
+            }
+        }
+
+        async function closeCampaign() {
+            // Xác nhận 2 lớp để tránh admin bấm nhầm
+            if(!confirm("⚠️ CẢNH BÁO: Bạn có chắc chắn muốn KẾT THÚC mùa giải hiện tại? Toàn bộ sa bàn sẽ bị đóng băng!")) return;
+
+            try {
+                const response = await fetch('/api/admin/campaign/close', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                
+                const data = await response.json();
+                alert(data.message);
+                
+                if (data.success) {
+                    location.reload(); // Tải lại trang sau khi đóng thành công
+                }
+            } catch (error) {
+                alert("❌ Lỗi kết nối đến Server!");
+                console.error(error);
+            }
+        }
+
 
         // --- KHỞI TẠO KHI TRANG LOAD XONG ---
         document.addEventListener('DOMContentLoaded', () => {

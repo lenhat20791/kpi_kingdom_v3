@@ -1,22 +1,42 @@
-import os
 import traceback
-import random
-import json
+import os, json, random
 import asyncio
-from fastapi import FastAPI, Depends, HTTPException, status, Query, Body, APIRouter,Request
+import threading
+import time
+import pytz
+from contextlib import asynccontextmanager
+from typing import Optional
+
+# --- IMPORT CHUẨN CHO DATETIME ---
+# Bỏ cái 'import datetime as dt' đi cho đỡ rối
+from datetime import datetime, timedelta 
+# --- IMPORT CHUẨN CHO FASTAPI ---
+from fastapi import FastAPI, Depends, HTTPException, status, Query, Body, APIRouter, Request
 from fastapi.middleware.cors import CORSMiddleware
-from sqlmodel import Session, select, update, func, col 
-from datetime import datetime, timedelta
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import JSONResponse, FileResponse
-from typing import Optional
-from database import create_db_and_tables, engine, Player, get_db, Item, Inventory, Title, TowerProgress, Boss, QuestionBank, BossLog, ArenaMatch, ArenaParticipant, SystemStatus, ChatLog
-from routes import admin, users, shop, tower, pets, inventory_api, arena_api, auth, skills, market_api, notifications, chat_api, companion
+
+# --- IMPORT CHUẨN CHO SQLMODEL & SQLALCHEMY ---
+from sqlmodel import Session, select, update, col, func, or_, and_
+from sqlalchemy import func, desc, or_ 
+
+# --- IMPORT FILE CẤU HÌNH & DB ---
+import campaign_config as cfg
 from pydantic import BaseModel
-from sqlalchemy import func, desc, or_
-from game_logic.level import add_exp_to_player
-from contextlib import asynccontextmanager
+from database import (
+    create_db_and_tables, engine, Player, get_db, Item, Inventory, 
+    Title, TowerProgress, Boss, QuestionBank, BossLog, ArenaMatch, 
+    ArenaParticipant, SystemStatus, ChatLog, Campaign, CampaignPlayer, 
+    MapNode, TroopMovement, Companion, CompanionTemplate, BattleReport, CampaignChat, ScoreLog, CampaignChat
+)
+
+# --- IMPORT ROUTES & LOGIC ---
+from routes import (
+    admin, users, shop, tower, pets, inventory_api, arena_api, 
+    auth, skills, market_api, notifications, chat_api, companion
+)
 from routes.auth import get_password_hash
+from game_logic.level import add_exp_to_player
 # 2. Viết hàm tạo Admin mặc định (Đây là giải pháp gốc rễ)
 def create_default_admin():
     with Session(engine) as session:
@@ -50,12 +70,30 @@ def create_default_admin():
 # 3. Cấu hình sự kiện khởi động (Lifespan)
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Khi Server bật lên:
-    create_db_and_tables() # 1. Tạo bảng trống
-    create_default_admin() # 2. Điền ngay ông Admin vào
-    yield
-    # Khi Server tắt đi:
-    print("Server shutting down...")
+    print("="*50)
+    print("🎬 FASTAPI LIFESPAN: Đang khởi động hệ thống...")
+    print("="*50)
+    
+    # 1. Khởi tạo Database cơ bản
+    create_db_and_tables() 
+    create_default_admin() 
+    
+    # 2. KÍCH HOẠT BATTLE ENGINE (Chạy ngầm liên tục)
+    print("🚀 Khởi động luồng BATTLE ENGINE (asyncio)...")
+    engine_task = asyncio.create_task(campaign_game_loop())
+    
+    # 3. Giao lại quyền điều khiển cho Web Server
+    yield 
+    
+    # ==========================================
+    # PHẦN NÀY CHẠY KHI BẠN NHẤN CTRL+C TẮT SERVER
+    # ==========================================
+    print("🛑 Server shutting down... Đang dọn dẹp tài nguyên...")
+    engine_task.cancel() # Ra lệnh dừng vòng lặp hành quân
+    try:
+        await engine_task # Đợi nó dừng hẳn
+    except asyncio.CancelledError:
+        print("✅ Đã tắt BATTLE ENGINE an toàn.")
 
 app = FastAPI(
     title="KPI Kingdom V3 API",  # Cấu hình tiêu đề
@@ -147,7 +185,40 @@ backend_path = backend_dir
 class LoginRequest(BaseModel):
     username: str
     password: str
+# Model nhận dữ liệu
+class BaseRequest(BaseModel):
+    username: str
+class BuyRequest(BaseModel):
+    item_id: int # Vì item.id trong model là Int
+    username: str
+class AttackRequest(BaseModel):
+    boss_id: int
+    player_id: int = 0         # ID người chơi (Để cộng thưởng chính xác)
+    player_name: str           # Tên người chơi (Để ghi log nhanh)
+    damage: int = 0            # Frontend gửi lên (nếu = 0 Server sẽ tự tính)
+    question_id: int = 0       # ID câu hỏi vừa trả lời (Để check đáp án)
+    selected_option: str = ""        # Sát thương gây ra (thường là 50-100 tùy cấu hình)
+class MarchByCodeRequest(BaseModel):
+    username: str
+    target_node_code: str
+# 3. API: Người chơi Báo danh / Rút lui
+class JoinFactionRequest(BaseModel):
+    username: str
+    faction: str # "THANH_LONG", "BACH_HO", hoặc "LEAVE"
 
+class SetCommanderRequest(BaseModel):
+    username: str
+    companion_id: str
+
+# 1. Khai báo khung dữ liệu chat nhận vào
+class ChatRequest(BaseModel):
+    username: str
+    message: str
+    channel: str # "ALL" hoặc "ALLY"
+# Khai báo form nhận thưởng minigame chien dich
+class MinigameRewardRequest(BaseModel):
+    username: str
+    campaign_id: int
 
 # 2. API Đăng nhập (Chấp nhận password thô từ Excel)
 @app.post("/api/login")
@@ -266,9 +337,7 @@ def get_shop_items(db: Session = Depends(get_db)):
         print(f"❌ Lỗi lấy Shop Item: {e}")
         return {"status": "error", "message": "Lỗi Server khi tải Shop"}
 
-class BuyRequest(BaseModel):
-    item_id: int # Vì item.id trong model là Int
-    username: str
+
 @app.post("/api/shop/buy")
 def buy_item(data: BuyRequest, db: Session = Depends(get_db)):
     try:
@@ -514,15 +583,6 @@ def get_active_boss_for_player(db: Session = Depends(get_db)):
             "rare_rate": boss.rare_item_rate
         }
     }
-
-
-class AttackRequest(BaseModel):
-    boss_id: int
-    player_id: int = 0         # ID người chơi (Để cộng thưởng chính xác)
-    player_name: str           # Tên người chơi (Để ghi log nhanh)
-    damage: int = 0            # Frontend gửi lên (nếu = 0 Server sẽ tự tính)
-    question_id: int = 0       # ID câu hỏi vừa trả lời (Để check đáp án)
-    selected_option: str = ""        # Sát thương gây ra (thường là 50-100 tùy cấu hình)
 
 @app.post("/api/boss/attack")
 def attack_boss(req: AttackRequest, db: Session = Depends(get_db)):
@@ -976,10 +1036,1692 @@ async def cleanup_chat_task():
         # Ngủ thêm 60s để tránh chạy lặp lại ngay lập tức
         await asyncio.sleep(60)
 
-# Kích hoạt tác vụ khi Server khởi động
-@app.on_event("startup")
-async def startup_event():
-    asyncio.create_task(cleanup_chat_task())
+# =====================================================================
+# [MODULE CHIẾN DỊCH] 1. HÀM PHỤ TRỢ: TÍNH SỨC CHỨA KHO CHUNG
+# =====================================================================
+def get_faction_vault_capacity(db: Session, campaign_id: int, faction: str) -> int:
+    """Tính tổng sức chứa kho lính của cả phe dựa trên level của từng thành viên"""
+    players = db.exec(
+        select(CampaignPlayer)
+        .where(CampaignPlayer.campaign_id == campaign_id)
+        .where(CampaignPlayer.faction == faction)
+    ).all()
+    
+    total_capacity = 0
+    for p in players:
+        # Công thức: 100 + (level - 1) * 20
+        player_cap = cfg.BASE_TROOP_CAPACITY + (p.legion_level - 1) * cfg.CAPACITY_PER_LEVEL
+        total_capacity += player_cap
+        
+    return total_capacity
+
+
+#module đóng băng chiến dịch
+def is_campaign_frozen():
+    """Kiểm tra xem hiện tại có phải giờ đóng băng hay không (Múi giờ VN)"""
+    # 1. Lấy giờ hiện tại theo chuẩn Việt Nam
+    vn_tz = pytz.timezone('Asia/Ho_Chi_Minh')
+    now_vn = datetime.now(vn_tz)
+    current_hour = now_vn.hour
+    
+    # 2. Kiểm tra dựa trên config: Ví dụ từ 18h đến trước 22h là MỞ
+    # Ngoài khung giờ này (nhỏ hơn 18 hoặc lớn hơn/bằng 22) là ĐÓNG BĂNG
+    if not (cfg.CAMPAIGN_START_HOUR <= current_hour < cfg.CAMPAIGN_END_HOUR):
+        return True
+    return False
+
+# =====================================================================
+# [MODULE CHIẾN DỊCH] 2. API CHIÊU BINH (Mini-game 1: Trắc nghiệm)
+# =====================================================================
+
+@app.post("/api/campaign/minigame/chieu-binh")
+def minigame_chieu_binh(req: MinigameRewardRequest, db: Session = Depends(get_db)):
+    player = db.exec(select(Player).where(Player.username == req.username)).first()
+    if not player: return {"success": False, "message": "Lỗi user"}
+    
+    c_player = db.exec(select(CampaignPlayer).where(
+        CampaignPlayer.campaign_id == req.campaign_id, CampaignPlayer.player_id == player.id
+    )).first()
+    campaign = db.get(Campaign, req.campaign_id)
+    
+    if not c_player or not campaign or campaign.status != "ACTIVE":
+        return {"success": False, "message": "Chiến dịch chưa mở hoặc đã kết thúc!"}
+
+    max_capacity = getattr(cfg, 'BASE_TROOP_CAPACITY', 100) + (c_player.legion_level - 1) * getattr(cfg, 'CAPACITY_PER_LEVEL', 20)
+    current_troops = campaign.tl_troops_vault if c_player.faction == "THANH_LONG" else campaign.bh_troops_vault
+    
+    if current_troops >= max_capacity:
+        return {"success": False, "message": f"Kho lính phe {c_player.faction} đã ĐẦY ({max_capacity}/{max_capacity})!"}
+
+    troops_to_add = getattr(cfg, 'MINIGAME1_TROOPS_REWARD', 100)
+    if current_troops + troops_to_add > max_capacity:
+        troops_to_add = max_capacity - current_troops 
+        
+    if c_player.faction == "THANH_LONG": campaign.tl_troops_vault += troops_to_add
+    else: campaign.bh_troops_vault += troops_to_add
+
+    c_player.total_troops_farmed += troops_to_add
+    c_player.h_hau_phuong = c_player.total_troops_farmed // getattr(cfg, 'TROOPS_FOR_ONE_H_POINT', 1000)
+
+    db.add(campaign)
+    db.add(c_player)
+    db.commit()
+    
+    return {"success": True, "message": f"Thu thập thành công {troops_to_add} lính!"}
+
+# 3. CẬP NHẬT API LUYỆN BINH (Nhận username)
+@app.post("/api/campaign/minigame/luyen-binh")
+def minigame_luyen_binh(req: MinigameRewardRequest, db: Session = Depends(get_db)):
+    player = db.exec(select(Player).where(Player.username == req.username)).first()
+    if not player: return {"success": False, "message": "Lỗi user"}
+    
+    c_player = db.exec(select(CampaignPlayer).where(
+        CampaignPlayer.campaign_id == req.campaign_id, CampaignPlayer.player_id == player.id
+    )).first()
+    
+    if not c_player: return {"success": False, "message": "Không tìm thấy người chơi!"}
+        
+    max_lv = getattr(cfg, 'MAX_LEGION_LEVEL', 20)
+    if c_player.legion_level >= max_lv:
+        return {"success": False, "message": f"Quân đoàn đã đạt cấp độ tối đa (Lv.{max_lv})!"}
+
+    exp_reward = getattr(cfg, 'MINIGAME2_EXP_REWARD', 10)
+    c_player.legion_exp += exp_reward
+    
+    exp_needed = c_player.legion_level * 50 
+    leveled_up = False
+    
+    while c_player.legion_exp >= exp_needed and c_player.legion_level < max_lv:
+        c_player.legion_exp -= exp_needed
+        c_player.legion_level += 1
+        leveled_up = True
+        exp_needed = c_player.legion_level * 50 
+        
+    db.add(c_player)
+    db.commit()
+    
+    msg = f"Đã nhận {exp_reward} EXP."
+    if leveled_up:
+        new_capacity = getattr(cfg, 'BASE_TROOP_CAPACITY', 100) + (c_player.legion_level - 1) * getattr(cfg, 'CAPACITY_PER_LEVEL', 20)
+        msg += f"\n🎉 THĂNG CẤP {c_player.legion_level}! Sức chứa tăng lên {new_capacity} lính!"
+        
+    return {"success": True, "message": msg}
+# 1. API LẤY DANH SÁCH CÁC FILE JSON TRONG THƯ MỤC chien dich
+# Hàm công cụ tự động dò đúng đường dẫn thư mục
+def get_minigame_folder(game_type: str):
+    # Lấy thư mục chứa file main.py (tức là thư mục 'backend')
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    # Lùi ra 1 cấp (..), rồi vào 'data câu hỏi' -> 'chien dich'
+    return os.path.normpath(os.path.join(current_dir, "..", "data câu hỏi", "chien dich", "chieu binh" if game_type == "chieu-binh" else "luyen binh"))
+
+# 1. API LẤY DANH SÁCH FILE
+@app.get("/api/campaign/minigame/files")
+def get_minigame_files(game_type: str):
+    folder_path = get_minigame_folder(game_type)
+    
+    if not os.path.exists(folder_path):
+        return {"success": False, "data": []}
+
+    files = [f for f in os.listdir(folder_path) if f.endswith('.json')]
+    return {"success": True, "data": files}
+
+# 2. API ĐỌC NỘI DUNG FILE
+@app.get("/api/campaign/minigame/questions")
+def get_minigame_questions(game_type: str, file_name: str):
+    folder_path = get_minigame_folder(game_type)
+    file_path = os.path.join(folder_path, file_name)
+    
+    if not os.path.exists(file_path):
+        return {"success": False, "message": "Không tìm thấy file!"}
+
+    try:
+        with open(file_path, 'r', encoding='utf-8') as f:
+            data = json.load(f)
+        if not isinstance(data, list): data = [data]
+        return {"success": True, "data": data}
+    except Exception as e:
+        return {"success": False, "message": f"Lỗi đọc file JSON: {e}"}
+# =====================================================================
+# [MODULE CHIẾN DỊCH] 5. API XUẤT QUÂN TỪ GIAO DIỆN (Dùng Node Code)
+# =====================================================================
+# =====================================================================
+# [BẢN ĐỒ GIAO THÔNG] ĐỊNH NGHĨA CÁC ĐƯỜNG NỐI & TÌM ĐƯỜNG
+# =====================================================================
+# Khai báo các đường nối với nhau (Ai đứng cạnh ai)
+CAMPAIGN_GRAPH = {
+    # Phe Thanh Long
+    "TL_BASE": ["TL_TOP_2", "TL_MID_2", "TL_BOT_2"],
+    "TL_TOP_2": ["TL_BASE", "TL_TOP_1", "TL_MID_2"], # Cho phép đổi đường (từ Top xuống Mid)
+    "TL_TOP_1": ["TL_TOP_2", "BH_TOP_1", "TL_MID_1"],
+    "TL_MID_2": ["TL_BASE", "TL_TOP_2", "TL_BOT_2", "TL_MID_1"],
+    "TL_MID_1": ["TL_MID_2", "TL_TOP_1", "TL_BOT_1", "BH_MID_1"],
+    "TL_BOT_2": ["TL_BASE", "TL_MID_2", "TL_BOT_1"],
+    "TL_BOT_1": ["TL_BOT_2", "TL_MID_1", "BH_BOT_1"],
+    
+    # Phe Bạch Hổ
+    "BH_BASE": ["BH_TOP_2", "BH_MID_2", "BH_BOT_2"],
+    "BH_TOP_2": ["BH_BASE", "BH_TOP_1", "BH_MID_2"],
+    "BH_TOP_1": ["BH_TOP_2", "TL_TOP_1", "BH_MID_1"],
+    "BH_MID_2": ["BH_BASE", "BH_TOP_2", "BH_BOT_2", "BH_MID_1"],
+    "BH_MID_1": ["BH_MID_2", "BH_TOP_1", "BH_BOT_1", "TL_MID_1"],
+    "BH_BOT_2": ["BH_BASE", "BH_MID_2", "BH_BOT_1"],
+    "BH_BOT_1": ["BH_BOT_2", "BH_MID_1", "TL_BOT_1"],
+}
+
+# Thuật toán đếm số bước chân (BFS - Tìm đường ngắn nhất)
+def get_path_distance(start_code: str, target_code: str) -> int:
+    if start_code == target_code: return 0
+    if start_code not in CAMPAIGN_GRAPH or target_code not in CAMPAIGN_GRAPH:
+        return 1 # Fallback mặc định
+    
+    queue = [(start_code, 0)]
+    visited = set([start_code])
+    
+    while queue:
+        current, dist = queue.pop(0)
+        if current == target_code:
+            return dist
+        
+        for neighbor in CAMPAIGN_GRAPH.get(current, []):
+            if neighbor not in visited:
+                visited.add(neighbor)
+                queue.append((neighbor, dist + 1))
+                
+    return 1 # Fallback nếu không tìm thấy đường
+
+@app.post("/api/campaign/{campaign_id}/march_by_code")
+def march_troops_by_code(campaign_id: int, req: MarchByCodeRequest, db: Session = Depends(get_db)):
+    try:
+        # 1. TÌM NGƯỜI CHƠI
+        player_base = db.exec(select(Player).where(Player.username == req.username)).first()
+        if not player_base:
+            return {"success": False, "message": "Không tìm thấy người chơi!"}
+
+        player = db.exec(select(CampaignPlayer).where(
+            CampaignPlayer.campaign_id == campaign_id, 
+            CampaignPlayer.player_id == player_base.id
+        )).first()
+        
+        # 2. TÌM CỨ ĐIỂM ĐÍCH THEO MÃ (VD: TL_MID_1)
+        target_node = db.exec(select(MapNode).where(
+            MapNode.campaign_id == campaign_id,
+            MapNode.node_code == req.target_node_code
+        )).first()
+        
+        if not player or not target_node:
+            return {"success": False, "message": "Dữ liệu chiến dịch hoặc cứ điểm không hợp lệ!"}
+            
+        # 3. KIỂM TRA ÁN PHẠT TỬ TRẬN (Giữ lại từ code cũ của bạn)
+        if player.respawn_at and datetime.now() < player.respawn_at:
+            wait_mins = int((player.respawn_at - datetime.now()).total_seconds() / 60)
+            return {"success": False, "message": f"💀 Đang trọng thương! Cần nghỉ ngơi {wait_mins} phút nữa."}
+
+        # 4. TÍNH TOÁN LỰC CHIẾN TỪ CHỦ TƯỚNG (Giữ lại chi tiết tên Tướng từ code cũ)
+        bonus_percent = 0.0
+        commander_name = "Vô Danh"
+        
+        if player.companion_id:
+            commander = db.get(Companion, player.companion_id)
+            if commander:
+                template = db.get(CompanionTemplate, commander.template_id)
+                if template:
+                    commander_name = commander.temp_name or template.name
+                    
+                    # Tính % Bonus theo độ hiếm và cấp sao bằng file config
+                    b_rate = {'R': getattr(cfg, 'BONUS_R', 0.02), 'SR': getattr(cfg, 'BONUS_SR', 0.04), 'SSR': getattr(cfg, 'BONUS_SSR', 0.06), 'USR': getattr(cfg, 'BONUS_USR', 0.08)}.get(template.rarity, 0)
+                    bonus_percent = b_rate + (commander.star * getattr(cfg, 'BONUS_PER_STAR', 0.01))
+
+        # 5. TÌM QUÂN ĐOÀN HIỆN TẠI (Logic MOBA mới - KHÔNG trừ lính kho nữa)
+        my_troop = db.exec(select(TroopMovement).where(
+            TroopMovement.campaign_id == campaign_id,
+            TroopMovement.player_id == player.player_id
+        )).first()
+
+        if not my_troop or my_troop.base_troops <= 0:
+            return {"success": False, "message": "Quân đoàn đang trống rỗng! Hãy về Nhà Chính bổ sung quân."}
+
+        if my_troop.status == "MARCHING":
+            return {"success": False, "message": "Quân đoàn đang hành quân, không thể bẻ lái giữa đường!"}
+
+        if my_troop.target_node_id == target_node.id:
+            return {"success": False, "message": "Tướng quân, chúng ta đang đóng quân tại đây rồi!"}
+
+        # 6. CẬP NHẬT LẠI LỰC CHIẾN 
+        # (Phòng hờ người chơi đứng ở trụ và lén thay Tướng mạnh hơn trước khi đi)
+        my_troop.bonus_percent = bonus_percent
+        my_troop.real_power = int(my_troop.base_troops + (my_troop.base_troops * bonus_percent))
+        # Lấy mã Cứ điểm xuất phát
+        current_node = db.get(MapNode, my_troop.target_node_id)
+        start_code = current_node.node_code if current_node else f"{player.faction[:2]}_BASE"
+        
+        # Gọi thuật toán quét bản đồ để đếm khoảng cách
+        distance = get_path_distance(start_code, target_node.node_code)
+
+        # 7. TÍNH THỜI GIAN ĐI ĐƯỜNG (Khoảng cách x Thời gian cơ bản)
+        if target_node.owner_faction == player.faction and not target_node.is_contested:
+            base_minutes = getattr(cfg, 'MARCH_TIME_ALLY_MINUTES', 1)
+        else:
+            base_minutes = getattr(cfg, 'MARCH_TIME_ENEMY_MINUTES', 2)
+            
+        total_march_minutes = base_minutes * distance # NHÂN LÊN VỚI SỐ BƯỚC ĐI
+        arrival_time = datetime.now() + timedelta(minutes=total_march_minutes)
+
+        # 8. CẬP NHẬT LỆNH HÀNH QUÂN MỚI 
+        my_troop.source_node_code = start_code # Ghi nhớ nơi đi
+        my_troop.target_node_id = target_node.id
+        my_troop.start_time = datetime.now()
+        my_troop.arrival_time = arrival_time
+        my_troop.status = "MARCHING"
+        
+        db.add(my_troop)
+        db.commit()
+
+        return {
+            "success": True, 
+            "message": f"🐎 {commander_name} dẫn {my_troop.base_troops} lính nhổ trại tới {target_node.name}. Khoảng cách: {distance} Trạm. Dự kiến {total_march_minutes} phút!"
+        }
+        
+    except Exception as e:
+        print(f"❌ LỖI HÀNH QUÂN:\n{traceback.format_exc()}")
+        return {"success": False, "message": "Lỗi hệ thống khi hành quân!"}
+
+# =====================================================================
+# [MODULE CHIẾN DỊCH] 6. API RÚT LUI (Hồi Thành Chiến Thuật)
+# =====================================================================
+@app.post("/api/campaign/{campaign_id}/recall")
+def recall_troops(campaign_id: int, req: BaseRequest, db: Session = Depends(get_db)):
+    try:
+        player_base = db.exec(select(Player).where(Player.username == req.username)).first()
+        player = db.exec(select(CampaignPlayer).where(CampaignPlayer.campaign_id == campaign_id, CampaignPlayer.player_id == player_base.id)).first()
+        
+        base_code = "TL_BASE" if player.faction == "THANH_LONG" else "BH_BASE"
+        base_node = db.exec(select(MapNode).where(MapNode.campaign_id == campaign_id, MapNode.node_code == base_code)).first()
+
+        if not base_node: return {"success": False, "message": "Lỗi DB: Bản đồ chưa khởi tạo Nhà Chính!"}
+
+        my_troop = db.exec(select(TroopMovement).where(TroopMovement.campaign_id == campaign_id, TroopMovement.player_id == player.player_id)).first()
+
+        if not my_troop: return {"success": False, "message": "Chưa xuất quân!"}
+        if my_troop.status == "MARCHING": return {"success": False, "message": "Quân đoàn đang di chuyển!"}
+        if my_troop.target_node_id == base_node.id: return {"success": False, "message": "Ngài đang ở Bệ Đá Cổ rồi!"}
+
+        my_troop.target_node_id = base_node.id
+        my_troop.source_node_code = None # Xóa dấu vết đường đi
+        my_troop.start_time = datetime.now()
+        my_troop.arrival_time = datetime.now() # Đến nơi ngay lập tức
+        my_troop.status = "GARRISONED" # Chuyển thành trạng thái Đang đồn trú tại Nhà chính
+
+        db.add(my_troop)
+        db.commit()
+
+        return {"success": True, "message": "✨ Dịch chuyển tức thời thành công! Toàn quân đã về tới Bệ Đá Cổ."}
+
+    except Exception as e:
+        print(f"❌ LỖI RECALL:\n{traceback.format_exc()}")
+        return {"success": False, "message": "Lỗi hệ thống khi biến về!"}
+# =====================================================================
+# [MODULE CHIẾN DỊCH] 7. API TÍNH TOÁN GIAO TRANH & CHIẾM THÀNH
+# =====================================================================
+@app.post("/api/campaign/{campaign_id}/node/{node_id}/resolve")
+def resolve_node_combat(campaign_id: int, node_id: int, db: Session = Depends(get_db)):
+    node = db.get(MapNode, node_id)
+    if not node:
+        return {"success": False, "message": "Cứ điểm không tồn tại"}
+
+    now = datetime.now()
+
+    # BƯỚC 1: ĐỔI TRẠNG THÁI "ĐANG ĐI" -> "ĐẾN NƠI (ĐÓNG QUÂN)"
+    arrived_troops = db.exec(select(TroopMovement).where(
+        TroopMovement.target_node_id == node_id,
+        TroopMovement.status == "MARCHING",
+        TroopMovement.arrival_time <= now
+    )).all()
+    
+    for t in arrived_troops:
+        t.status = "GARRISONED"
+    db.commit()
+
+    # BƯỚC 2: GOM QUÂN 2 PHE (Đang đóng quân tại Node này) ĐỂ CHUẨN BỊ XẾP HÀNG
+    # Lấy lính Thanh Long
+    tl_troops = db.exec(
+        select(TroopMovement, CampaignPlayer)
+        .join(CampaignPlayer, TroopMovement.player_id == CampaignPlayer.player_id)
+        .where(TroopMovement.target_node_id == node_id, TroopMovement.status == "GARRISONED", CampaignPlayer.faction == "THANH_LONG")
+        .order_by(TroopMovement.arrival_time) # Ai đến trước xếp trước
+    ).all()
+
+    # Lấy lính Bạch Hổ
+    bh_troops = db.exec(
+        select(TroopMovement, CampaignPlayer)
+        .join(CampaignPlayer, TroopMovement.player_id == CampaignPlayer.player_id)
+        .where(TroopMovement.target_node_id == node_id, TroopMovement.status == "GARRISONED", CampaignPlayer.faction == "BACH_HO")
+        .order_by(TroopMovement.arrival_time)
+    ).all()
+
+    # Chuyển thành list (mảng) để dễ pop (rút) người đứng đầu ra đánh
+    tl_queue = [{"troop": t, "player": p} for t, p in tl_troops if t.real_power > 0]
+    bh_queue = [{"troop": t, "player": p} for t, p in bh_troops if t.real_power > 0]
+
+    combat_logs = [] # Lưu lịch sử chém nhau để báo cáo cho người dùng
+
+    # BƯỚC 3: VÒNG LẶP GIAO TRANH TIÊN PHONG (1 vs 1)
+    while tl_queue and bh_queue:
+        tl_front = tl_queue[0]
+        bh_front = bh_queue[0]
+
+        tl_power = tl_front["troop"].real_power
+        bh_power = bh_front["troop"].real_power
+
+        if tl_power > bh_power:
+            # Thanh Long Thắng, Bạch Hổ Chết
+            tl_front["troop"].real_power -= bh_power
+            tl_front["player"].k_kills += 1  # Ăn mạng
+            
+            bh_front["troop"].real_power = 0
+            bh_front["troop"].status = "DEFEATED"
+            bh_front["player"].t_deaths += 1 # Bị giết
+            bh_front["player"].respawn_at = now + timedelta(minutes=cfg.RESPAWN_PENALTY_MINUTES)
+            # 👇 CHÈN GỌI HÀM VÀO ĐÂY (Thanh Long giết Bạch Hổ) 👇
+            killer_name = db.get(Player, tl_front["player"].player_id).username
+            victim_name = db.get(Player, bh_front["player"].player_id).username
+            process_kill_streak(db, campaign, tl_front["player"], bh_front["player"], killer_name, victim_name)
+            # 👆 KẾT THÚC CHÈN 👆
+            combat_logs.append(f"⚔️ {tl_front['player'].player_id} đánh bại {bh_front['player'].player_id}.")
+            bh_queue.pop(0) # Loại Bạch Hổ khỏi hàng đợi
+
+        elif bh_power > tl_power:
+            # Bạch Hổ Thắng, Thanh Long Chết
+            bh_front["troop"].real_power -= tl_power
+            bh_front["player"].k_kills += 1
+            
+            tl_front["troop"].real_power = 0
+            tl_front["troop"].status = "DEFEATED"
+            tl_front["player"].t_deaths += 1
+            tl_front["player"].respawn_at = now + timedelta(minutes=cfg.RESPAWN_PENALTY_MINUTES)
+            # 👇 CHÈN GỌI HÀM VÀO ĐÂY (Bạch Hổ giết Thanh Long) 👇
+            killer_name = db.get(Player, bh_front["player"].player_id).username
+            victim_name = db.get(Player, tl_front["player"].player_id).username
+            process_kill_streak(db, campaign, bh_front["player"], tl_front["player"], killer_name, victim_name)
+            # 👆 KẾT THÚC CHÈN 👆
+            combat_logs.append(f"⚔️ {bh_front['player'].player_id} đánh bại {tl_front['player'].player_id}.")
+            tl_queue.pop(0) # Loại Thanh Long khỏi hàng đợi
+            
+        else:
+            # Hòa (Chết cả 2)
+            tl_front["troop"].real_power = 0
+            tl_front["troop"].status = "DEFEATED"
+            tl_front["player"].t_deaths += 1
+            tl_front["player"].respawn_at = now + timedelta(minutes=cfg.RESPAWN_PENALTY_MINUTES)
+            
+            bh_front["troop"].real_power = 0
+            bh_front["troop"].status = "DEFEATED"
+            bh_front["player"].t_deaths += 1
+            bh_front["player"].respawn_at = now + timedelta(minutes=cfg.RESPAWN_PENALTY_MINUTES)
+            
+            combat_logs.append(f"⚔️ {tl_front['player'].player_id} và {bh_front['player'].player_id} đồng quy ư tận.")
+            tl_queue.pop(0)
+            bh_queue.pop(0)
+
+    # BƯỚC 4: LƯU TRẠNG THÁI LÍNH VÀ PLAYER VÀO DATABASE SAU KHI ĐÁNH XONG
+    for item in tl_troops + bh_troops:
+        db.add(item[0]) # Troop
+        db.add(item[1]) # Player
+
+    # BƯỚC 5: XỬ LÝ QUYỀN SỞ HỮU & CHIẾM THÀNH (60 PHÚT)
+    # Tìm xem phe nào còn sống (còn GARRISONED)
+    tl_survivors = len(tl_queue) > 0
+    bh_survivors = len(bh_queue) > 0
+
+    if tl_survivors and not bh_survivors:
+        occupying_faction = "THANH_LONG"
+    elif bh_survivors and not tl_survivors:
+        occupying_faction = "BACH_HO"
+    else:
+        occupying_faction = None # Không còn ai sống sót ở cái thành này
+
+    # A. Nếu kẻ đang chiếm đóng KHÁC với chủ sở hữu hiện tại -> Kích hoạt tranh chấp
+    if occupying_faction and occupying_faction != node.owner_faction:
+        if not node.is_contested:
+            # Bắt đầu đếm ngược cắm cờ 60 phút
+            node.is_contested = True
+            node.capture_start_time = now
+            combat_logs.append(f"🚩 Phe {occupying_faction} đã dọn sạch phòng thủ! Bắt đầu đếm ngược chiếm cứ điểm.")
+        else:
+            # Nếu Đang tranh chấp rồi, kiểm tra xem đã đủ 60 phút chưa?
+            time_held = (now - node.capture_start_time).total_seconds() / 60
+            if time_held >= cfg.DEFEND_TO_CAPTURE_MINUTES:
+                # 🎊 ĐỔI CHỦ THÀNH CÔNG!
+                node.owner_faction = occupying_faction
+                node.is_contested = False
+                node.capture_start_time = None
+                combat_logs.append(f"🏰 CHIẾM THÀNH CÔNG! Cứ điểm nay thuộc về phe {occupying_faction}.")
+                
+    # B. Nếu chủ sở hữu hiện tại lấy lại được quyền kiểm soát (Đánh đuổi được kẻ tấn công)
+    elif occupying_faction == node.owner_faction and node.is_contested:
+        # Hủy bỏ quá trình tranh chấp
+        node.is_contested = False
+        node.capture_start_time = None
+        combat_logs.append(f"🛡️ Phe {node.owner_faction} đã bảo vệ thành công Cứ điểm!")
+
+    db.add(node)
+    db.commit()
+
+    return {
+        "success": True,
+        "logs": combat_logs,
+        "current_owner": node.owner_faction,
+        "is_contested": node.is_contested,
+        "capture_start_time": node.capture_start_time.isoformat() if node.capture_start_time else None
+    }
+
+# =====================================================================
+# [MODULE CHIẾN DỊCH] 8. API LẤY TRẠNG THÁI BẢN ĐỒ (Dành cho Frontend)
+# =====================================================================
+
+@app.get("/api/campaign/state")
+def get_campaign_state(username: str, db: Session = Depends(get_db)):
+    try:
+        try:
+            import campaign_config as cfg
+        except ImportError:
+            import sys, os
+            # Tự động trỏ vào thư mục hiện tại nếu Python không tìm thấy
+            sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+            import campaign_config as cfg
+            
+        player = db.exec(select(Player).where(Player.username == username)).first()
+        if not player: return {"success": False, "message": "Không tìm thấy người chơi"}
+
+        # 🔥 SỬA BUG 1: Dạy API tìm cả chiến dịch đang Báo danh (REGISTERING) và Khai chiến (ACTIVE)
+        campaign = db.exec(
+            select(Campaign)
+            .where(Campaign.status.in_(["REGISTERING", "ACTIVE"]))
+        ).first()
+        if not campaign: return {"success": False, "message": "Hiện không có chiến dịch nào đang diễn ra!"}
+
+        # Lấy thông tin người chơi (Có thể c_player = None nếu họ chưa bấm nút Báo danh)
+        c_player = db.exec(select(CampaignPlayer).where(
+            CampaignPlayer.campaign_id == campaign.id, CampaignPlayer.player_id == player.id
+        )).first()
+
+        # 1. Lấy thông tin Chủ Tướng (Chỉ lấy khi ĐÃ BÁO DANH)
+        commander_info = None
+        if c_player and c_player.companion_id:
+            comp = db.get(Companion, c_player.companion_id)
+            template = db.get(CompanionTemplate, comp.template_id) if comp else None
+            if comp and template:
+                base = {'R': getattr(cfg, 'BONUS_R', 0.02), 'SR': getattr(cfg, 'BONUS_SR', 0.04), 'SSR': getattr(cfg, 'BONUS_SSR', 0.06), 'USR': getattr(cfg, 'BONUS_USR', 0.08)}.get(template.rarity, 0)
+                commander_info = {
+                    "name": comp.temp_name or template.name, "image_url": template.image_path,
+                    "rarity": template.rarity, "stars": comp.star, "total_bonus": int(round((base + (comp.star * getattr(cfg, 'BONUS_PER_STAR', 0.01))) * 100))
+                }
+
+        # 2. Xử lý thông tin CỦA BẢN THÂN (Bọc bằng if c_player để bảo vệ)
+        my_current_troops = 0
+        my_location = None
+        
+        if c_player:
+            my_troop = db.exec(select(TroopMovement).where(TroopMovement.campaign_id == campaign.id, TroopMovement.player_id == player.id)).first()
+            if my_troop:
+                if my_troop.real_power > 0:
+                    my_current_troops = my_troop.base_troops
+                
+                if my_troop.status == "GARRISONED":
+                    loc_node = db.get(MapNode, my_troop.target_node_id)
+                    if loc_node: my_location = loc_node.node_code
+
+        # 3. Lấy DANH SÁCH TÊN NGƯỜI CHƠI TRÊN SA BÀN (Trụ)
+        garrisoned_troops = db.exec(
+            select(TroopMovement.target_node_id, Player.username)
+            .join(Player, TroopMovement.player_id == Player.id) 
+            .where(
+                TroopMovement.campaign_id == campaign.id, 
+                TroopMovement.status == "GARRISONED", 
+                TroopMovement.real_power > 0
+            )
+        ).all()
+        
+        players_in_nodes = {}
+        for node_id, uname in garrisoned_troops:
+            if node_id not in players_in_nodes:
+                players_in_nodes[node_id] = []
+            players_in_nodes[node_id].append(uname)
+
+        # 4. Quét toàn bộ Cứ Điểm
+        nodes = db.exec(select(MapNode).where(MapNode.campaign_id == campaign.id)).all()
+        node_data = {}
+        for n in nodes:
+            defenders_sum = db.exec(select(func.sum(TroopMovement.real_power)).where(
+                TroopMovement.target_node_id == n.id, TroopMovement.status == "GARRISONED"
+            )).first()
+            
+            capture_end = None
+            if n.is_contested and n.capture_start_time:
+                defend_time = getattr(cfg, 'DEFEND_TO_CAPTURE_MINUTES', 60)
+                capture_end = (n.capture_start_time + timedelta(minutes=defend_time)).isoformat()
+
+            node_data[n.node_code] = {
+                "owner": n.owner_faction,
+                "troops": int(defenders_sum) if defenders_sum else 0,
+                "is_contested": n.is_contested,
+                "contesting_faction": n.contesting_faction,
+                "capture_end_time": capture_end,
+                "players": players_in_nodes.get(n.id, []) 
+            }
+
+        # 5. Quét Radar lấy các đạo quân đang chạy
+        active_movements = db.exec(select(TroopMovement).where(TroopMovement.campaign_id == campaign.id, TroopMovement.status == "MARCHING")).all()
+        movements_data = []
+        for m in active_movements:
+            m_player = db.exec(select(CampaignPlayer).where(CampaignPlayer.player_id == m.player_id, CampaignPlayer.campaign_id == campaign.id)).first()
+            target_node = db.get(MapNode, m.target_node_id)
+            if m_player and target_node:
+                movements_data.append({
+                    "id": m.id, "faction": m_player.faction,
+                    "start_code": m.source_node_code, "target_code": target_node.node_code,
+                    "start_time": m.start_time.isoformat(), "arrival_time": m.arrival_time.isoformat()
+                })
+
+        # 6. Lấy danh sách tên người đã báo danh cho Sảnh Lobby
+        registered_players = db.exec(
+            select(CampaignPlayer.faction, Player.username)
+            .join(Player, CampaignPlayer.player_id == Player.id)
+            .where(CampaignPlayer.campaign_id == campaign.id)
+        ).all()
+        
+        lobby_players = {"THANH_LONG": [], "BACH_HO": []}
+        for faction, uname in registered_players:
+            if faction in lobby_players:
+                lobby_players[faction].append(uname)
+                
+        # Tính số lượng thay vì phải query SQL thêm lần nữa (tối ưu tốc độ)
+        tl_count = len(lobby_players["THANH_LONG"])
+        bh_count = len(lobby_players["BACH_HO"])
+        # 🔴 1. TÍNH TOÁN GIỚI HẠN KHO CHO 2 PHE
+        try:
+            import campaign_config as cfg
+        except ImportError:
+            import sys, os
+            sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+            import campaign_config as cfg
+
+        base_cap = getattr(cfg, 'BASE_TROOP_CAPACITY', 100)
+        per_level = getattr(cfg, 'CAPACITY_PER_LEVEL', 20)
+
+        # Gom tất cả người chơi phe Thanh Long và Bạch Hổ lại
+        tl_players = db.exec(select(CampaignPlayer).where(CampaignPlayer.campaign_id == campaign.id, CampaignPlayer.faction == "THANH_LONG")).all()
+        bh_players = db.exec(select(CampaignPlayer).where(CampaignPlayer.campaign_id == campaign.id, CampaignPlayer.faction == "BACH_HO")).all()
+
+        # =================================================================
+        # 🔥 CODE ĐÃ SỬA CHUẨN XÁC: HÀM TÍNH SỨC CHỨA CÓ BONUS
+        # =================================================================
+        def get_capacity_with_bonus(player):
+            # 1. Tính sức chứa cơ bản
+            base_capacity = base_cap + (player.legion_level - 1) * per_level
+            bonus_percent = 0
+            
+            # 2. Tính bonus từ Chủ Tướng (Copy y chang logic commander_info của bạn)
+            if getattr(player, 'companion_id', None):
+                comp = db.get(Companion, player.companion_id)
+                template = db.get(CompanionTemplate, comp.template_id) if comp else None
+                
+                if comp and template:
+                    base = {'R': getattr(cfg, 'BONUS_R', 0.02), 'SR': getattr(cfg, 'BONUS_SR', 0.04), 'SSR': getattr(cfg, 'BONUS_SSR', 0.06), 'USR': getattr(cfg, 'BONUS_USR', 0.08)}.get(template.rarity, 0)
+                    # Tính ra con số phần trăm nguyên (ví dụ 10)
+                    bonus_percent = int(round((base + (comp.star * getattr(cfg, 'BONUS_PER_STAR', 0.01))) * 100))
+            
+            # 3. Tính tổng sức chứa (Cộng phần trăm và Làm tròn xuống)
+            import math
+            return math.floor(base_capacity * (1 + (bonus_percent / 100.0)))
+
+        # Cộng dồn sức chứa (Đã áp dụng bonus) của từng người cho 2 phe
+        tl_max_vault = sum([get_capacity_with_bonus(p) for p in tl_players]) if tl_players else 0
+        bh_max_vault = sum([get_capacity_with_bonus(p) for p in bh_players]) if bh_players else 0
+        # =================================================================
+        # =================================================================
+        # 🔥 SỬA BUG 3: Bọc c_player lại bằng lệnh if c_player else ... để không bị sập Server
+        return {
+            "success": True, 
+            "is_frozen": is_campaign_frozen(),
+            "status": campaign.status, 
+            "campaign_id": campaign.id, 
+            "end_time": campaign.end_time.isoformat() if campaign.end_time else None,
+            "tl_max_vault": tl_max_vault, 
+            "bh_max_vault": bh_max_vault, 
+            "lobby_counts": {"THANH_LONG": tl_count, "BACH_HO": bh_count},
+            "lobby_players": lobby_players, # 🚨 ĐÃ BỔ SUNG: Dòng này quan trọng nhất để Frontend có danh sách tên!
+            "my_faction": c_player.faction if c_player else None, 
+            "my_level": c_player.legion_level if c_player else 1,
+            "scores": {
+                "THANH_LONG": round(campaign.tl_victory_points, 1),
+                "BACH_HO": round(campaign.bh_victory_points, 1)
+            },
+            "my_commander": commander_info, 
+            "my_legion_troops": my_current_troops, 
+            "my_location": my_location,
+            "k_kills": c_player.k_kills if c_player else 0, 
+            "t_deaths": c_player.t_deaths if c_player else 0, 
+            "h_hau_phuong": c_player.h_hau_phuong if c_player else 0,
+            "vaults": {"THANH_LONG": campaign.tl_troops_vault, "BACH_HO": campaign.bh_troops_vault},
+            "respawn_at": c_player.respawn_at.isoformat() if c_player and c_player.respawn_at else None,
+            "nodes": node_data, "movements": movements_data
+        }
+    except Exception as e:
+        import traceback
+        print(f"❌ LỖI LOAD MAP:\n{traceback.format_exc()}")
+        return {"success": False, "message": "Lỗi hệ thống khi tải bản đồ!"}
+# =====================================================================
+# [MODULE CHIẾN DỊCH] QUẢN LÝ MÙA GIẢI & PHÒNG CHỜ BÁO DANH
+# =====================================================================
+
+# 1. API ADMIN: Mở Chiến Dịch Mùa Mới
+@app.post("/api/admin/campaign/create")
+def admin_create_campaign(db: Session = Depends(get_db)):
+    # Kiểm tra xem có chiến dịch nào đang chạy hoặc đang báo danh không
+    existing = db.exec(select(Campaign).where(Campaign.status.in_(["ACTIVE", "REGISTERING"]))).first()
+    if existing:
+        return {"success": False, "message": f"Đang có chiến dịch Mùa {existing.id} ở trạng thái {existing.status}!"}
+
+    # Đếm số lượng chiến dịch để tự động tăng số Mùa (Mùa 1, Mùa 2...)
+    total_campaigns = len(db.exec(select(Campaign)).all())
+    next_season = total_campaigns + 1
+
+    new_campaign = Campaign(
+        name=f"Mùa {next_season}: Quần Anh Tranh Tài",
+        status="REGISTERING", # Trạng thái BÁO DANH (Chưa đánh được)
+        tl_troops_vault=0,
+        bh_troops_vault=0
+    )
+    db.add(new_campaign)
+    db.commit()
+    return {"success": True, "message": f"Loa loa! Đã mở báo danh Chiến dịch Mùa {next_season}!"}
+
+# 2. API: Lấy thông tin Phòng Chờ (Lobby)
+@app.get("/api/campaign/lobby")
+def get_campaign_lobby(db: Session = Depends(get_db)):
+    campaign = db.exec(select(Campaign).where(Campaign.status == "REGISTERING")).first()
+    if not campaign:
+        return {"success": False, "message": "Hiện không có phòng chờ báo danh nào."}
+
+    # Lấy danh sách người chơi đã báo danh
+    players = db.exec(select(CampaignPlayer, Player).join(Player, CampaignPlayer.player_id == Player.id).where(CampaignPlayer.campaign_id == campaign.id)).all()
+    
+    tl_players = [p.Player.username for p in players if p.CampaignPlayer.faction == "THANH_LONG"]
+    bh_players = [p.Player.username for p in players if p.CampaignPlayer.faction == "BACH_HO"]
+
+    return {
+        "success": True,
+        "campaign_id": campaign.id,
+        "campaign_name": campaign.name,
+        "tl_players": tl_players,
+        "bh_players": bh_players
+    }
+
+# 5. API ADMIN: Kết Thúc Mùa Giải Hiện Tại
+@app.post("/api/admin/campaign/close")
+def admin_close_campaign(db: Session = Depends(get_db)):
+    try:
+        # Tìm chiến dịch đang chạy hoặc đang báo danh
+        active_campaign = db.exec(select(Campaign).where(Campaign.status.in_(["ACTIVE", "REGISTERING"]))).first()
+        
+        if not active_campaign:
+            return {"success": False, "message": "Không có mùa giải nào đang diễn ra để kết thúc!"}
+
+        # Đổi trạng thái thành ENDED và chốt thời gian
+        active_campaign.status = "ENDED"
+        active_campaign.end_time = datetime.now()
+        
+        db.add(active_campaign)
+        db.commit()
+
+        return {"success": True, "message": f"🛑 Đã kết thúc {active_campaign.name} thành công! Hãy mở mùa giải mới."}
+        
+    except Exception as e:
+        print(f"❌ LỖI ĐÓNG MÙA GIẢI: {e}")
+        return {"success": False, "message": "Lỗi hệ thống khi đóng mùa giải!"}
+
+@app.post("/api/campaign/join")
+def join_campaign(req: JoinFactionRequest, db: Session = Depends(get_db)):
+    campaign = db.exec(select(Campaign).where(Campaign.status == "REGISTERING")).first()
+    if not campaign:
+        return {"success": False, "message": "Đã hết hạn báo danh, chiến dịch đang diễn ra!"}
+
+    player = db.exec(select(Player).where(Player.username == req.username)).first()
+    if not player:
+        return {"success": False, "message": "Lỗi: Không tìm thấy tài khoản!"}
+
+    c_player = db.exec(select(CampaignPlayer).where(CampaignPlayer.campaign_id == campaign.id, CampaignPlayer.player_id == player.id)).first()
+
+    # Xử lý Rút lui
+    if req.faction == "LEAVE":
+        if c_player:
+            db.delete(c_player)
+            db.commit()
+        return {"success": True, "message": "Đã rút lui khỏi chiến dịch!"}
+
+    # Xử lý Báo danh
+    if c_player:
+        c_player.faction = req.faction # Đổi phe
+    else:
+        c_player = CampaignPlayer(
+            campaign_id=campaign.id,
+            player_id=player.id,
+            faction=req.faction,
+            legion_level=1,
+            merit_points=0
+        )
+        db.add(c_player)
+        
+    db.commit()
+    faction_name = "Thanh Long" if req.faction == "THANH_LONG" else "Bạch Hổ"
+    return {"success": True, "message": f"Đã ghi danh vào phe {faction_name}!"}
+
+# 4. API ADMIN: Bắt Đầu Chiến Dịch
+@app.post("/api/admin/campaign/start")
+def admin_start_campaign(db: Session = Depends(get_db)):
+    campaign = db.exec(select(Campaign).where(Campaign.status == "REGISTERING")).first()
+    if not campaign:
+        return {"success": False, "message": "Không có chiến dịch nào đang trong giai đoạn báo danh!"}
+
+    # ==========================================
+    # 🔥 THÊM LOGIC TÍNH TOÁN THỜI GIAN MÙA GIẢI
+    # ==========================================
+    from datetime import datetime, timedelta
+    try:
+        import campaign_config as cfg
+    except ImportError:
+        import sys, os
+        sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+        import campaign_config as cfg
+
+    now = datetime.now()
+    # Lấy số giờ giới hạn từ config, nếu quên chưa set thì mặc định là 48h
+    duration_hours = getattr(cfg, 'CAMPAIGN_DURATION_HOURS', 48) 
+
+    # Ghi nhận giờ khai chiến và giờ kết thúc vào Database
+    campaign.start_time = now
+    campaign.end_time = now + timedelta(hours=duration_hours)
+    # ==========================================
+
+    # Chuyển trạng thái sang ACTIVE (Bản đồ sẽ mở)
+    campaign.status = "ACTIVE"
+    
+    # Sinh ra 14 Cứ điểm trên bản đồ (Gồm 2 Nhà Chính + 12 Trụ)
+    # Format: (Mã, Tên Cứ Điểm, Phe, VP mỗi giờ)
+    nodes_data = [
+        # --- NHÀ CHÍNH (Không sinh điểm VP) ---
+        ("TL_BASE", "Bệ Đá Cổ (Thanh Long)", "THANH_LONG", 0),
+        ("BH_BASE", "Bệ Đá Cổ (Bạch Hổ)", "BACH_HO", 0),
+        
+        # --- 12 TRỤ (Sinh 1 điểm VP/giờ) ---
+        ("TL_TOP_2", "Trụ 2 Sơn Lâm (TL)", "THANH_LONG", 1), ("TL_TOP_1", "Trụ 1 Sơn Lâm (TL)", "THANH_LONG", 1),
+        ("BH_TOP_1", "Trụ 1 Sơn Lâm (BH)", "BACH_HO", 1), ("BH_TOP_2", "Trụ 2 Sơn Lâm (BH)", "BACH_HO", 1),
+        ("TL_MID_2", "Trụ 2 Đồng Bằng (TL)", "THANH_LONG", 1), ("TL_MID_1", "Trụ 1 Đồng Bằng (TL)", "THANH_LONG", 1),
+        ("BH_MID_1", "Trụ 1 Đồng Bằng (BH)", "BACH_HO", 1), ("BH_MID_2", "Trụ 2 Đồng Bằng (BH)", "BACH_HO", 1),
+        ("TL_BOT_2", "Trụ 2 Duyên Hải (TL)", "THANH_LONG", 1), ("TL_BOT_1", "Trụ 1 Duyên Hải (TL)", "THANH_LONG", 1),
+        ("BH_BOT_1", "Trụ 1 Duyên Hải (BH)", "BACH_HO", 1), ("BH_BOT_2", "Trụ 2 Duyên Hải (BH)", "BACH_HO", 1),
+    ]
+    
+    for code, name, faction, vp in nodes_data:
+        node = MapNode(
+            campaign_id=campaign.id, 
+            node_code=code, 
+            name=name, 
+            owner_faction=faction, 
+            is_contested=False,
+            vp_per_hour=vp
+        )
+        db.add(node)
+        
+    db.commit()
+    return {"success": True, "message": f"🔥 CHIẾN DỊCH {campaign.name} CHÍNH THỨC BẮT ĐẦU!"}
+
+# =====================================================================
+# [MODULE CHIẾN DỊCH] TRÁI TIM HỆ THỐNG: ENGINE XỬ LÝ CHIẾN ĐẤU
+# =====================================================================
+engine_run_count = 0 
+
+def process_campaign_battles(db):
+    try:
+        import campaign_config as cfg
+    except ImportError:
+        import sys, os
+        sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+        import campaign_config as cfg
+        
+    penalty_mins = getattr(cfg, 'RESPAWN_PENALTY_MINUTES', 1) # Lấy cấu hình phạt thời gian
+    now = datetime.now()
+    arrived_movements = db.exec(select(TroopMovement).where(
+        TroopMovement.status == "MARCHING", TroopMovement.arrival_time <= now
+    ).order_by(TroopMovement.arrival_time)).all()
+
+    if not arrived_movements: return
+    campaign = db.get(Campaign, arrived_movements[0].campaign_id)
+    if not campaign: return
+
+    # 🔥 BỔ SUNG: Tìm tọa độ 2 Nhà Chính để làm "Điểm Hồi Sinh"
+    tl_base = db.exec(select(MapNode).where(MapNode.campaign_id == campaign.id, MapNode.node_code == "TL_BASE")).first()
+    bh_base = db.exec(select(MapNode).where(MapNode.campaign_id == campaign.id, MapNode.node_code == "BH_BASE")).first()
+
+    for movement in arrived_movements:
+        target_node = db.get(MapNode, movement.target_node_id)
+        
+        c_player = db.exec(select(CampaignPlayer).where(
+            CampaignPlayer.player_id == movement.player_id, CampaignPlayer.campaign_id == campaign.id
+        )).first()
+
+        if not c_player or not target_node: continue
+        player_faction = c_player.faction
+        
+        defenders = db.exec(select(TroopMovement).where(
+            TroopMovement.target_node_id == target_node.id, TroopMovement.status == "GARRISONED"
+        ).order_by(TroopMovement.id)).all()
+
+        total_defense = sum(d.real_power for d in defenders)
+        attack_power = movement.real_power
+
+        defender_faction = target_node.owner_faction
+        if target_node.is_contested and target_node.contesting_faction:
+            defender_faction = target_node.contesting_faction
+
+        # 1. TIẾP VIỆN ĐỒNG MINH
+        if player_faction == defender_faction:
+            movement.status = "GARRISONED"
+            db.add(movement)
+            c_player.h_hau_phuong += 1
+            db.add(c_player)
+            continue
+
+        # CHUẨN BỊ DỮ LIỆU TÊN CHO CHIẾN BÁO
+        attacker_p = db.get(Player, movement.player_id)
+        attacker_name = attacker_p.username if attacker_p else "Vô danh"
+        attacker_faction_tag = "(TL)" if player_faction == "THANH_LONG" else "(BH)"
+
+        enemy_names = []
+        for d in defenders:
+            enemy_p = db.get(Player, d.player_id)
+            if enemy_p and enemy_p.username not in enemy_names:
+                enemy_names.append(enemy_p.username)
+        
+        enemy_str = ", ".join(enemy_names) if enemy_names else "Phiến quân"
+
+        target_faction_tag = ""
+        if defender_faction == "THANH_LONG": target_faction_tag = "(TL)"
+        elif defender_faction == "BACH_HO": target_faction_tag = "(BH)"
+        full_target_name = f"{target_node.name} {target_faction_tag}".strip()
+
+
+        # 2. ĐÁNH NHAU
+        if attack_power > total_defense:
+            # TẤN CÔNG THẮNG (Phe thủ chết sạch)
+            for d in defenders:
+                c_player.k_kills += 1 
+                def_player = db.exec(select(CampaignPlayer).where(
+                    CampaignPlayer.player_id == d.player_id, CampaignPlayer.campaign_id == campaign.id
+                )).first()
+                
+                if def_player:
+                    def_player.t_deaths += 1 
+                    def_player.respawn_at = now + timedelta(minutes=penalty_mins)
+                    db.add(def_player)
+                    # 👇 CHÈN GỌI HÀM VÀO ĐÂY (Trong vòng lặp giết từng người) 👇
+                    victim_name = db.get(Player, def_player.player_id).username
+                    process_kill_streak(db, campaign, c_player, def_player, killer_name, victim_name)
+                    # 👆 KẾT THÚC CHÈN 👆
+                    # 🔥 Kéo xác phe THỦ về Nhà Chính
+                    base_node = tl_base if def_player.faction == "THANH_LONG" else bh_base
+                    if base_node: d.target_node_id = base_node.id
+                    
+            db.add(c_player) 
+            
+            remaining_real_power = attack_power - total_defense
+            remaining_troops = int(remaining_real_power / (1 + movement.bonus_percent))
+            
+            new_report = BattleReport(
+                campaign_id=campaign.id, player_id=movement.player_id, faction=player_faction,
+                type="PERSONAL", title="⚔️ ĐẠI THẮNG",
+                content=f"Bạn đã đánh bại quân đoàn địch [{enemy_str}] tại {full_target_name}.\n📈 Thiệt hại: -{movement.base_troops - remaining_troops} lính.\n📉 Quân số còn lại: {remaining_troops}."
+            )
+            db.add(new_report)
+
+            ally_report = BattleReport(
+                campaign_id=campaign.id, player_id=0, faction=player_faction,
+                type="ALLY", title="🛡️ TIẾP BÁO",
+                content=f"Đồng đội [{attacker_name}] vừa bảo vệ/đánh chiếm thành công {full_target_name} từ tay [{enemy_str}]!"
+            )
+            db.add(ally_report)
+            
+            movement.real_power = remaining_real_power
+            movement.base_troops = remaining_troops 
+            movement.status = "GARRISONED" 
+            db.add(movement)
+
+            # --- LOGIC CỜ VÀNG ---
+            if target_node.owner_faction == player_faction:
+                target_node.is_contested = False
+                target_node.contesting_faction = None
+                target_node.capture_start_time = None
+            else:
+                target_node.is_contested = True
+                target_node.contesting_faction = player_faction
+                target_node.capture_start_time = now
+            db.add(target_node)
+            
+            # Cập nhật trạng thái những kẻ thủ thành bại trận thành "Đang GARRISONED ở Nhà Chính với 0 lính"
+            for d in defenders:
+                d.status = "GARRISONED" 
+                d.real_power = 0
+                d.base_troops = 0 
+                db.add(d)
+            
+        else:
+            # TẤN CÔNG THUA (Phe công chết sạch)
+            c_player.t_deaths += 1
+            c_player.respawn_at = now + timedelta(minutes=penalty_mins)
+            db.add(c_player)
+            
+            # 🔥 Kéo xác phe CÔNG về Nhà Chính
+            base_node = tl_base if player_faction == "THANH_LONG" else bh_base
+            if base_node: movement.target_node_id = base_node.id
+            
+            lose_report = BattleReport(
+                campaign_id=campaign.id, player_id=movement.player_id, faction=player_faction,
+                type="PERSONAL", title="💀 THẢM BẠI",
+                content=f"Quân đoàn của bạn đã bị [{enemy_str}] tiêu diệt tại {full_target_name}.\n📈 Thiệt hại: -{movement.base_troops} lính.\n📉 Quân số còn lại: 0."
+            )
+            db.add(lose_report)
+            
+            # Gán trạng thái cho kẻ Tấn công
+            movement.status = "GARRISONED"
+            movement.real_power = 0
+            movement.base_troops = 0
+            db.add(movement)
+
+            remaining_damage = attack_power
+            for d in defenders:
+                if remaining_damage <= 0: break
+                
+                def_player = db.exec(select(CampaignPlayer).where(
+                    CampaignPlayer.player_id == d.player_id, CampaignPlayer.campaign_id == campaign.id
+                )).first()
+                
+                if d.real_power <= remaining_damage:
+                    remaining_damage -= d.real_power
+                    
+                    if def_player:
+                        def_player.t_deaths += 1
+                        def_player.respawn_at = now + timedelta(minutes=penalty_mins)
+                        db.add(def_player)
+                        # 🔥 Kéo xác những người THỦ chết chùm về Nhà Chính
+                        base_node = tl_base if def_player.faction == "THANH_LONG" else bh_base
+                        if base_node: d.target_node_id = base_node.id
+                        
+                    c_player.k_kills += 1 
+                    db.add(c_player)
+                    
+                    # Gán trạng thái cho kẻ Thủ bị kéo theo
+                    d.status = "GARRISONED"
+                    d.real_power = 0
+                    d.base_troops = 0
+                else:
+                    d.real_power -= remaining_damage
+                    d.base_troops = int(d.real_power / (1 + d.bonus_percent)) 
+                    remaining_damage = 0
+                    
+                    if def_player:
+                        def_player.k_kills += 1
+                        db.add(def_player)
+                        
+                db.add(d)
+                
+    db.commit()
+
+# API Bổ Sung Quân (Hồi máu ở Bệ Đá Cổ)
+@app.post("/api/campaign/{campaign_id}/replenish")
+def replenish_troops(campaign_id: int, req: BaseRequest, db: Session = Depends(get_db)):
+    try:
+        player_base = db.exec(select(Player).where(Player.username == req.username)).first()
+        player = db.exec(select(CampaignPlayer).where(CampaignPlayer.campaign_id == campaign_id, CampaignPlayer.player_id == player_base.id)).first()
+        campaign = db.get(Campaign, campaign_id)
+        
+        if not player or not campaign: return {"success": False, "message": "Dữ liệu không hợp lệ!"}
+
+        if player.respawn_at and datetime.now() < player.respawn_at:
+            wait_mins = int((player.respawn_at - datetime.now()).total_seconds() / 60)
+            return {"success": False, "message": f"💀 Đang trọng thương! Chờ {wait_mins} phút."}
+
+        # Tìm đúng mã Nhà Chính
+        base_code = "TL_BASE" if player.faction == "THANH_LONG" else "BH_BASE"
+        base_node = db.exec(select(MapNode).where(MapNode.campaign_id == campaign_id, MapNode.node_code == base_code)).first()
+
+        if not base_node: return {"success": False, "message": "❌ Lỗi DB: Bản đồ chưa khởi tạo Nhà Chính!"}
+
+        my_troop = db.exec(select(TroopMovement).where(TroopMovement.campaign_id == campaign_id, TroopMovement.player_id == player.player_id)).first()
+
+        # Nếu chưa xuất quân lần nào -> Tạo thẳng ở Base
+        if not my_troop:
+            my_troop = TroopMovement(
+                campaign_id=campaign_id, player_id=player.player_id,
+                target_node_id=base_node.id, base_troops=0, bonus_percent=0.0, real_power=0,
+                start_time=datetime.now(), arrival_time=datetime.now(), status="GARRISONED"
+            )
+            db.add(my_troop)
+            db.commit()
+            db.refresh(my_troop)
+
+        if my_troop.status == "MARCHING": return {"success": False, "message": "Quân đoàn đang di chuyển, không thể tiếp tế!"}
+        if my_troop.target_node_id != base_node.id: return {"success": False, "message": "Bạn phải Rút Lui về Bệ Đá Cổ mới có thể bổ sung binh lực!"}
+
+        # =====================================================================
+        # BƯỚC 1: LẤY % BONUS CỦA CHỦ TƯỚNG (Đưa lên trên cùng)
+        # =====================================================================
+        bonus_percent = 0.0
+        if player.companion_id:
+            comp = db.get(Companion, player.companion_id)
+            if comp:
+                template = db.get(CompanionTemplate, comp.template_id)
+                if template:
+                    b_rate = {'R': getattr(cfg, 'BONUS_R', 0.02), 'SR': getattr(cfg, 'BONUS_SR', 0.04), 'SSR': getattr(cfg, 'BONUS_SSR', 0.06), 'USR': getattr(cfg, 'BONUS_USR', 0.08)}.get(template.rarity, 0)
+                    bonus_percent = b_rate + (comp.star * getattr(cfg, 'BONUS_PER_STAR', 0.01))
+
+        # =====================================================================
+        # BƯỚC 2: TÍNH MAX_CAPACITY (ĐÃ CỘNG BONUS) VÀ KIỂM TRA SỨC CHỨA
+        # =====================================================================
+        import math
+        base_capacity = getattr(cfg, 'BASE_TROOP_CAPACITY', 100) + (player.legion_level - 1) * getattr(cfg, 'CAPACITY_PER_LEVEL', 20)
+        max_capacity = math.floor(base_capacity * (1 + bonus_percent))
+        
+        troops_needed = max_capacity - my_troop.base_troops
+
+        if troops_needed <= 0: return {"success": False, "message": "Quân đoàn đã đầy sức chứa!"}
+
+        # =====================================================================
+        # BƯỚC 3: RÚT LÍNH TỪ KHO PHE VÀ CỘNG CHO PLAYER
+        # =====================================================================
+        faction_vault = campaign.tl_troops_vault if player.faction == "THANH_LONG" else campaign.bh_troops_vault
+        if faction_vault <= 0: return {"success": False, "message": "Kho dự trữ đã cạn kiệt!"}
+
+        troops_to_take = min(troops_needed, faction_vault)
+        if player.faction == "THANH_LONG": 
+            campaign.tl_troops_vault -= troops_to_take
+        else: 
+            campaign.bh_troops_vault -= troops_to_take
+
+        my_troop.base_troops += troops_to_take
+        my_troop.bonus_percent = bonus_percent
+        # Lưu ý: Sức mạnh thực chiến (real_power) sẽ được tính buff lên thêm dựa trên số lính base * bonus_percent
+        my_troop.real_power = int(my_troop.base_troops + (my_troop.base_troops * bonus_percent))
+        my_troop.status = "GARRISONED" 
+
+        db.add(campaign)
+        db.add(my_troop)
+        db.commit()
+
+        return {"success": True, "message": f"💊 Đã bổ sung {troops_to_take} lính vào Quân đoàn!"}
+
+    except Exception as e:
+        import traceback
+        print(f"❌ LỖI REPLENISH:\n{traceback.format_exc()}")
+        return {"success": False, "message": "Lỗi hệ thống khi nạp quân!"}
+
+# =========================================================
+# VÒNG LẶP ENGINE CHIẾN ĐẤU (DÙNG ĐA LUỒNG - THREADING)
+# =========================================================
+engine_run_count = 0
+
+def campaign_engine_worker():
+    global engine_run_count
+    print("\n" + "="*50)
+    print("🚀 BATTLE ENGINE (THREADING): Đã khởi động luồng độc lập!")
+    print("="*50 + "\n")
+    
+    while True:
+        time.sleep(5)  # Nghỉ 5 giây (Dùng time.sleep chuẩn của Python)
+        engine_run_count += 1
+        
+        try:
+            # Lấy Session DB
+            db_gen = get_db()
+            db = next(db_gen)
+            try:
+                process_campaign_battles(db)
+                
+                # In log mỗi 60 giây (12 vòng x 5s)
+                if engine_run_count % 12 == 0:
+                    print(f"[{datetime.now().strftime('%H:%M:%S')}] ⚔️ Thread Engine vẫn đang soi sa bàn... (Vòng {engine_run_count})")
+            finally:
+                try:
+                    next(db_gen) # Đóng kết nối DB
+                except StopIteration:
+                    pass
+        except Exception as e:
+            print(f"❌ LỖI TRONG THREAD COMBAT: {e}")
+
+
+@app.post("/api/campaign/set-commander")
+def set_campaign_commander(req: SetCommanderRequest, db: Session = Depends(get_db)):
+    try:
+        player = db.exec(select(Player).where(Player.username == req.username)).first()
+        campaign = db.exec(select(Campaign).where(Campaign.status == "ACTIVE")).first()
+        
+        if not player or not campaign:
+            return {"success": False, "message": "Không tìm thấy dữ liệu người chơi hoặc chiến dịch đang mở!"}
+
+        c_player = db.exec(select(CampaignPlayer).where(
+            CampaignPlayer.campaign_id == campaign.id,
+            CampaignPlayer.player_id == player.id
+        )).first()
+
+        if not c_player:
+            return {"success": False, "message": "Bạn chưa báo danh tham gia mùa giải này!"}
+
+        # Lấy thông tin Đồng hành
+        companion = db.get(Companion, req.companion_id)
+        if not companion or companion.player_id != player.id:
+            return {"success": False, "message": "Đồng hành không hợp lệ hoặc không thuộc quyền sở hữu của bạn!"}
+
+        # LẤY TÊN TỪ BẢNG TEMPLATE
+        template = db.get(CompanionTemplate, companion.template_id)
+        display_name = companion.temp_name or (template.name if template else "Vô Danh")
+
+        c_player.companion_id = req.companion_id
+        db.add(c_player)
+        db.commit()
+
+        return {
+            "success": True, 
+            "message": f"🚩 Đã bổ nhiệm {display_name} làm Chủ Tướng dẫn quân!"
+        }
+    except Exception as e:
+        print(f"❌ Lỗi Set Commander: {e}")
+        return {"success": False, "message": "Lỗi hệ thống khi thiết lập Chủ Tướng"}
+
+@app.get("/api/companions/my-list")
+def get_my_companions(username: str, db: Session = Depends(get_db)):
+    # 1. Tìm người chơi
+    player = db.exec(select(Player).where(Player.username == username)).first()
+    if not player:
+        return {"success": False, "companions": [], "message": "Không tìm thấy người chơi"}
+
+    # 2. Truy vấn gộp (JOIN) giữa thẻ thực tế và phôi thẻ
+    statement = select(Companion, CompanionTemplate).join(
+        CompanionTemplate, Companion.template_id == CompanionTemplate.template_id
+    ).where(Companion.player_id == player.id)
+    
+    results = db.exec(statement).all()
+
+    if not results:
+        return {"success": True, "companions": [], "message": "Bạn chưa sở hữu đồng hành nào"}
+
+    # 3. Lấy dữ liệu chính xác từ từng bảng và TỰ ĐỘNG TÍNH BONUS
+    companions_data = []
+    for comp, template in results:
+        # Lấy Bonus gốc từ campaign_config (cfg)
+        base = 0.0
+        if template.rarity == 'R': base = cfg.BONUS_R
+        elif template.rarity == 'SR': base = cfg.BONUS_SR
+        elif template.rarity == 'SSR': base = cfg.BONUS_SSR
+        elif template.rarity == 'USR': base = cfg.BONUS_USR
+        
+        star_bonus = comp.star * cfg.BONUS_PER_STAR
+        total_bonus_pct = int(round((base + star_bonus) * 100))
+
+        companions_data.append({
+            "id": comp.id, 
+            "name": comp.temp_name or template.name, 
+            "rarity": template.rarity, 
+            "stars": comp.star,        
+            "image_url": template.image_path,
+            "total_bonus": total_bonus_pct # <--- Tính xong gửi thẳng ra Frontend!
+        })
+
+    return {
+        "success": True,
+        "companions": companions_data
+    }
+# =========================================================
+# API KIỂM TRA TRẠNG THÁI (ĐỂ BẠN YÊN TÂM)
+# =========================================================
+@app.get("/api/campaign/engine-status")
+def check_engine_status():
+    global engine_run_count
+    if engine_thread.is_alive():
+        return {"success": True, "message": f"✅ HOÀN HẢO! Thread Engine đang hoạt động cực mạnh. Đã quét {engine_run_count} vòng."}
+    return {"success": False, "message": "❌ THREAD ĐÃ CHẾT!"}
+
+# =====================================================================
+# [GAME LOOP] XỬ LÝ TRANH CHẤP TRỤ VÀ ĐIỂM CHIẾN DỊCH (CHẠY MỖI PHÚT)
+# =====================================================================
+async def campaign_game_loop():
+    print("🚀 BATTLE ENGINE: Đã khởi động hệ thống điều hành tập trung!")
+    
+    while True:
+        await asyncio.sleep(5) # Chạy mỗi 5 giây
+        
+        # 🔥 BƯỚC 1: KIỂM TRA GIỜ ĐÓNG BĂNG (MÚI GIỜ VN)
+        # Nếu đang trong giờ đóng băng, bỏ qua toàn bộ logic bên dưới
+        if is_campaign_frozen():
+            # Chỉ in log một lần mỗi khi đóng băng để tránh rác console
+            if not hasattr(campaign_game_loop, "frozen_logged"):
+                print("❄️ [HỆ THỐNG] Chiến trường đã đóng băng. Tạm dừng mọi hoạt động chém giết và cộng điểm.")
+                campaign_game_loop.frozen_logged = True
+            continue 
+        
+        # Nếu không đóng băng thì reset lại flag log để lần sau in tiếp
+        campaign_game_loop.frozen_logged = False
+
+        try:
+            with Session(engine) as db:
+                # 1. XỬ LÝ TRẬN ĐÁNH (Sẽ bị dừng nếu ở trên continue)
+                process_campaign_battles(db)
+                
+                # 2. KIỂM TRA CHIẾM ĐÓNG & CỘNG ĐIỂM (Chạy mỗi 30s)
+                if not hasattr(campaign_game_loop, "counter"): campaign_game_loop.counter = 0
+                campaign_game_loop.counter += 5
+                
+                if campaign_game_loop.counter >= 30:
+                    campaign_game_loop.counter = 0
+                    
+                    campaign = db.exec(select(Campaign).where(Campaign.status == "ACTIVE")).first()
+                    if campaign:
+                        now = datetime.now()
+                        nodes = db.exec(select(MapNode).where(MapNode.campaign_id == campaign.id)).all()
+                        
+                        is_game_over = False
+                        winner_faction = ""
+                        
+                        for node in nodes:
+                            # 1. Kiểm tra hết giờ tranh chấp
+                            if node.is_contested and node.capture_start_time:
+                                defend_time = getattr(cfg, 'DEFEND_TO_CAPTURE_MINUTES', 60)
+                                if now >= node.capture_start_time + timedelta(minutes=defend_time):
+                                    node.owner_faction = node.contesting_faction
+                                    node.is_contested = False
+                                    node.contesting_faction = None
+                                    node.capture_start_time = None
+                                    db.add(node)
+                            
+                            # 2. CỘNG ĐIỂM (VP) - Phần này sẽ dừng sinh điểm khi đóng băng do lệnh continue ở trên
+                            if not node.is_contested and "BASE" not in node.node_code and node.owner_faction:
+                                vp_reward = (node.vp_per_hour or 1) / 120.0
+                                if node.owner_faction == "THANH_LONG":
+                                    campaign.tl_victory_points += float(vp_reward)
+                                elif node.owner_faction == "BACH_HO":
+                                    campaign.bh_victory_points += float(vp_reward)
+
+                            # 3. KIỂM TRA ĐIỀU KIỆN CHIẾN THẮNG TUYỆT ĐỐI
+                            if node.node_code == "BH_BASE" and node.owner_faction == "THANH_LONG":
+                                is_game_over = True
+                                winner_faction = "THANH_LONG"
+                            elif node.node_code == "TL_BASE" and node.owner_faction == "BACH_HO":
+                                is_game_over = True
+                                winner_faction = "BACH_HO"
+                        
+                        db.add(campaign)
+                        
+                        # ======================================================
+                        # 4. LOGIC KẾT THÚC GAME & PHÁT THƯỞNG (DÙNG BIẾN CONFIG)
+                        # ======================================================
+                        if is_game_over:
+                            winner_display_name = "Thanh Long" if winner_faction == "THANH_LONG" else "Bạch Hổ"
+                            print(f"🏆 KẾT THÚC MÙA GIẢI: PHE {winner_display_name.upper()} ĐÃ GIÀNH CHIẾN THẮNG!")
+                            
+                            campaign.status = "FINISHED"
+                            campaign.end_time = now # Ghi nhận thời gian kết thúc
+                            
+                            # Bắn chiến báo hệ thống
+                            victory_report = BattleReport(
+                                campaign_id=campaign.id,
+                                player_id=0,
+                                faction="ALL",
+                                type="SYSTEM",
+                                title="🏆 ĐẠI THẮNG MÙA GIẢI",
+                                content=f"Vang dội đất trời! Quân đoàn {winner_display_name} đã xuất sắc đập tan Nhà Chính địch, giành vị trí Độc Tôn!\nPhần thưởng đã được gửi vào kho đồ các Lãnh chúa."
+                            )
+                            db.add(victory_report)
+                            
+                            # Quét danh sách người tham gia để phát thưởng
+                            participants = db.exec(select(CampaignPlayer).where(CampaignPlayer.campaign_id == campaign.id)).all()
+                            
+                            for p_record in participants:
+                                actual_player = db.get(Player, p_record.player_id)
+                                if not actual_player: continue
+                                
+                                # SỬ DỤNG ĐÚNG TÊN BIẾN TRONG FILE CONFIG CỦA BẠN
+                                if p_record.faction == winner_faction:
+                                    reward_kpi = getattr(cfg, 'WIN_REWARD_KPI', 20)
+                                    reward_tri_thuc = getattr(cfg, 'WIN_REWARD_TRI_THUC', 50)
+                                    reward_chien_tich = getattr(cfg, 'WIN_REWARD_CHIEN_TICH', 10)
+                                    status_text = "Chiến thắng"
+                                else:
+                                    reward_kpi = getattr(cfg, 'LOSE_REWARD_KPI', 10)
+                                    reward_tri_thuc = getattr(cfg, 'LOSE_REWARD_TRI_THUC', 10)
+                                    reward_chien_tich = getattr(cfg, 'LOSE_REWARD_CHIEN_TICH', 3)
+                                    status_text = "Tham gia"
+                                
+                                # Cộng tài nguyên cho người chơi
+                                actual_player.kpi = (actual_player.kpi or 0) + reward_kpi
+                                actual_player.tri_thuc = (actual_player.tri_thuc or 0) + reward_tri_thuc
+                                actual_player.chien_tich = (actual_player.chien_tich or 0) + reward_chien_tich
+                                db.add(actual_player)
+                                from database import ScoreLog
+                                # Ghi log nhận thưởng để user dễ theo dõi trong hồ sơ
+                                log = ScoreLog(
+                                    target_id=actual_player.id,
+                                    target_name=actual_player.username,
+                                    sender_id=0,
+                                    sender_name="Hệ Thống",
+                                    category="TÀI NGUYÊN",
+                                    description=f"Thưởng {status_text} chiến dịch mùa này: +{reward_kpi} KPI, +{reward_tri_thuc} Tri Thức, +{reward_chien_tich} Chiến Tích.",
+                                    value_change=reward_kpi
+                                )
+                                db.add(log)
+                                
+                            print(f"🎁 Đã phát thưởng thành công cho {len(participants)} lãnh chúa tham gia!")
+
+                db.commit() # Một lệnh Commit duy nhất cho tất cả thay đổi
+                
+        except Exception as e:
+            import traceback
+            print(f"❌ LỖI ENGINE TỔNG HỢP: {traceback.format_exc()}")
+
+@app.get("/api/campaign/reports")
+def get_battle_reports(username: str, db: Session = Depends(get_db)):
+    try:
+        player = db.exec(select(Player).where(Player.username == username)).first()
+        campaign = db.exec(select(Campaign).where(Campaign.status == "ACTIVE")).first()
+        if not player or not campaign: return {"success": False, "data": []}
+
+        c_player = db.exec(select(CampaignPlayer).where(
+            CampaignPlayer.player_id == player.id,
+            CampaignPlayer.campaign_id == campaign.id
+        )).first()
+        if not c_player: return {"success": False, "data": []}
+
+        # LẤY 30 CHIẾN BÁO MỚI NHẤT DÀNH CHO NGƯỜI NÀY
+        # Gồm: Tin của riêng mình + Tin đồng minh cùng phe + Tin Hệ thống
+        reports = db.exec(
+            select(BattleReport).where(
+                BattleReport.campaign_id == campaign.id,
+                or_(
+                    BattleReport.player_id == player.id,  # Tin Cá nhân
+                    (BattleReport.type == "ALLY") & (BattleReport.faction == c_player.faction), # Tin Phe
+                    BattleReport.type == "SYSTEM"         # Tin Thế giới
+                )
+            ).order_by(BattleReport.timestamp.desc()).limit(30)
+        ).all()
+
+        data = []
+        for r in reports:
+            data.append({
+                "id": r.id,
+                "type": r.type,
+                "title": r.title,
+                "content": r.content,
+                "time": r.timestamp.strftime('%H:%M')
+            })
+            
+        return {"success": True, "data": data}
+        
+    except Exception as e:
+        import traceback
+        print(f"❌ LỖI LẤY CHIẾN BÁO: {traceback.format_exc()}")
+        return {"success": False, "data": []}
+
+@app.get("/api/campaign/last-result")
+def get_campaign_last_result(db: Session = Depends(get_db)):
+    try:
+        # 1. Tìm chiến dịch vừa mới FINISHED gần nhất
+        last_campaign = db.exec(
+            select(Campaign)
+            .where(Campaign.status == "FINISHED")
+            .order_by(Campaign.end_time.desc())
+        ).first()
+        
+        if not last_campaign:
+            return {"success": False, "message": "Chưa có chiến dịch nào."}
+            
+        # ==========================================
+        # 🔥 ĐỊNH ĐOẠT PHE CHIẾN THẮNG THEO LUẬT CHƠI
+        # ==========================================
+        winner = "DRAW" # Mặc định là hòa
+        
+        # 🚨 BẮT BUỘC: Phải lọc theo campaign_id để không lấy nhầm Nhà Chính mùa trước
+        tl_base = db.exec(
+            select(MapNode)
+            .where(MapNode.campaign_id == last_campaign.id)
+            .where(MapNode.node_code == "TL_BASE")
+        ).first()
+        
+        bh_base = db.exec(
+            select(MapNode)
+            .where(MapNode.campaign_id == last_campaign.id)
+            .where(MapNode.node_code == "BH_BASE")
+        ).first()
+        
+        # ĐIỀU KIỆN 1: Chiếm được Nhà Chính của địch (Kiểm tra xem owner_faction đã bị đổi chưa)
+        if tl_base and tl_base.owner_faction == "BACH_HO":
+            winner = "BACH_HO"
+        elif bh_base and bh_base.owner_faction == "THANH_LONG":
+            winner = "THANH_LONG"
+        else:
+            # ĐIỀU KIỆN 2: Không ai mất Nhà Chính -> Xét theo Điểm Chiến Dịch (Victory Points)
+            if last_campaign.tl_victory_points > last_campaign.bh_victory_points:
+                winner = "THANH_LONG"
+            elif last_campaign.bh_victory_points > last_campaign.tl_victory_points:
+                winner = "BACH_HO"
+
+        # ==========================================
+        # LẤY DỮ LIỆU NGƯỜI CHƠI & PHONG THẦN
+        # ==========================================
+        players = db.exec(
+            select(CampaignPlayer, Player.username)
+            .join(Player, CampaignPlayer.player_id == Player.id)
+            .where(CampaignPlayer.campaign_id == last_campaign.id)
+        ).all()
+        
+        thanh_long = []
+        bach_ho = []
+        
+        # 3. Tìm các kỷ lục K, T, H
+        max_k, max_h = 0, 0
+        min_t = 999999
+        
+        for cp, _ in players:
+            if cp.k_kills > max_k: max_k = cp.k_kills
+            if cp.h_hau_phuong > max_h: max_h = cp.h_hau_phuong
+            if cp.t_deaths < min_t: min_t = cp.t_deaths
+            
+        if min_t == 999999: min_t = 0 # Tránh lỗi nếu chưa ai chết
+            
+        # 4. Trao danh hiệu & Phân loại phe
+        for cp, username in players:
+            titles = []
+            if cp.k_kills == max_k and max_k > 0: titles.append("👑 Chiến Thần")
+            if cp.h_hau_phuong == max_h and max_h > 0: titles.append("🛡️ Hậu Phương Thép")
+            if cp.t_deaths == min_t: titles.append("🏃 Kẻ Sinh Tồn")
+            
+            p_data = {
+                "username": username,
+                "k": cp.k_kills,
+                "t": cp.t_deaths,
+                "h": cp.h_hau_phuong,
+                "titles": titles
+            }
+            
+            if cp.faction == "THANH_LONG": thanh_long.append(p_data)
+            else: bach_ho.append(p_data)
+                
+        # Sắp xếp danh sách theo Kills giảm dần
+        thanh_long.sort(key=lambda x: x['k'], reverse=True)
+        bach_ho.sort(key=lambda x: x['k'], reverse=True)
+        
+        return {
+            "success": True,
+            "campaign_name": last_campaign.name,
+            "winner": winner,  # Trả về kết quả phe thắng/thua/hòa
+            "tl_score": round(last_campaign.tl_victory_points, 1), # Gửi điểm về giao diện chờ
+            "bh_score": round(last_campaign.bh_victory_points, 1),
+            "thanh_long": thanh_long,
+            "bach_ho": bach_ho
+        }
+    except Exception as e:
+        import traceback
+        print(f"❌ LỖI LẤY KẾT QUẢ: {traceback.format_exc()}")
+        return {"success": False}
+
+@app.get("/api/dev/reset-map")
+def force_reset_campaign(db: Session = Depends(get_db)):
+    """API bí mật dành cho Dev để dọn dẹp các chiến dịch bị kẹt"""
+    try:
+        # 1. Ép tất cả các chiến dịch đang kẹt về trạng thái FINISHED
+        stuck_campaigns = db.exec(select(Campaign).where(Campaign.status != "FINISHED")).all()
+        for c in stuck_campaigns:
+            c.status = "FINISHED"
+            db.add(c)
+            
+        # 2. Quét sạch toàn bộ lính đang kẹt trên bản đồ
+        all_movements = db.exec(select(TroopMovement)).all()
+        for mov in all_movements:
+            db.delete(mov)
+            
+        # 3. Trả toàn bộ trụ về trạng thái trung lập ban đầu
+        nodes = db.exec(select(MapNode)).all()
+        for node in nodes:
+            node.is_contested = False
+            node.contesting_faction = None
+            node.capture_start_time = None
+            if "TL_" in node.node_code:
+                node.owner_faction = "THANH_LONG"
+            elif "BH_" in node.node_code:
+                node.owner_faction = "BACH_HO"
+            else:
+                node.owner_faction = None
+            db.add(node)
+            
+        db.commit()
+        return {"success": True, "message": "🧹 Đã dọn dẹp sạch sẽ toàn bộ rác sa bàn! Bạn có thể báo danh lại."}
+        
+    except Exception as e:
+        db.rollback()
+        return {"success": False, "message": str(e)}
+
+# 2. API GỬI TIN NHẮN CHAT
+@app.post("/api/campaign/chat")
+def send_chat_message(req: ChatRequest, db: Session = Depends(get_db)):
+    try:
+        player = db.exec(select(Player).where(Player.username == req.username)).first()
+        campaign = db.exec(select(Campaign).where(Campaign.status == "ACTIVE")).first()
+        if not player or not campaign: return {"success": False, "message": "Chiến dịch chưa mở!"}
+
+        c_player = db.exec(select(CampaignPlayer).where(
+            CampaignPlayer.campaign_id == campaign.id,
+            CampaignPlayer.player_id == player.id
+        )).first()
+        if not c_player: return {"success": False, "message": "Bạn chưa báo danh!"}
+
+        if not req.message.strip(): return {"success": False, "message": "Tin nhắn trống!"}
+
+        # Lưu vào Database
+        new_chat = CampaignChat(
+            campaign_id=campaign.id,
+            sender_name=player.username,
+            faction=c_player.faction,
+            message=req.message[:255], # Giới hạn 255 ký tự chống spam
+            channel=req.channel
+        )
+        db.add(new_chat)
+        db.commit()
+        return {"success": True}
+    except Exception as e:
+        print(f"Lỗi gửi Chat: {e}")
+        return {"success": False, "message": "Lỗi hệ thống!"}
+
+# 3. API LẤY DANH SÁCH TIN NHẮN
+@app.get("/api/campaign/chat")
+def get_chat_messages(username: str, db: Session = Depends(get_db)):
+    try:
+        player = db.exec(select(Player).where(Player.username == username)).first()
+        campaign = db.exec(select(Campaign).where(Campaign.status == "ACTIVE")).first()
+        if not player or not campaign: return {"success": False, "data": []}
+
+        c_player = db.exec(select(CampaignPlayer).where(
+            CampaignPlayer.campaign_id == campaign.id,
+            CampaignPlayer.player_id == player.id
+        )).first()
+        if not c_player: return {"success": False, "data": []}
+
+        # Lọc tin nhắn: Lấy kênh "TẤT CẢ" HOẶC (kênh "ĐỒNG MINH" + đúng phe của mình)
+        chats = db.exec(
+            select(CampaignChat)
+            .where(
+                CampaignChat.campaign_id == campaign.id,
+                or_(
+                    CampaignChat.channel == "ALL",
+                    and_(CampaignChat.channel == "ALLY", CampaignChat.faction == c_player.faction)
+                )
+            )
+            .order_by(CampaignChat.timestamp.desc())
+            .limit(50) # Lấy 50 tin mới nhất
+        ).all()
+
+        data = []
+        # Đảo ngược mảng để tin mới nhất nằm ở dưới cùng khung chat
+        for c in reversed(chats): 
+            data.append({
+                "id": c.id,
+                "sender": c.sender_name,
+                "faction": c.faction,
+                "message": c.message,
+                "channel": c.channel,
+                "time": c.timestamp.strftime('%H:%M')
+            })
+        
+        return {"success": True, "data": data}
+    except Exception as e:
+        print(f"Lỗi lấy Chat: {e}")
+        return {"success": False, "data": []}
+
+#hàm check để gọi danh hiệu liên sát
+def process_kill_streak(db, campaign, killer_player, victim_player, killer_name: str, victim_name: str):
+    """ Hàm tính toán và sinh ra thông báo Chuỗi Hạ Gục """
+    now = datetime.now()
+    announcement_msg = None
+
+    # 1. Nạn nhân bị giết -> Reset chuỗi về 0
+    victim_player.current_kill_streak = 0
+
+    # 2. Kiểm tra chuỗi của Kẻ Tồn Tại (Thời gian 60 phút)
+    if killer_player.last_kill_time and (now - killer_player.last_kill_time) <= timedelta(minutes=60):
+        killer_player.current_kill_streak += 1
+    else:
+        # Nếu quá 60 phút mới giết mạng tiếp theo -> Tính lại từ 1
+        killer_player.current_kill_streak = 1
+        
+    killer_player.last_kill_time = now
+
+    # 3. Phán xét danh hiệu
+    if not campaign.first_blood_claimed:
+        campaign.first_blood_claimed = True
+        announcement_msg = f"🩸 <b>{killer_name}</b> đã hạ gục <b>{victim_name}</b> - đạt được <span class='text-red-500'>ĐẦU DANH TRẠNG!</span>"
+    elif killer_player.current_kill_streak == 2:
+        announcement_msg = f"⚔️ <b>{killer_name}</b> đã hạ gục <b>{victim_name}</b> - đạt được <span class='text-yellow-400'>SONG SÁT!</span>"
+    elif killer_player.current_kill_streak >= 3:
+        announcement_msg = f"🔥 <b>{killer_name}</b> đã hạ gục <b>{victim_name}</b> - Đạt được liên sát và trở thành <span class='text-purple-500 font-black'>SÁT THẦN!</span>"
+
+    # 4. Phát loa thông báo toàn bản đồ (Mượn bảng Chat để lưu thông báo)
+    if announcement_msg:
+        sys_msg = CampaignChat(
+            campaign_id=campaign.id,
+            sender_name="SYSTEM_KILL_ANNOUNCEMENT", # Phải là sender_name
+            faction="SYSTEM",                       # Phải có faction
+            channel="ALL",
+            message=announcement_msg,               # Phải là message
+            timestamp=now
+        )
+        db.add(sys_msg)
+        
+    db.commit()
 
 
 

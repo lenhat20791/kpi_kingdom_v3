@@ -452,6 +452,116 @@ class Companion(SQLModel, table=True):
     is_equipped: bool = Field(default=False)
     slot_index: int = Field(default=0)
 
+# ==========================================
+# 1. BẢNG CHIẾN DỊCH (Quản lý Mùa giải & Kho Chung)
+# ==========================================
+class Campaign(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    name: str = Field(index=True) # VD: "Mùa 1: Khởi Nguyên"
+    status: str = Field(default="REGISTERING") # REGISTERING, ACTIVE, ENDED
+    
+    # Kho Lính Chung
+    tl_troops_vault: int = Field(default=0) # Lính phe Thanh Long
+    bh_troops_vault: int = Field(default=0) # Lính phe Bạch Hổ
+    
+    # Điểm Chiến Dịch (VP)
+    tl_victory_points: int = Field(default=0)
+    bh_victory_points: int = Field(default=0)
+    
+    start_time: Optional[datetime] = None
+    end_time: Optional[datetime] = None
+    first_blood_claimed: bool = Field(default=False)
+
+# ==========================================
+# 2. BẢNG QUÂN ĐOÀN CÁ NHÂN (Người chơi tham gia)
+# ==========================================
+class CampaignPlayer(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    campaign_id: int = Field(foreign_key="campaign.id")
+    player_id: int = Field(foreign_key="player.id")
+    
+    faction: str = Field(...) # "THANH_LONG" hoặc "BACH_HO"
+    
+    # Khóa Chủ Tướng
+    companion_id: Optional[int] = Field(default=None, foreign_key="companion.id") 
+    
+    # Hệ thống Luyện Quân
+    legion_level: int = Field(default=1)
+    legion_exp: int = Field(default=0)
+    
+    # Bảng Phong Thần (K-T-H)
+    k_kills: int = Field(default=0)
+    t_deaths: int = Field(default=0)
+    h_hau_phuong: int = Field(default=0)
+    total_troops_farmed: int = Field(default=0)
+    
+    # Trạng thái Sinh Tử
+    respawn_at: Optional[datetime] = None # Thời gian sống lại (Nếu đang chết)
+    current_kill_streak: int = Field(default=0)
+    last_kill_time: datetime = Field(default=None, nullable=True)
+
+# ==========================================
+# 3. BẢNG BẢN ĐỒ / CỨ ĐIỂM (Map Nodes)
+# ==========================================
+class MapNode(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    campaign_id: int = Field(foreign_key="campaign.id")
+    
+    node_code: str = Field(...) # VD: "TL_TOP_1", "BH_MID_2", "TL_BASE"
+    name: str = Field(...) # VD: "Trụ 1 Sơn Lâm (Thanh Long)"
+    
+    # Quyền sở hữu & Trạng thái chiếm đóng
+    owner_faction: str = Field(...) # Phe đang kiểm soát
+    is_contested: bool = Field(default=False) # Đang bị tranh chấp (đếm ngược 60p)
+    contesting_faction: Optional[str] = Field(default=None)
+    capture_start_time: Optional[datetime] = None # Thời điểm bắt đầu thủ 60p
+    
+    vp_per_hour: int = Field(default=1) # Điểm chiến dịch sinh ra mỗi giờ
+
+# ==========================================
+# 4. BẢNG ĐẠO QUÂN (Hành quân & Giao tranh)
+# ==========================================
+class TroopMovement(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    campaign_id: int = Field(foreign_key="campaign.id")
+    player_id: int = Field(foreign_key="player.id")
+    target_node_id: int = Field(foreign_key="mapnode.id")
+    source_node_code: str | None = Field(default=None)
+    
+    # Quân lực
+    base_troops: int = Field(...) # Lính gốc mang theo
+    bonus_percent: float = Field(...) # % Bonus của Tướng lúc xuất phát
+    real_power: int = Field(...) # Lực chiến thực tế (Gốc + Bonus)
+    
+    # Thời gian & Trạng thái
+    start_time: datetime = Field(...)
+    arrival_time: datetime = Field(...)
+    
+    # Trạng thái đạo quân: "MARCHING" (Đang đi), "GARRISONED" (Đang đồn trú/thủ), "RECALLING" (Đang chạy về)
+    status: str = Field(default="MARCHING")
+    
+# Bảng lưu trữ Chiến báo
+class BattleReport(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    campaign_id: int = Field(index=True)
+    
+    player_id: int = Field(index=True) # Người nhận tin (để filter "Cá nhân")
+    faction: str # Phe của người nhận tin
+    
+    type: str # "PERSONAL", "ALLY", "SYSTEM"
+    title: str # Ví dụ: "Đại thắng", "Thảm bại", "Chiếm thành"
+    content: str # Nội dung chi tiết trận đánh
+    timestamp: datetime = Field(default_factory=datetime.now)
+
+# Bảng lưu trữ Chat Chiến dịch
+class CampaignChat(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    campaign_id: int = Field(index=True)
+    sender_name: str
+    faction: str
+    message: str
+    channel: str # "ALL" hoặc "ALLY"
+    timestamp: datetime = Field(default_factory=datetime.now)
 if __name__ == "__main__":
     create_db_and_tables()
     print(f"✅ Đã khởi tạo thành công Database tại: {DB_PATH}")
