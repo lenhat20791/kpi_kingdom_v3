@@ -5584,7 +5584,9 @@
         async function addNotification(type) {
             const inputId = type === 'marquee' ? 'marquee-input' : 'popup-input';
             const input = document.getElementById(inputId);
-            const content = input.value.trim();
+            
+            // 🔥 ĐIỂM CHỐT CHẶN: Thêm .replace(/\n/g, '<br>') vào ngay đây
+            const content = input.value.trim().replace(/\n/g, '<br>');
             
             if (!content) return alert("Vui lòng nhập nội dung!");
 
