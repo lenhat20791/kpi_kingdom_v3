@@ -129,13 +129,15 @@ class ActiveEffect(SQLModel, table=True):
     expire_time: float
 # 6
 class Question(SQLModel, table=True):
+    # __tablename__ = "question"  # Bật dòng này nếu ngài muốn quản lý tên bảng
     id: Optional[int] = Field(default=None, primary_key=True)
-    subject: str
-    content: str
-    options_json: str
-    correct_answer: str
-    difficulty: int = 1
-    Field(default=6)
+    grade: int = Field(default=6)                  # Khối lớp
+    subject: str                                   # Môn học
+    content: str                                   # Nội dung
+    options_json: str                              # Các lựa chọn
+    correct_answer: str                            # Đáp án đúng
+    difficulty: str = Field(default="medium")      # Đã đổi sang chuỗi (string)
+    question_type: str = Field(default="normal")   # 🔥 CỘT CHỐT CHẶN MỚI
 # 7. Bảng Quản lý Boss (Lưu cấu hình)
 class Boss(SQLModel, table=True):
     __tablename__ = "bosses" # Quy ước số nhiều
@@ -562,6 +564,7 @@ class CampaignChat(SQLModel, table=True):
     message: str
     channel: str # "ALL" hoặc "ALLY"
     timestamp: datetime = Field(default_factory=datetime.now)
+    
 if __name__ == "__main__":
     create_db_and_tables()
     print(f"✅ Đã khởi tạo thành công Database tại: {DB_PATH}")

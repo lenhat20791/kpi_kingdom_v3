@@ -843,95 +843,108 @@ def attack_boss(req: AttackRequest, db: Session = Depends(get_db)):
 @app.get("/api/boss/get-question")
 def get_boss_question(boss_id: int, db: Session = Depends(get_db)):
     try:
-        # 1. Tìm Boss để biết Môn học (subject) và Khối lớp (grade)
+        # ==========================================
+        # 1. TÌM BOSS VÀ PHÂN LOẠI ĐỘ KHÓ
+        # ==========================================
         boss = db.get(Boss, boss_id)
         if not boss:
             return JSONResponse(status_code=404, content={"message": "Không tìm thấy Boss!"})
-        # Phân loại độ khó câu hỏi dựa trên sức mạnh của Boss (Ví dụ qua ATK)
-        if boss.atk >= 1000:
-            target_diff = "hell"
-        elif boss.atk >= 500:
-            target_diff = "extreme"
-        elif boss.atk >= 200:
-            target_diff = "hard"
-        else:
-            target_diff = "medium"
-
-        search_subject = f"boss-{boss.subject.lower()}"
-        # 2. Lấy câu hỏi với điều kiện linh hoạt chữ hoa/thường
-        statement = select(QuestionBank).where(
-            # Sử dụng func.lower để so sánh không phân biệt hoa thường
-            func.lower(QuestionBank.subject) == search_subject,
-            QuestionBank.grade == boss.grade,
-            QuestionBank.difficulty == target_diff
-        ).order_by(func.random()).limit(1)
-        
-        q = db.exec(statement).first()
-        
-        if not q:
-            # Nếu không tìm thấy câu đúng yêu cầu, lấy 1 câu ngẫu nhiên bất kỳ để game ko bị treo
-            statement = select(QuestionBank).order_by(func.random()).limit(1)
-            q = db.exec(statement).first()
-        
-        if not q:
-            return JSONResponse(status_code=404, content={"message": "Kho câu hỏi trống!"})
-
-        # 2. XỬ LÝ ĐÁP ÁN (QUAN TRỌNG)
-        # QuestionBank lưu đáp án kiểu: '["Màu Đỏ", "Màu Xanh", "Màu Vàng", "Màu Tím"]'
-        try:
-            # Giải nén chuỗi JSON thành List Python
-            options_list = json.loads(q.options_json)
             
-            # Đảm bảo danh sách luôn có đủ 4 phần tử (nếu thiếu thì điền dấu "-")
+        if boss.atk >= 1000: target_diff = "hell"
+        elif boss.atk >= 500: target_diff = "extreme"
+        elif boss.atk >= 200: target_diff = "hard"
+        else: target_diff = "medium"
+
+        # 2. XÁC ĐỊNH ĐƯỜNG DẪN THƯ MỤC CHUẨN XÁC
+        subject_str = boss.subject.lower() 
+        
+        # Lấy thư mục hiện tại (backend)
+        CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
+        
+        # 🔥 ĐIỂM CHỐT CHẶN: Sử dụng chính xác thư mục "data câu hỏi" của Lãnh chúa
+        folder_path = os.path.join(CURRENT_DIR, "..", "data câu hỏi", subject_str)
+        
+        print(f"👉 [BOSS API] Đang tìm thư mục: {folder_path}")
+        
+        if not os.path.exists(folder_path):
+            print(f"❌ LỖI BOSS: Thư mục không tồn tại: {folder_path}")
+            return JSONResponse(status_code=404, content={"message": f"Chưa có thư mục môn: {subject_str}"})
+
+        # 3. TÌM FILE BOSS VÀ ĐỘ KHÓ
+        all_files = os.listdir(folder_path)
+        
+        # Tìm file có đuôi json VÀ có chữ "boss"
+        boss_files = [f for f in all_files if "boss" in f.lower() and f.endswith(".json")]
+        
+        if not boss_files:
+            print(f"❌ LỖI BOSS: Thư mục {subject_str} không có file nào chứa chữ 'boss' trong tên!")
+            return JSONResponse(status_code=404, content={"message": f"Không có file câu hỏi Boss!"})
+
+        # Cố gắng tìm file khớp độ khó
+        diff_files = [f for f in boss_files if target_diff in f.lower()]
+        
+        # Nếu có file đúng độ khó -> Lấy file đó. Nếu không có -> Lấy bừa 1 file Boss bất kỳ.
+        final_files_list = diff_files if diff_files else boss_files
+        
+        chosen_file = random.choice(final_files_list)
+        file_path = os.path.join(folder_path, chosen_file)
+        
+        print(f"👉 [BOSS API] Đã chọn bốc câu hỏi từ file: {chosen_file}")
+        
+        # 4. ĐỌC FILE VÀ BỐC CÂU HỎI
+        with open(file_path, 'r', encoding='utf-8') as f:
+            questions_list = json.load(f)
+            
+        if not questions_list:
+            print(f"❌ LỖI BOSS: File {chosen_file} đang trống rỗng!")
+            return JSONResponse(status_code=404, content={"message": f"File {chosen_file} đang trống!"})
+            
+        q_dict = random.choice(questions_list)
+
+        # 5. TÁCH ĐÁP ÁN
+        try:
+            options_list = q_dict.get("options", [])
             while len(options_list) < 4:
                 options_list.append("---")
 
-            # Gán vào 4 biến
             opt_a = options_list[0]
             opt_b = options_list[1]
             opt_c = options_list[2]
             opt_d = options_list[3]
 
-            # 3. TÌM ĐÁP ÁN ĐÚNG LÀ A, B, C HAY D
-            # QuestionBank lưu đáp án đúng là TEXT (VD: "Màu Xanh")
-            # Ta phải tìm xem "Màu Xanh" nằm ở vị trí nào để trả về 'a', 'b', 'c' hay 'd'
-            correct_char = "a" # Mặc định
+            correct_text = q_dict.get("answer", "")
+            correct_char = "a" 
             
-            # So sánh nội dung để tìm ra key
-            if q.correct_answer == opt_a: correct_char = "a"
-            elif q.correct_answer == opt_b: correct_char = "b"
-            elif q.correct_answer == opt_c: correct_char = "c"
-            elif q.correct_answer == opt_d: correct_char = "d"
+            if correct_text == opt_a: correct_char = "a"
+            elif correct_text == opt_b: correct_char = "b"
+            elif correct_text == opt_c: correct_char = "c"
+            elif correct_text == opt_d: correct_char = "d"
             
-            # 4. Trả về Frontend
+            print(f"✅ [BOSS API] Bốc thành công 1 câu! (Đáp án: {correct_char.upper()})")
+
             return {
-                "id": q.id,
-                "content": q.content,
-                "options": {
-                    "a": opt_a,
-                    "b": opt_b,
-                    "c": opt_c,
-                    "d": opt_d
-                },
+                "id": random.randint(100000, 999999),
+                "content": q_dict.get("question", "Lỗi mất nội dung câu hỏi?"),
+                "options": {"a": opt_a, "b": opt_b, "c": opt_c, "d": opt_d},
                 "correct_ans": correct_char, 
-                "explanation": getattr(q, "explanation", f"Đáp án đúng là: {q.correct_answer}")
+                "explanation": f"Đáp án đúng là: {correct_text}"
             }
 
         except Exception as parse_err:
-            print(f"Lỗi giải nén đáp án (ID {q.id}): {parse_err}")
-            # Fallback nếu dữ liệu lỗi để không sập game
+            print(f"❌ LỖI XỬ LÝ JSON BOSS: {parse_err}")
             return {
-                "id": q.id,
-                "content": q.content,
-                "options": {"a": "Lỗi dữ liệu", "b": "Lỗi dữ liệu", "c": "Lỗi dữ liệu", "d": "Lỗi dữ liệu"},
+                "id": 999999,
+                "content": q_dict.get("question", "Lỗi dữ liệu câu hỏi"),
+                "options": {"a": "Lỗi", "b": "Lỗi", "c": "Lỗi", "d": "Lỗi"},
                 "correct_ans": "a",
-                "explanation": "Câu hỏi này bị lỗi định dạng đáp án."
+                "explanation": "Câu hỏi này bị lỗi định dạng JSON."
             }
 
     except Exception as e:
-        print(f"❌ Server Error: {str(e)}")
-        return JSONResponse(status_code=500, content={"message": str(e)})
-
+        print("\n================= 💥 LỖI API BOSS (HỆ THỐNG) 💥 =================")
+        traceback.print_exc() 
+        print("=================================================================\n")
+        return JSONResponse(status_code=500, content={"message": f"Lỗi Server: {str(e)}"})
 # --- API LẤY TOÀN BỘ ITEM (DÀNH CHO ADMIN CẤU HÌNH BOSS) ---
 @app.get("/api/all-items")
 def get_all_items_system(db: Session = Depends(get_db)):
@@ -1037,25 +1050,8 @@ async def cleanup_chat_task():
         await asyncio.sleep(60)
 
 # =====================================================================
-# [MODULE CHIẾN DỊCH] 1. HÀM PHỤ TRỢ: TÍNH SỨC CHỨA KHO CHUNG
+# [MODULE CHIẾN DỊCH] 
 # =====================================================================
-def get_faction_vault_capacity(db: Session, campaign_id: int, faction: str) -> int:
-    """Tính tổng sức chứa kho lính của cả phe dựa trên level của từng thành viên"""
-    players = db.exec(
-        select(CampaignPlayer)
-        .where(CampaignPlayer.campaign_id == campaign_id)
-        .where(CampaignPlayer.faction == faction)
-    ).all()
-    
-    total_capacity = 0
-    for p in players:
-        # Công thức: 100 + (level - 1) * 20
-        player_cap = cfg.BASE_TROOP_CAPACITY + (p.legion_level - 1) * cfg.CAPACITY_PER_LEVEL
-        total_capacity += player_cap
-        
-    return total_capacity
-
-
 #module đóng băng chiến dịch
 def is_campaign_frozen():
     """Kiểm tra xem hiện tại có phải giờ đóng băng hay không (Múi giờ VN)"""
