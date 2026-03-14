@@ -2487,28 +2487,50 @@ def get_battle_reports(username: str, db: Session = Depends(get_db)):
             CampaignPlayer.player_id == player.id,
             CampaignPlayer.campaign_id == campaign.id
         )).first()
-        if not c_player: return {"success": False, "data": []}
-
-        # LẤY 30 CHIẾN BÁO MỚI NHẤT DÀNH CHO NGƯỜI NÀY
-        # Gồm: Tin của riêng mình + Tin đồng minh cùng phe + Tin Hệ thống
-        reports = db.exec(
-            select(BattleReport).where(
-                BattleReport.campaign_id == campaign.id,
-                or_(
-                    BattleReport.player_id == player.id,  # Tin Cá nhân
-                    (BattleReport.type == "ALLY") & (BattleReport.faction == c_player.faction), # Tin Phe
-                    BattleReport.type == "SYSTEM"         # Tin Thế giới
-                )
-            ).order_by(BattleReport.timestamp.desc()).limit(30)
-        ).all()
+  
+        # 🔥 CHIA NHÁNH: XỬ LÝ RIÊNG CHO KHÁN GIẢ VÀ NGƯỜI CHƠI
+        if not c_player:
+            # 1. NẾU LÀ KHÁN GIẢ: Lấy tin Hệ thống + Tin chiến sự (ALLY) của CẢ 2 PHE
+            reports = db.exec(
+                select(BattleReport).where(
+                    BattleReport.campaign_id == campaign.id,
+                    BattleReport.type.in_(["SYSTEM", "ALLY"]) 
+                ).order_by(BattleReport.timestamp.desc()).limit(30)
+            ).all()
+        else:
+            # 2. NẾU LÀ NGƯỜI CHƠI BÁO DANH: Lấy tin như bình thường
+            reports = db.exec(
+                select(BattleReport).where(
+                    BattleReport.campaign_id == campaign.id,
+                    or_(
+                        BattleReport.player_id == player.id,  
+                        (BattleReport.type == "ALLY") & (BattleReport.faction == c_player.faction), 
+                        BattleReport.type == "SYSTEM"         
+                    )
+                ).order_by(BattleReport.timestamp.desc()).limit(30)
+            ).all()
 
         data = []
         for r in reports:
+            # 🔥 TỐI ƯU HIỂN THỊ CHO KHÁN GIẢ TRUNG LẬP
+            rpt_type = r.type
+            rpt_title = r.title
+            rpt_content = r.content
+
+            if not c_player and rpt_type == "ALLY":
+                # Biến tin Đồng minh thành tin Hệ thống (Màu đỏ) để khán giả dễ nhìn
+                rpt_type = "SYSTEM" 
+                # Thêm tên phe vào Tiêu đề
+                faction_str = "Thanh Long" if r.faction == "THANH_LONG" else "Bạch Hổ"
+                rpt_title = f"[{faction_str}] {r.title}"
+                # Đổi nhân xưng
+                rpt_content = r.content.replace("Đồng đội", "Tướng")
+
             data.append({
                 "id": r.id,
-                "type": r.type,
-                "title": r.title,
-                "content": r.content,
+                "type": rpt_type,
+                "title": rpt_title,
+                "content": rpt_content,
                 "time": r.timestamp.strftime('%H:%M')
             })
             
