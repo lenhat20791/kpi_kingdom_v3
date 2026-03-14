@@ -1,252 +1,167 @@
 [
-  {
-    "question": "Vải nào thường được dùng để may áo sơ mi?",
-    "options": [
-      "Vải len",
-      "Vải cotton",
-      "Vải nỉ",
-      "Vải dạ"
-    ],
-    "answer": "Vải cotton"
-  },
-  {
-    "question": "Nhãn “100% cotton” trên quần áo cho biết điều gì?",
-    "options": [
-      "May từ vải tổng hợp",
-      "Pha sợi nilon",
-      "Dễ nhăn và co rút",
-      "Làm từ sợi bông tự nhiên, thấm hút tốt"
-    ],
-    "answer": "Làm từ sợi bông tự nhiên, thấm hút tốt"
-  },
-  {
-    "question": "Nhãn “100% polyester” cho biết vải được làm từ loại sợi nào?",
-    "options": [
-      "Sợi tổng hợp",
-      "Sợi tự nhiên",
-      "Sợi bán tổng hợp",
-      "Sợi len"
-    ],
-    "answer": "Sợi tổng hợp"
-  },
-  {
-    "question": "Vì sao quần thể thao thường dùng vải thun thay vì vải lụa?",
-    "options": [
-      "Màu sắc tươi sáng hơn",
-      "Rẻ hơn",
-      "Không nhăn",
-      "Co giãn tốt, dễ vận động"
-    ],
-    "answer": "Co giãn tốt, dễ vận động"
-  },
-  {
-    "question": "Khi may váy dự tiệc, yếu tố vải nào thường được ưu tiên?",
-    "options": [
-      "Độ co giãn",
-      "Màu sắc và độ bóng",
-      "Khả năng thấm hút",
-      "Độ dày giữ ấm"
-    ],
-    "answer": "Màu sắc và độ bóng"
-  },
-  {
-    "question": "Quần áo cho trẻ nhỏ nên dùng loại vải nào?",
-    "options": [
-      "Polyester",
-      "Len",
-      "Cotton",
-      "Thun dày"
-    ],
-    "answer": "Cotton"
-  },
-  {
-    "question": "Vai trò quan trọng nhất của trang phục là gì?",
-    "options": [
-      "Thể hiện địa vị",
-      "Phân biệt giới tính",
-      "Làm quà tặng",
-      "Bảo vệ cơ thể và làm đẹp"
-    ],
-    "answer": "Bảo vệ cơ thể và làm đẹp"
-  },
-  {
-    "question": "Trang phục thay đổi theo yếu tố nào?",
-    "options": [
-      "Thời tiết, khí hậu, văn hóa, nghề nghiệp",
-      "Tuổi và chiều cao",
-      "Sở thích cá nhân",
-      "Màu sắc yêu thích"
-    ],
-    "answer": "Thời tiết, khí hậu, văn hóa, nghề nghiệp"
-  },
-  {
-    "question": "Trang phục rộng và thoáng mát phù hợp khi nào?",
-    "options": [
-      "Mùa đông",
-      "Mùa hè",
-      "Dạ tiệc",
-      "Biểu diễn"
-    ],
-    "answer": "Mùa hè"
-  },
-  {
-    "question": "Người thấp và tròn nên chọn trang phục như thế nào?",
-    "options": [
-      "Sọc ngang màu sáng",
-      "Họa tiết to",
-      "Màu sẫm, sọc dọc",
-      "Quần áo rộng sáng màu"
-    ],
-    "answer": "Màu sẫm, sọc dọc"
-  },
-  {
-    "question": "Để trang phục luôn gọn gàng cần làm gì?",
-    "options": [
-      "Gấp/treo đúng cách và ủi trước khi mặc",
-      "Cất vào tủ khi còn ướt",
-      "Phơi trong phòng kín",
-      "Xịt nước thơm"
-    ],
-    "answer": "Gấp/treo đúng cách và ủi trước khi mặc"
-  },
-  {
-    "question": "Vì sao cần đọc nhãn hướng dẫn trên quần áo?",
-    "options": [
-      "Biết giá tiền",
-      "Biết cách giặt, ủi, bảo quản",
-      "Biết nhà thiết kế",
-      "Biết kích thước người mặc"
-    ],
-    "answer": "Biết cách giặt, ủi, bảo quản"
-  },
-  {
-    "question": "Yếu tố quan trọng nhất khi chọn trang phục là gì?",
-    "options": [
-      "Màu sắc yêu thích",
-      "Xu hướng thời trang",
-      "Phù hợp vóc dáng và hoàn cảnh",
-      "Giá rẻ"
-    ],
-    "answer": "Phù hợp vóc dáng và hoàn cảnh"
-  },
-  {
-    "question": "Trang phục đi học nên có đặc điểm gì?",
-    "options": [
-      "Sặc sỡ",
-      "Sang trọng",
-      "Phá cách",
-      "Thoải mái, gọn gàng, lịch sự"
-    ],
-    "answer": "Thoải mái, gọn gàng, lịch sự"
-  },
-  {
-    "question": "Trang phục thể thao cần ưu tiên điều gì?",
-    "options": [
-      "Màu sáng",
-      "Co giãn và thấm mồ hôi tốt",
-      "Vải dày",
-      "Vải bóng"
-    ],
-    "answer": "Co giãn và thấm mồ hôi tốt"
-  },
-  {
-    "question": "Trang phục phù hợp khi dự dạ tiệc là gì?",
-    "options": [
-      "Đơn giản",
-      "Năng động",
-      "Lịch sự, vải mềm và bóng",
-      "Áo phông quần jean"
-    ],
-    "answer": "Lịch sự, vải mềm và bóng"
-  },
-  {
-    "question": "Yếu tố nào giúp phối trang phục hài hòa?",
-    "options": [
-      "Màu sắc, kiểu dáng và phụ kiện",
-      "Nhiều màu sặc sỡ",
-      "Chỉ chú ý kiểu dáng",
-      "Chỉ theo sở thích"
-    ],
-    "answer": "Màu sắc, kiểu dáng và phụ kiện"
-  },
-  {
-    "question": "Nguyên tắc sử dụng trang phục hàng ngày là gì?",
-    "options": [
-      "Mặc theo ý thích",
-      "Giữ sạch sẽ và phù hợp hoàn cảnh",
-      "Mặc đồ bẩn",
-      "Chỉ cần hợp mốt"
-    ],
-    "answer": "Giữ sạch sẽ và phù hợp hoàn cảnh"
-  },
-  {
-    "question": "Vì sao không giặt chung đồ màu đậm với đồ trắng?",
-    "options": [
-      "Dễ phai màu sang quần áo trắng",
-      "Làm rách vải",
-      "Tốn nước",
-      "Khó phơi"
-    ],
-    "answer": "Dễ phai màu sang quần áo trắng"
-  },
-  {
-    "question": "Ký hiệu tam giác có dấu X trên nhãn quần áo nghĩa là gì?",
-    "options": [
-      "Không dùng máy sấy",
-      "Không dùng chất tẩy",
-      "Không được ủi",
-      "Chỉ giặt tay"
-    ],
-    "answer": "Không dùng chất tẩy"
-  },
-  {
-    "question": "Thuật ngữ “thời trang” được hiểu là gì?",
-    "options": [
-      "Trang phục xa xỉ",
-      "Trang phục lỗi mốt",
-      "Sự đổi mới kiểu dáng và màu sắc theo xu hướng",
-      "Cách ăn mặc tùy ý"
-    ],
-    "answer": "Sự đổi mới kiểu dáng và màu sắc theo xu hướng"
-  },
-  {
-    "question": "Vì sao vải dạ và vải nỉ không phù hợp mùa hè?",
-    "options": [
-      "Quá mỏng",
-      "Gây kích ứng",
-      "Giữ nhiệt cao, ít thoáng khí",
-      "Màu quá sáng"
-    ],
-    "answer": "Giữ nhiệt cao, ít thoáng khí"
-  },
-  {
-    "question": "Vải sợi tự nhiên gồm những loại nào?",
-    "options": [
-      "Cotton và lụa tơ tằm",
-      "Len và thun tổng hợp",
-      "Polyester và nilon",
-      "Lanh và dạ"
-    ],
-    "answer": "Cotton và lụa tơ tằm"
-  },
-  {
-    "question": "Ký hiệu bàn là có 1 chấm nghĩa là gì?",
-    "options": [
-      "Ủi được mọi mức nhiệt",
-      "Không được ủi",
-      "Ủi ở nhiệt độ thấp",
-      "Ủi ở nhiệt độ cao"
-    ],
-    "answer": "Ủi ở nhiệt độ thấp"
-  },
-  {
-    "question": "Vì sao không nên mặc quần áo quá rộng hoặc quá chật?",
-    "options": [
-      "Dễ bị chú ý",
-      "Mất thẩm mỹ và gây khó chịu",
-      "Trái xu hướng",
-      "Dễ nhăn"
-    ],
-    "answer": "Mất thẩm mỹ và gây khó chịu"
-  }
+{
+"subject":"Công nghệ",
+"difficulty":"medium",
+"content":"Loại vải nào sau đây thường được ưu tiên sử dụng để may áo sơ mi?",
+"a":"Chất liệu vải len tự nhiên",
+"b":"Chất liệu vải sợi cotton",
+"c":"Chất liệu vải nỉ nhân tạo",
+"d":"Chất liệu vải dạ giữ ấm",
+"correct":"Chất liệu vải sợi cotton",
+"explain":"Vải cotton mềm, thoáng và thấm hút mồ hôi tốt nên thường được dùng may áo sơ mi."
+},
+{
+"subject":"Công nghệ",
+"difficulty":"medium",
+"content":"Nhãn quần áo ghi “100% cotton” cho biết điều gì?",
+"a":"Trang phục làm hoàn toàn từ vải tổng hợp",
+"b":"Trang phục có pha sợi nilon",
+"c":"Trang phục rất dễ co rút",
+"d":"Trang phục làm từ sợi bông tự nhiên, thấm hút tốt",
+"correct":"Trang phục làm từ sợi bông tự nhiên, thấm hút tốt",
+"explain":"Cotton là sợi tự nhiên từ bông, có khả năng thấm hút mồ hôi và thoáng khí."
+},
+{
+"subject":"Công nghệ",
+"difficulty":"medium",
+"content":"Thành phần vải ghi “100% polyester” cho biết loại vải được dệt từ sợi nào?",
+"a":"Sợi tổng hợp",
+"b":"Sợi tự nhiên",
+"c":"Sợi bán tổng hợp",
+"d":"Sợi len",
+"correct":"Sợi tổng hợp",
+"explain":"Polyester là loại sợi tổng hợp được sản xuất từ hóa chất công nghiệp."
+},
+{
+"subject":"Công nghệ",
+"difficulty":"easy",
+"content":"Vì sao quần thể thao thường được may bằng vải thun?",
+"a":"Vải có màu sắc sáng hơn",
+"b":"Vải rẻ hơn",
+"c":"Vải không bị nhăn",
+"d":"Vải co giãn tốt, thuận tiện vận động",
+"correct":"Vải co giãn tốt, thuận tiện vận động",
+"explain":"Vải thun có độ co giãn cao giúp người mặc vận động thoải mái khi chơi thể thao."
+},
+{
+"subject":"Công nghệ",
+"difficulty":"medium",
+"content":"Khi may váy dự tiệc, yếu tố nào của vải thường được ưu tiên?",
+"a":"Độ co giãn",
+"b":"Màu sắc và độ bóng của vải",
+"c":"Khả năng thấm hút",
+"d":"Độ dày giữ ấm",
+"correct":"Màu sắc và độ bóng của vải",
+"explain":"Trang phục dự tiệc thường cần tính thẩm mỹ cao nên ưu tiên vải có màu sắc đẹp và bề mặt bóng."
+},
+{
+"subject":"Công nghệ",
+"difficulty":"easy",
+"content":"Khi may quần áo cho trẻ nhỏ nên chọn loại vải nào?",
+"a":"Vải polyester",
+"b":"Vải len",
+"c":"Vải cotton",
+"d":"Vải thun dày",
+"correct":"Vải cotton",
+"explain":"Cotton mềm, thoáng và thấm mồ hôi tốt nên phù hợp với làn da trẻ nhỏ."
+},
+{
+"subject":"Công nghệ",
+"difficulty":"easy",
+"content":"Vai trò quan trọng nhất của trang phục đối với con người là gì?",
+"a":"Thể hiện địa vị xã hội",
+"b":"Phân biệt giới tính",
+"c":"Làm quà tặng",
+"d":"Bảo vệ cơ thể và làm đẹp",
+"correct":"Bảo vệ cơ thể và làm đẹp",
+"explain":"Trang phục giúp bảo vệ cơ thể trước môi trường và tăng tính thẩm mỹ."
+},
+{
+"subject":"Công nghệ",
+"difficulty":"medium",
+"content":"Trang phục thường thay đổi dựa vào yếu tố nào?",
+"a":"Thời tiết, khí hậu, văn hóa và nghề nghiệp",
+"b":"Chiều cao và tuổi tác",
+"c":"Sở thích cá nhân",
+"d":"Màu sắc yêu thích",
+"correct":"Thời tiết, khí hậu, văn hóa và nghề nghiệp",
+"explain":"Trang phục cần phù hợp môi trường sống, văn hóa và tính chất công việc."
+},
+{
+"subject":"Công nghệ",
+"difficulty":"easy",
+"content":"Trang phục rộng rãi và thoáng mát phù hợp mặc khi nào?",
+"a":"Mùa đông lạnh",
+"b":"Mùa hè nóng",
+"c":"Dạ tiệc",
+"d":"Biểu diễn nghệ thuật",
+"correct":"Mùa hè nóng",
+"explain":"Quần áo rộng và thoáng giúp cơ thể mát mẻ trong thời tiết nóng."
+},
+{
+"subject":"Công nghệ",
+"difficulty":"medium",
+"content":"Người có dáng thấp và tròn nên chọn trang phục như thế nào?",
+"a":"Áo sọc ngang sáng màu",
+"b":"Họa tiết to và sặc sỡ",
+"c":"Màu sẫm, họa tiết nhỏ, sọc dọc",
+"d":"Quần áo rộng sáng màu",
+"correct":"Màu sẫm, họa tiết nhỏ, sọc dọc",
+"explain":"Sọc dọc và màu tối giúp tạo cảm giác cơ thể cao và thon gọn hơn."
+},
+{
+"subject":"Công nghệ",
+"difficulty":"easy",
+"content":"Để quần áo luôn phẳng phiu cần làm gì?",
+"a":"Gấp hoặc treo đúng cách và ủi trước khi mặc",
+"b":"Cất vào tủ khi còn ướt",
+"c":"Phơi trong phòng kín",
+"d":"Xịt nước thơm",
+"correct":"Gấp hoặc treo đúng cách và ủi trước khi mặc",
+"explain":"Bảo quản và ủi đúng cách giúp trang phục luôn gọn gàng."
+},
+{
+"subject":"Công nghệ",
+"difficulty":"easy",
+"content":"Vì sao cần đọc nhãn hướng dẫn trên quần áo?",
+"a":"Biết giá tiền sản phẩm",
+"b":"Biết cách giặt và bảo quản",
+"c":"Biết nhà thiết kế",
+"d":"Biết kích thước người mặc",
+"correct":"Biết cách giặt và bảo quản",
+"explain":"Nhãn quần áo cung cấp thông tin về cách giặt, ủi và bảo quản phù hợp."
+},
+{
+"subject":"Công nghệ",
+"difficulty":"medium",
+"content":"Yếu tố quan trọng nhất khi chọn trang phục là gì?",
+"a":"Màu sắc yêu thích",
+"b":"Xu hướng thời trang",
+"c":"Phù hợp vóc dáng và hoàn cảnh",
+"d":"Giá rẻ",
+"correct":"Phù hợp vóc dáng và hoàn cảnh",
+"explain":"Trang phục phù hợp với vóc dáng và hoàn cảnh giúp người mặc tự tin và lịch sự."
+},
+{
+"subject":"Công nghệ",
+"difficulty":"easy",
+"content":"Trang phục đi học nên có đặc điểm gì?",
+"a":"Sặc sỡ và cầu kỳ",
+"b":"Sang trọng",
+"c":"Phá cách",
+"d":"Thoải mái, gọn gàng, lịch sự",
+"correct":"Thoải mái, gọn gàng, lịch sự",
+"explain":"Trang phục học sinh cần đảm bảo sự thoải mái và phù hợp môi trường học tập."
+},
+{
+"subject":"Công nghệ",
+"difficulty":"easy",
+"content":"Trang phục thể thao cần ưu tiên điều gì?",
+"a":"Màu sắc tươi sáng",
+"b":"Co giãn và thấm mồ hôi tốt",
+"c":"Vải dày",
+"d":"Vải bóng",
+"correct":"Co giãn và thấm mồ hôi tốt",
+"explain":"Chất liệu co giãn và thấm mồ hôi giúp vận động dễ dàng."
+}
 ]
