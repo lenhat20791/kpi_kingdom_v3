@@ -156,7 +156,7 @@
 "explanation": "Các biện pháp bảo tồn đa dạng sinh học bao gồm bảo vệ môi trường sống và không săn bắt trái phép."
 },
 {
-"subject": "Vật lý",
+"subject": "Sinh học",
 "difficulty": "Trung bình",
 "question": "Đâu là sự phân biệt chính xác nhất về khái niệm khối lượng và trọng lượng của một vật thể trong môn Khoa học tự nhiên?",
 "options": [
@@ -169,7 +169,7 @@
 "explanation": "Khối lượng là số đo lượng chất (kg), trọng lượng là độ lớn lực hút của Trái Đất (N)."
 },
 {
-"subject": "Vật lý",
+"subject": "Sinh học",
 "difficulty": "Trung bình",
 "question": "Trong thực tế đời sống hàng ngày, hiện tượng nào dưới đây là một ví dụ điển hình minh chứng cho tác dụng của lực không tiếp xúc?",
 "options": [
@@ -182,7 +182,7 @@
 "explanation": "Lực không tiếp xúc tác dụng qua khoảng không gian, ví dụ như lực nam châm."
 },
 {
-"subject": "Vật lý",
+"subject": "Sinh học",
 "difficulty": "Trung bình",
 "question": "Khi thực hiện kỹ năng biểu diễn cấu trúc của một lực bằng hình mũi tên, yếu tố độ lớn của lực sẽ được thể hiện thông qua đặc điểm nào?",
 "options": [
@@ -196,7 +196,7 @@
 },
 
 {
-"subject": "Vật lý",
+"subject": "Sinh học",
 "difficulty": "Trung bình",
 "question": "Tác dụng của lực lên một vật thể có thể gây ra những hệ quả trực tiếp nào dưới đây?",
 "options": [
@@ -274,7 +274,7 @@
 "explanation": "Nấm túi sinh sản bằng túi bào tử, với đại diện tiêu biểu là nấm men và nấm mốc."
 },
 {
-"subject": "Vật lý",
+"subject": "Sinh học",
 "difficulty": "Trung bình",
 "question": "Khái niệm về Lực trong môn Khoa học Tự nhiên được định nghĩa chính xác theo phương án nào dưới đây?",
 "options": [
@@ -326,7 +326,7 @@
 "explanation": "Trong tự nhiên, nấm có vai trò phân giải xác sinh vật."
 },
 {
-"subject": "Vật lý",
+"subject": "Sinh học",
 "difficulty": "Trung bình",
 "question": "Trường hợp nào dưới đây minh họa rõ nét nhất cho sự xuất hiện của một \"lực tiếp xúc\"?",
 "options": [
@@ -339,7 +339,7 @@
 "explanation": "Lực tiếp xúc xuất hiện khi vật gây ra lực có sự chạm trực tiếp vào vật chịu tác dụng của lực, ví dụ như đá bóng."
 },
 {
-"subject": "Vật lý",
+"subject": "Sinh học",
 "difficulty": "Trung bình",
 "question": "Khi tiến hành biểu diễn một lực bằng mũi tên, yếu tố \"phương của lực\" được thể hiện thế nào?",
 "options": [
@@ -487,7 +487,7 @@
 "difficulty": "Trung bình",
 "question": "Khi tiến hành nghiên cứu về sự đa dạng sinh học của lớp Lưỡng cư (như ếch, nhái), phát biểu nào dưới đây là hoàn toàn sai lệch với đặc tính của chúng?",
 "options": [
-  "Chúng là những loài sinh vật sở hữu một làn da trần trụi, luôn luôn duy trì độ ẩm ướt và rất dễ bị tổn thương vật lý.",
+  "Chúng là những loài sinh vật sở hữu một làn da trần trụi, luôn luôn duy trì độ ẩm ướt và rất dễ bị tổn thương Sinh học.",
   "Chúng là những loài sinh vật mang khả năng hô hấp linh hoạt thông qua cả cấu trúc bề mặt da và hệ thống phổi bên trong.",
   "Chúng là những loài sinh vật tiến hành quá trình sinh sản thông qua hình thức thụ tinh ở bên ngoài môi trường nước ngọt.",
   "Chúng là những loài sinh vật sở hữu một làn da thô ráp phủ đầy vảy sừng cứng chắc và chỉ sinh sống ở nơi khô ráo."
@@ -535,9 +535,9 @@
 "explanation": "Khoáng sản kim loại là tài nguyên địa chất, không thuộc phạm vi của đa dạng sinh học."
 },
 {
-"subject": "Vật lý",
+"subject": "Sinh học",
 "difficulty": "Trung bình",
-"question": "Trong lĩnh vực vật lý cơ học, khái niệm cốt lõi về \"Lực\" được các chuyên gia định nghĩa một cách đầy đủ và chính xác nhất theo phương án nào dưới đây?",
+"question": "Trong lĩnh vực Sinh học cơ học, khái niệm cốt lõi về \"Lực\" được các chuyên gia định nghĩa một cách đầy đủ và chính xác nhất theo phương án nào dưới đây?",
 "options": [
   "Lực được định nghĩa là sự gia tăng khối lượng liên tục của một vật thể khi nó di chuyển với một tốc độ cực kỳ nhanh chóng.",
   "Lực được định nghĩa là sự biến đổi trạng thái nhiệt độ đột ngột của một vật thể khi nó ma sát trực tiếp với một vật thể khác.",
@@ -548,9 +548,9 @@
 "explanation": "Tác dụng đẩy hoặc kéo của vật này lên vật khác được gọi là lực."
 },
 {
-"subject": "Vật lý",
+"subject": "Sinh học",
 "difficulty": "Trung bình",
-"question": "Khi người học sinh cần biểu diễn một lực kéo bằng hình vẽ kỹ thuật, yếu tố chiều dài của mũi tên được sử dụng nhằm mục đích mô tả cho đại lượng vật lý nào?",
+"question": "Khi người học sinh cần biểu diễn một lực kéo bằng hình vẽ kỹ thuật, yếu tố chiều dài của mũi tên được sử dụng nhằm mục đích mô tả cho đại lượng Sinh học nào?",
 "options": [
   "Chiều dài mũi tên được vẽ để thể hiện chính xác hướng chuyển động tịnh tiến của vật thể trên không gian.",
   "Chiều dài mũi tên được vẽ để thể hiện chính xác điểm đặt của lực tác dụng ngay tại tâm của vật thể đó.",
