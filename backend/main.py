@@ -1985,7 +1985,13 @@ def process_campaign_battles(db):
             if enemy_p and enemy_p.username not in enemy_names:
                 enemy_names.append(enemy_p.username)
         
-        enemy_str = ", ".join(enemy_names) if enemy_names else "Phiến quân"
+        # 🔥 SỬA LỖI 1: Nếu Cứ điểm không có lính thủ, vinh danh tên Phe đang sở hữu thay vì gọi là Phiến quân
+        if enemy_names:
+            enemy_str = ", ".join(enemy_names)
+        else:
+            if defender_faction == "THANH_LONG": enemy_str = "Phe Thanh Long"
+            elif defender_faction == "BACH_HO": enemy_str = "Phe Bạch Hổ"
+            else: enemy_str = "Phiến quân"
 
         target_faction_tag = ""
         if defender_faction == "THANH_LONG": target_faction_tag = "(TL)"
@@ -2006,10 +2012,10 @@ def process_campaign_battles(db):
                     def_player.t_deaths += 1 
                     def_player.respawn_at = now + timedelta(minutes=penalty_mins)
                     db.add(def_player)
-                    # 👇 CHÈN GỌI HÀM VÀO ĐÂY (Trong vòng lặp giết từng người) 👇
+                    # vòng lặp giết từng người)👇
                     victim_name = db.get(Player, def_player.player_id).username
-                    process_kill_streak(db, campaign, c_player, def_player, killer_name, victim_name)
-                    # 👆 KẾT THÚC CHÈN 👆
+                    # 🔥 SỬA LỖI 2: Đổi chữ killer_name (vô nghĩa) thành attacker_name (biến chuẩn)
+                    process_kill_streak(db, campaign, c_player, def_player, attacker_name, victim_name)
                     # 🔥 Kéo xác phe THỦ về Nhà Chính
                     base_node = tl_base if def_player.faction == "THANH_LONG" else bh_base
                     if base_node: d.target_node_id = base_node.id
@@ -2113,6 +2119,9 @@ def process_campaign_battles(db):
                     if def_player:
                         def_player.k_kills += 1
                         db.add(def_player)
+                        # 🔥 SỬA LỖI 3: Bổ sung gọi hàm Liên Sát để vinh danh người Phòng Thủ
+                        def_killer_name = db.get(Player, def_player.player_id).username
+                        process_kill_streak(db, campaign, def_player, c_player, def_killer_name, attacker_name)
                         
                 db.add(d)
                 
