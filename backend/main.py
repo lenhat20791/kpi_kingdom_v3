@@ -1335,8 +1335,9 @@ def march_troops_by_code(campaign_id: int, req: MarchByCodeRequest, db: Session 
             base_minutes = getattr(cfg, 'MARCH_TIME_ALLY_MINUTES', 1)
         else:
             base_minutes = getattr(cfg, 'MARCH_TIME_ENEMY_MINUTES', 2)
-            
-        total_march_minutes = base_minutes * distance # NHÂN LÊN VỚI SỐ BƯỚC ĐI
+             
+        # TỐI ƯU: Đảm bảo thời gian đi tối thiểu > 0 để tránh lỗi Javascript
+        total_march_minutes = max(base_minutes * distance, 0.1) 
         arrival_time = datetime.now() + timedelta(minutes=total_march_minutes)
 
         # 8. CẬP NHẬT LỆNH HÀNH QUÂN MỚI 
@@ -1936,14 +1937,15 @@ def process_campaign_battles(db):
     ).order_by(TroopMovement.arrival_time)).all()
 
     if not arrived_movements: return
-    campaign = db.get(Campaign, arrived_movements[0].campaign_id)
-    if not campaign: return
-
-    # 🔥 BỔ SUNG: Tìm tọa độ 2 Nhà Chính để làm "Điểm Hồi Sinh"
-    tl_base = db.exec(select(MapNode).where(MapNode.campaign_id == campaign.id, MapNode.node_code == "TL_BASE")).first()
-    bh_base = db.exec(select(MapNode).where(MapNode.campaign_id == campaign.id, MapNode.node_code == "BH_BASE")).first()
 
     for movement in arrived_movements:
+        # ĐƯA VIỆC TÌM CAMPAIGN VÀ BỆ ĐÁ CỔ VÀO TRONG VÒNG LẶP
+        campaign = db.get(Campaign, movement.campaign_id)
+        if not campaign: continue
+
+        tl_base = db.exec(select(MapNode).where(MapNode.campaign_id == campaign.id, MapNode.node_code == "TL_BASE")).first()
+        bh_base = db.exec(select(MapNode).where(MapNode.campaign_id == campaign.id, MapNode.node_code == "BH_BASE")).first()
+
         target_node = db.get(MapNode, movement.target_node_id)
         
         c_player = db.exec(select(CampaignPlayer).where(

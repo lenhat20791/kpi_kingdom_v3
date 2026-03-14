@@ -10481,12 +10481,23 @@
                 movements.forEach((m, index) => {
                     const el = document.getElementById(`march-icon-${index}`);
                     if(!el) return;
-                    const startT = new Date(m.start_time).getTime();
-                    const endT = new Date(m.arrival_time).getTime();
-                    let progress = (now - startT) / (endT - startT);
+                    // Sửa lỗi iOS và ngăn chặn chia cho 0
+                    const safeStartTime = String(m.start_time).replace(' ', 'T');
+                    const safeArrivalTime = String(m.arrival_time).replace(' ', 'T');
+                    const startT = new Date(safeStartTime).getTime();
+                    const endT = new Date(safeArrivalTime).getTime();
+ 
+                    const duration = endT - startT;
+                    let progress = duration > 0 ? (now - startT) / duration : 1;
                     
-                    // Bù trừ lag: Cho lính hiện thêm 1 giây sau khi tới đích để tránh bị mất hút đột ngột
-                    if (progress >= 1.02) { el.style.opacity = '0'; } 
+                    if (progress >= 1.0) { 
+                        el.style.opacity = '0'; 
+                        // Tự động kéo dữ liệu mới về ngay khi cập bến
+                        if (!m.hasArrivedTriggered) {
+                            m.hasArrivedTriggered = true;
+                            setTimeout(() => { if (typeof scanRadar === 'function') scanRadar(); }, 500);
+                        }
+                    } 
                     else {
                         anyActive = true;
                         progress = Math.max(0, Math.min(1, progress));
@@ -10941,31 +10952,6 @@
             } catch(e) { console.error("Lỗi lấy kết quả Hòa Bình:", e); }
         }
 
-        // CÔNG CỤ TẠM THỜI ĐỂ LẤY TỌA ĐỘ BẢN ĐỒ (Làm xong thì xóa đi)
-        document.addEventListener('DOMContentLoaded', () => {
-            const mapContainer = document.getElementById('campaign-map-container');
-            if(mapContainer) {
-                mapContainer.addEventListener('click', function(e) {
-                    // Không tính click vào các Node đã có sẵn
-                    if(e.target.closest('.absolute.group')) return; 
-
-                    const rect = this.getBoundingClientRect();
-                    const x = e.clientX - rect.left;
-                    const y = e.clientY - rect.top;
-                    
-                    // Tính toán phần trăm (%)
-                    const xPercent = (x / rect.width * 100).toFixed(1);
-                    const yPercent = (y / rect.height * 100).toFixed(1);
-                    
-                    const styleCode = `top: ${yPercent}%; left: ${xPercent}%;`;
-                    
-                    // Tự động copy vào Clipboard
-                    navigator.clipboard.writeText(styleCode).then(() => {
-                        alert(`Đã copy vào bộ nhớ tạm:\n${styleCode}\n\nGiờ chỉ cần Paste đè lên đoạn style="" của Node đó!`);
-                    });
-                });
-            }
-        });
 
         // ==========================================
         // HỆ THỐNG TRÒ CHUYỆN CHIẾN DỊCH (ĐỘC LẬP)
@@ -11176,8 +11162,6 @@
         window.currentCampaignId = null; 
 
 
-        // --- HÀM MỞ/ĐÓNG POPUP MINIGAME ---
- 
         // --- HÀM MỞ/ĐÓNG POPUP MINIGAME ---
         function openMinigame(type) {
             // 1. KIỂM TRA ĐIỀU KIỆN TIÊN QUYẾT
