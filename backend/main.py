@@ -2524,7 +2524,7 @@ def get_battle_reports(username: str, db: Session = Depends(get_db)):
                 faction_str = "Thanh Long" if r.faction == "THANH_LONG" else "Bạch Hổ"
                 rpt_title = f"[{faction_str}] {r.title}"
                 # Đổi nhân xưng
-                rpt_content = r.content.replace("Đồng đội", "Tướng")
+                rpt_content = r.content.replace("Đồng đội", "Quân Đoàn")
 
             data.append({
                 "id": r.id,
