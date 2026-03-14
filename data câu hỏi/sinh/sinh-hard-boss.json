@@ -1,433 +1,57 @@
 [
-  {
-    "question": "Đặc điểm sinh sản nổi bật nhất của các loài nấm đảm (ví dụ như nấm rơm) là gì?",
-    "options": [
-      "Hình thành các túi bào tử để duy trì và phát triển nòi giống.",
-      "Hình thành các đảm bào tử để duy trì và phát triển nòi giống.",
-      "Phân chia các tế bào soma để duy trì và phát triển nòi giống.",
-      "Nảy chồi từ tế bào cơ thể mẹ để phát triển thành nòi giống."
-    ],
-    "answer": "Hình thành các đảm bào tử để duy trì và phát triển nòi giống."
-  },
-  {
-    "question": "Trong thế giới tự nhiên, loài nấm nào dưới đây được các nhà khoa học xếp vào nhóm nấm đơn bào?",
-    "options": [
-      "Nấm hương, loài nấm thường mọc ở trên các thân cây gỗ bị mục.",
-      "Nấm mộc nhĩ, loài nấm thường mọc ở trên các thân cây bị mục.",
-      "Nấm men, loài nấm thường được sử dụng phổ biến trong ngành lên men.",
-      "Nấm rơm, loài nấm thường mọc rải rác trên các đống rơm rạ ẩm."
-    ],
-    "answer": "Nấm men, loài nấm thường được sử dụng phổ biến trong ngành lên men."
-  },
-  {
-    "question": "Dấu hiệu nhận biết bên ngoài nào sau đây giúp chúng ta phân biệt được một loài nấm có chứa độc tố?",
-    "options": [
-      "Màu sắc vô cùng sặc sỡ, phần thân có vòng cuống và bao gốc nấm.",
-      "Màu sắc rất đỗi tối tăm, phần thân không vòng cuống và không bao gốc.",
-      "Màu sắc khá nhạt nhòa, phần mũ nấm có kích thước cực kỳ to lớn.",
-      "Màu sắc rất trắng sáng, phần thân nấm có rất nhiều rễ giả bám chặt."
-    ],
-    "answer": "Màu sắc vô cùng sặc sỡ, phần thân có vòng cuống và bao gốc nấm."
-  },
-  {
-    "question": "Khi thực hiện kỹ thuật trồng nấm rơm, nếu người trồng tưới quá nhiều nước thì nấm sẽ phát triển kém hoặc chết. Nguyên nhân chính là do đâu?",
-    "options": [
-      "Tình trạng nước thừa rửa trôi hết lượng chất dinh dưỡng khiến nấm không còn thức ăn sinh trưởng.",
-      "Vi khuẩn có hại sinh sôi vô cùng mạnh mẽ, trực tiếp tấn công và tiêu diệt hoàn toàn nấm.",
-      "Môi trường sống bị ứ đọng nước khiến nấm bị thiếu hụt nguồn dưỡng khí để duy trì sự hô hấp.",
-      "Nhiệt độ xung quanh môi trường giảm xuống quá sâu khiến cấu trúc tế bào nấm bị đóng băng vỡ vụn."
-    ],
-    "answer": "Môi trường sống bị ứ đọng nước khiến nấm bị thiếu hụt nguồn dưỡng khí để duy trì sự hô hấp."
-  },
-  {
-    "question": "Đặc điểm sinh học nào dưới đây là hoàn toàn chính xác khi mô tả về nhóm thực vật thuộc ngành Rêu?",
-    "options": [
-      "Cơ thể tương đối nhỏ bé, sống tại nơi ẩm ướt, chưa có rễ thật, sinh sản bằng nón cái.",
-      "Cơ thể tương đối nhỏ bé, sống tại nơi ẩm ướt, chưa có rễ thật, sinh sản bằng bào tử.",
-      "Cơ thể sinh trưởng cực tốt, sống tại nơi khô hạn, đã có rễ thật, sinh sản bằng bào tử.",
-      "Cơ thể sinh trưởng cực tốt, sống tại nơi ẩm ướt, đã có mạch dẫn, sinh sản bằng hoa quả."
-    ],
-    "answer": "Cơ thể tương đối nhỏ bé, sống tại nơi ẩm ướt, chưa có rễ thật, sinh sản bằng bào tử."
-  },
-  {
-    "question": "Nhóm thực vật Hạt trần sở hữu đặc điểm sinh sản cốt lõi nào dưới đây để phân biệt với thực vật Hạt kín?",
-    "options": [
-      "Hạt được bọc kín cẩn thận ở bên trong quả, thường được hình thành từ cấu trúc của nhụy hoa.",
-      "Cơ quan sinh sản chính là các túi bào tử tập trung với số lượng lớn ở vị trí mặt dưới lá.",
-      "Hệ thống rễ giả đâm sâu vào lòng đất, giúp cho cây có thể hấp thụ nhiều lượng nước khoáng chất.",
-      "Hạt nằm lộ trần trên các phiến lá noãn hở, thực vật này hoàn toàn không có cấu trúc sinh ra quả."
-    ],
-    "answer": "Hạt nằm lộ trần trên các phiến lá noãn hở, thực vật này hoàn toàn không có cấu trúc sinh ra quả."
-  },
-  {
-    "question": "Trong môi trường tự nhiên, tại sao hệ thống cây xanh thường được ví von với hình ảnh là chiếc \"lá phổi xanh\"?",
-    "options": [
-      "Thực hiện quá trình quang hợp, hấp thu lượng khí oxygen và thải ra lượng vô cùng lớn khí carbon dioxide.",
-      "Thực hiện quá trình hô hấp, hấp thu lượng khí carbon dioxide và thải ra lượng vô cùng lớn khí oxygen.",
-      "Thực hiện quá trình quang hợp, hấp thu lượng khí carbon dioxide và thải ra lượng vô cùng lớn khí oxygen.",
-      "Thực hiện quá trình hút nước, hấp thu khoáng chất độc hại và thải ra lượng vô cùng lớn các hơi nước."
-    ],
-    "answer": "Thực hiện quá trình quang hợp, hấp thu lượng khí carbon dioxide và thải ra lượng vô cùng lớn khí oxygen."
-  },
-  {
-    "question": "Trong hệ thống phân loại, động vật không xương sống nào hiện nay được đánh giá là nhóm đa dạng nhất tự nhiên?",
-    "options": [
-      "Đại diện thuộc nhóm Động vật thân mềm, vô cùng nổi bật với lớp vỏ ngoài cấu tạo bằng đá vôi.",
-      "Đại diện thuộc nhóm Động vật ruột khoang, vô cùng nổi bật với cấu trúc cơ thể mang tính tỏa tròn.",
-      "Đại diện thuộc nhóm Động vật giun đốt, vô cùng nổi bật với cấu trúc cơ thể có hình dạng thon dài.",
-      "Đại diện thuộc nhóm Động vật chân khớp, vô cùng nổi bật với lớp vỏ ngoài cấu tạo bằng chất chitin."
-    ],
-    "answer": "Đại diện thuộc nhóm Động vật chân khớp, vô cùng nổi bật với lớp vỏ ngoài cấu tạo bằng chất chitin."
-  },
-  {
-    "question": "Cá heo là sinh vật sống hoàn toàn dưới nước và bơi lội xuất sắc nhưng lại được phân loại vào lớp Thú. Vì sao?",
-    "options": [
-      "Bởi vì chúng sở hữu hệ thống vảy sừng cực kỳ cứng chắc và sinh sản bằng phương pháp đẻ trứng.",
-      "Bởi vì chúng có khả năng nuôi dưỡng con non bằng tuyến sữa và thực hiện hô hấp bằng cấu trúc phổi.",
-      "Bởi vì chúng có khả năng biến nhiệt cực kỳ linh hoạt để thích nghi theo sự thay đổi của môi trường sống.",
-      "Bởi vì chúng sở hữu hệ thống vây bơi cực kỳ khỏe mạnh và thực hiện hô hấp hoàn toàn bằng cấu trúc mang."
-    ],
-    "answer": "Bởi vì chúng có khả năng nuôi dưỡng con non bằng tuyến sữa và thực hiện hô hấp bằng cấu trúc phổi."
-  },
-  {
-    "question": "Nhóm động vật Lưỡng cư sở hữu tập hợp những đặc điểm sinh lý và sinh thái nổi bật nào được liệt kê dưới đây?",
-    "options": [
-      "Sở hữu một làn da khô ráp, có vảy sừng bao bọc quanh cơ thể và tiến hành quá trình thụ tinh trong.",
-      "Sở hữu một làn da trần ẩm ướt, sống được ở cả cạn và nước, tiến hành quá trình thụ tinh bên ngoài.",
-      "Sở hữu một làn da phủ đầy lông vũ, chi trước hóa thành đôi cánh và tiến hành quá trình thụ tinh trong.",
-      "Sở hữu một làn da phủ đầy lông mao, nuôi con non bằng tuyến sữa và tiến hành quá trình thụ tinh trong."
-    ],
-    "answer": "Sở hữu một làn da trần ẩm ướt, sống được ở cả cạn và nước, tiến hành quá trình thụ tinh bên ngoài."
-  },
-  {
-    "question": "Căn cứ vào đặc điểm sinh cảnh trên Trái Đất, độ đa dạng sinh học thường đạt mức độ cao nhất tại khu vực nào?",
-    "options": [
-      "Khu vực sinh thái rừng rậm nhiệt đới với điều kiện khí hậu luôn duy trì trạng thái vô cùng nóng và ẩm.",
-      "Khu vực sinh thái sa mạc cát vàng với điều kiện khí hậu luôn duy trì trạng thái vô cùng khô và nóng.",
-      "Khu vực sinh thái hai cực Trái đất với điều kiện khí hậu luôn duy trì trạng thái vô cùng khắc nghiệt lạnh.",
-      "Khu vực sinh thái đồng cỏ thảo nguyên với điều kiện khí hậu luôn duy trì trạng thái vô cùng khô và lạnh."
-    ],
-    "answer": "Khu vực sinh thái rừng rậm nhiệt đới với điều kiện khí hậu luôn duy trì trạng thái vô cùng nóng và ẩm."
-  },
-  {
-    "question": "Hành động nào sau đây của con người góp phần tích cực và trực tiếp nhất vào việc bảo vệ độ đa dạng sinh học?",
-    "options": [
-      "Tích cực chặt phá toàn bộ thảm thực vật rừng rậm nhằm gia tăng diện tích đất canh tác cho nông nghiệp.",
-      "Khuyến khích việc săn bắt động vật hoang dã một cách ồ ạt nhằm mục đích phục vụ nhu cầu thực phẩm.",
-      "Thành lập thêm hệ thống các khu bảo tồn tự nhiên và nghiêm cấm tuyệt đối mọi hành vi săn bắt trái phép.",
-      "Đổ trực tiếp một lượng lớn hóa chất chưa qua xử lý xuống các khu vực sông ngòi nhằm tiết kiệm tài chính."
-    ],
-    "answer": "Thành lập thêm hệ thống các khu bảo tồn tự nhiên và nghiêm cấm tuyệt đối mọi hành vi săn bắt trái phép."
-  },
-  {
-    "question": "Đâu là sự phân biệt chính xác nhất về khái niệm khối lượng và trọng lượng của một vật thể trong môn Khoa học tự nhiên?",
-    "options": [
-      "Khối lượng chỉ lượng chất tạo nên vật thể đó (kg), trọng lượng chính là lực hút Trái Đất tác dụng lên vật (N).",
-      "Khối lượng chính là lực hút Trái Đất tác dụng lên vật (N), trọng lượng chỉ lượng chất tạo nên vật thể đó (kg).",
-      "Khối lượng cùng với trọng lượng đều chỉ chung lượng chất tạo nên vật thể đó và cùng được đo bằng đơn vị Newton.",
-      "Khối lượng cùng với trọng lượng đều chỉ chung độ lớn lực hấp dẫn Trái Đất và cùng được đo bằng đơn vị kilôgam."
-    ],
-    "answer": "Khối lượng chỉ lượng chất tạo nên vật thể đó (kg), trọng lượng chính là lực hút Trái Đất tác dụng lên vật (N)."
-  },
-  {
-    "question": "Trong thực tế đời sống hàng ngày, hiện tượng nào dưới đây là một ví dụ điển hình minh chứng cho tác dụng của \"lực không tiếp xúc\"?",
-    "options": [
-      "Lực cản vô cùng mạnh mẽ xuất hiện ở vị trí bánh xe đạp khi bạn phanh gấp trên một đoạn đường nhựa nhám.",
-      "Lực nâng đỡ vững chắc xuất hiện ở bề mặt mặt sàn bằng phẳng khi có một kiện hàng khổng lồ đặt đè lên.",
-      "Lực đẩy vô hình nhưng cực kỳ mạnh mẽ xuất hiện giữa hai cực cùng tên của hai thanh nam châm đặt gần nhau.",
-      "Lực đàn hồi rất mạnh xuất hiện tại vị trí của một sợi dây lò xo bằng thép khi nó bị bàn tay kéo dãn."
-    ],
-    "answer": "Lực đẩy vô hình nhưng cực kỳ mạnh mẽ xuất hiện giữa hai cực cùng tên của hai thanh nam châm đặt gần nhau."
-  },
-  {
-    "question": "Khi thực hiện kỹ năng biểu diễn cấu trúc của một lực bằng hình mũi tên, yếu tố \"độ lớn của lực\" sẽ được thể hiện thông qua đặc điểm nào?",
-    "options": [
-      "Được quy ước và hiển thị rõ ràng thông qua phần dấu chấm tròn đặt tại trung tâm của vật thể đang chịu tác dụng.",
-      "Được quy ước và hiển thị rõ ràng thông qua đường thẳng mang hướng trùng khớp hoàn toàn với phương dịch chuyển của vật thể.",
-      "Được quy ước và hiển thị rõ ràng thông qua phần chiều dài của toàn bộ mũi tên được vẽ chuẩn xác theo một tỉ xích.",
-      "Được quy ước và hiển thị rõ ràng thông qua góc nhọn ở đầu mũi tên hướng về phía mà vật thể đó đang di chuyển."
-    ],
-    "answer": "Được quy ước và hiển thị rõ ràng thông qua phần chiều dài của toàn bộ mũi tên được vẽ chuẩn xác theo một tỉ xích."
-  },
-  {
-    "question": "Tác dụng của lực lên một vật thể có thể gây ra những hệ quả trực tiếp nào dưới đây?",
-    "options": [
-      "Thay đổi trọng lượng, thay đổi hướng chuyển động hoặc làm cho vật thể bị biến dạng hoàn toàn.",
-      "Thay đổi tốc độ, thay đổi hướng chuyển động hoặc làm cho vật thể bị biến dạng hoàn toàn.",
-      "Thay đổi khối lượng, thay đổi hướng chuyển động hoặc làm cho vật thể bị biến dạng hoàn toàn.",
-      "Thay đổi thành phần, thay đổi hướng chuyển động hoặc làm cho vật thể bị biến dạng hoàn toàn."
-    ],
-    "answer": "Thay đổi tốc độ, thay đổi hướng chuyển động hoặc làm cho vật thể bị biến dạng hoàn toàn."
-  },
-  {
-    "question": "Lớp Bò sát trong tự nhiên mang những đặc điểm cấu tạo cơ thể đặc trưng nào sau đây?",
-    "options": [
-      "Làn da trần ẩm, có tuyến nhờn bao bọc bên ngoài và chủ yếu sinh sống ở môi trường cạn.",
-      "Làn da phủ lông, có lớp mỡ dày bao bọc bên ngoài và chủ yếu sinh sống ở môi trường cạn.",
-      "Làn da khô ráp, có vảy sừng bao bọc bên ngoài và chủ yếu sinh sống ở môi trường cạn.",
-      "Làn da mềm mại, có vỏ đá vôi bao bọc bên ngoài và chủ yếu sinh sống ở môi trường cạn."
-    ],
-    "answer": "Làn da khô ráp, có vảy sừng bao bọc bên ngoài và chủ yếu sinh sống ở môi trường cạn."
-  },
-  {
-    "question": "Vì sao nhóm thực vật Hạt kín lại được đánh giá là nhóm có mức độ tiến hóa cao nhất?",
-    "options": [
-      "Do hạt của chúng nằm lộ trần trên các phiến lá noãn và tổ chức cơ thể rất đỗi đơn giản.",
-      "Do chúng sinh sản chủ yếu bằng hệ thống túi bào tử và tổ chức cơ thể rất đỗi phức tạp.",
-      "Do chúng sinh sản chủ yếu bằng hệ thống đảm bào tử và tổ chức cơ thể rất đỗi đơn giản.",
-      "Do hạt của chúng được bảo vệ an toàn bên trong quả và tổ chức cơ thể rất đỗi phức tạp."
-    ],
-    "answer": "Do hạt của chúng được bảo vệ an toàn bên trong quả và tổ chức cơ thể rất đỗi phức tạp."
-  },
-  {
-    "question": "Nhóm động vật Không xương sống Ruột khoang (ví dụ: san hô, hải quỳ) mang đặc điểm hình thái nổi bật nào?",
-    "options": [
-      "Cơ thể mang tính chất đối xứng tỏa tròn ra các hướng và sinh sống hoàn toàn ở dưới nước.",
-      "Cơ thể mang tính chất đối xứng hai bên theo chiều dọc và sinh sống hoàn toàn ở dưới nước.",
-      "Cơ thể mang tính chất phân đốt thành nhiều khoang nhỏ và sinh sống hoàn toàn ở dưới nước.",
-      "Cơ thể mang tính chất mềm mại được bao bọc bởi vỏ cứng và sinh sống hoàn toàn ở dưới nước."
-    ],
-    "answer": "Cơ thể mang tính chất đối xứng tỏa tròn ra các hướng và sinh sống hoàn toàn ở dưới nước."
-  },
-  {
-    "question": "Đặc điểm nhận dạng hình thái điển hình nhất của nhóm thực vật Dương xỉ là gì?",
-    "options": [
-      "Hệ thống lá non thường vươn thẳng đứng lên phía trên và bên trong cấu trúc chưa mạch dẫn.",
-      "Hệ thống lá non thường cuộn tròn lại ở phần đầu lá và bên trong cấu trúc đã có mạch dẫn.",
-      "Hệ thống rễ giả đâm sâu xuống lòng đất để hút nước và bên trong cấu trúc đã có mạch dẫn.",
-      "Hệ thống rễ thật đâm sâu xuống lòng đất để hút nước và bên trong cấu trúc chưa mạch dẫn."
-    ],
-    "answer": "Hệ thống lá non thường cuộn tròn lại ở phần đầu lá và bên trong cấu trúc đã có mạch dẫn."
-  },
-  {
-    "question": "Dựa vào cấu tạo của cơ quan sinh sản, nấm men và nấm mốc được phân loại vào nhóm nào?",
-    "options": [
-      "Nhóm nấm đảm, thực hiện quá trình sinh sản chủ yếu thông qua cấu trúc của các đảm bào tử.",
-      "Nhóm nấm mủ, thực hiện quá trình sinh sản chủ yếu thông qua cấu trúc của các tuyến bào tử.",
-      "Nhóm nấm rễ, thực hiện quá trình sinh sản chủ yếu thông qua cấu trúc của các sợi rễ giả.",
-      "Nhóm nấm túi, thực hiện quá trình sinh sản chủ yếu thông qua cấu trúc của các túi bào tử."
-    ],
-    "answer": "Nhóm nấm túi, thực hiện quá trình sinh sản chủ yếu thông qua cấu trúc của các túi bào tử."
-  },
-  {
-    "question": "Khái niệm về Lực trong môn Khoa học Tự nhiên được định nghĩa chính xác theo phương án nào dưới đây?",
-    "options": [
-      "Lực chính là sự tác dụng nén hoặc ép của vật này lên một vật khác, được đo bằng Kilogam.",
-      "Lực chính là sự thay đổi trạng thái của vật này lên một vật khác, được đo bằng Mét/giây.",
-      "Lực chính là sự tác dụng đẩy hoặc kéo của vật này lên một vật khác, được đo bằng Newton.",
-      "Lực chính là sự chuyển động liên tục của vật này lên một vật khác, được đo bằng Đơn vị."
-    ],
-    "answer": "Lực chính là sự tác dụng đẩy hoặc kéo của vật này lên một vật khác, được đo bằng Newton."
-  },
-  {
-    "question": "Sinh cảnh nào trên Trái Đất thường được ghi nhận có mức độ đa dạng sinh học thấp nhất?",
-    "options": [
-      "Các vùng hoang mạc khô cằn và khu vực hai cực của Trái Đất với thời tiết vô cùng khắc nghiệt.",
-      "Các vùng rừng mưa nhiệt đới và khu vực xích đạo của Trái Đất với thời tiết thay đổi bất thường.",
-      "Các vùng đồng bằng châu thổ và khu vực ven biển của Trái Đất với thời tiết thay đổi bất thường.",
-      "Các vùng thảo nguyên rộng lớn và khu vực ôn đới của Trái Đất với thời tiết vô cùng khắc nghiệt."
-    ],
-    "answer": "Các vùng hoang mạc khô cằn và khu vực hai cực của Trái Đất với thời tiết vô cùng khắc nghiệt."
-  },
-  {
-    "question": "Nhóm động vật thuộc Lớp Chim có cấu tạo cơ thể thích nghi với đời sống bay lượn như thế nào?",
-    "options": [
-      "Cơ thể bao phủ bởi một lớp lông mao dày dặn, chi trước đã biến đổi hoàn toàn thành màng bơi.",
-      "Cơ thể bao phủ bởi một lớp vảy sừng cứng chắc, chi trước đã biến đổi hoàn toàn thành đôi vây.",
-      "Cơ thể bao phủ bởi một lớp màng nhầy ẩm ướt, chi trước đã biến đổi hoàn toàn thành đôi chân.",
-      "Cơ thể bao phủ bởi một lớp lông vũ nhẹ nhàng, chi trước đã biến đổi hoàn toàn thành đôi cánh."
-    ],
-    "answer": "Cơ thể bao phủ bởi một lớp lông vũ nhẹ nhàng, chi trước đã biến đổi hoàn toàn thành đôi cánh."
-  },
-  {
-    "question": "Trong môi trường tự nhiên, các loài nấm đóng vai trò hoại sinh cực kỳ quan trọng nào sau đây?",
-    "options": [
-      "Tham gia tích cực vào quá trình tổng hợp các chất vô cơ đơn giản thành chất hữu cơ phức tạp.",
-      "Tham gia tích cực vào quá trình phân giải xác của các sinh vật chết thành chất khoáng vô cơ.",
-      "Tham gia tích cực vào quá trình hấp thụ trực tiếp nguồn năng lượng dồi dào từ bức xạ mặt trời.",
-      "Tham gia tích cực vào quá trình cộng sinh với các loài thực vật lớn để trao đổi chất dinh dưỡng."
-    ],
-    "answer": "Tham gia tích cực vào quá trình phân giải xác của các sinh vật chết thành chất khoáng vô cơ."
-  },
-  {
-    "question": "Trường hợp nào dưới đây minh họa rõ nét nhất cho sự xuất hiện của một \"lực tiếp xúc\"?",
-    "options": [
-      "Thanh nam châm vĩnh cửu hút chặt một viên bi sắt nhỏ từ khoảng cách xa mà chưa hề chạm vào nó.",
-      "Trái đất liên tục tác dụng một lực hút vô hình lên mặt trăng khiến nó quay quanh quỹ đạo tròn.",
-      "Cầu thủ sử dụng đôi bàn chân của mình để tác dụng một lực đẩy cực mạnh vào quả bóng trên sân.",
-      "Quả táo rụng khỏi cành và rơi thẳng xuống mặt đất do chịu sự tác dụng của lực hút từ trái đất."
-    ],
-    "answer": "Cầu thủ sử dụng đôi bàn chân của mình để tác dụng một lực đẩy cực mạnh vào quả bóng trên sân."
-  },
-  {
-    "question": "Khi tiến hành biểu diễn một lực bằng mũi tên, yếu tố \"phương của lực\" được thể hiện thế nào?",
-    "options": [
-      "Bằng một đường thẳng mang hướng hoàn toàn trùng khớp với phương tác dụng của chính lực đó.",
-      "Bằng một dấu chấm tròn được định vị chính xác tại điểm trung tâm của vật thể chịu tác dụng.",
-      "Bằng chiều dài của toàn bộ đoạn thẳng được đo đạc và vẽ chuẩn xác theo một tỉ xích cố định.",
-      "Bằng một góc nhọn ở đầu mũi tên luôn hướng về phía trung tâm của Trái Đất nằm ở phía dưới."
-    ],
-    "answer": "Bằng một đường thẳng mang hướng hoàn toàn trùng khớp với phương tác dụng của chính lực đó."
-  },
-  {
-    "question": "Sự xuất hiện và sinh sôi mạnh mẽ của các loại nấm mốc trên bề mặt thức ăn thường sẽ dẫn đến hậu quả trực tiếp nào dưới đây?",
-    "options": [
-      "Chúng đẩy nhanh quá trình lên men sinh học tự nhiên khiến cho bề mặt thực phẩm trở nên thơm ngon và giàu dinh dưỡng hơn.",
-      "Chúng tiết ra các loại enzyme phân giải làm cho toàn bộ cấu trúc thực phẩm bị phá hủy và vô cùng nhanh chóng bị ôi thiu.",
-      "Chúng đóng vai trò tựa như một lớp màng mỏng bảo vệ bên ngoài giúp thực phẩm duy trì được độ tươi giòn trong nhiều ngày.",
-      "Chúng hút cạn toàn bộ lượng nước bên trong khiến cho cấu trúc thực phẩm trở nên vô cùng khô cứng nhưng vẫn an toàn để ăn."
-    ],
-    "answer": "Chúng tiết ra các loại enzyme phân giải làm cho toàn bộ cấu trúc thực phẩm bị phá hủy và vô cùng nhanh chóng bị ôi thiu."
-  },
-  {
-    "question": "Loài nấm rơm hay nấm hương thuộc nhóm nấm đảm, vậy chúng thực hiện quá trình duy trì nòi giống chủ yếu thông qua cấu trúc đặc trưng nào?",
-    "options": [
-      "Chúng sinh sản chủ yếu thông qua việc hình thành các cấu trúc túi bào tử nằm ở mặt dưới mũ nấm.",
-      "Chúng sinh sản chủ yếu thông qua quá trình phân chia tế bào chất diễn ra liên tục trên thân nấm.",
-      "Chúng sinh sản chủ yếu thông qua việc hình thành các cấu trúc đảm bào tử nằm ở mặt dưới mũ nấm.",
-      "Chúng sinh sản chủ yếu thông qua quá trình nảy chồi trực tiếp từ các sợi nấm rễ dưới lòng đất."
-    ],
-    "answer": "Chúng sinh sản chủ yếu thông qua việc hình thành các cấu trúc đảm bào tử nằm ở mặt dưới mũ nấm."
-  },
-  {
-    "question": "Dựa trên đặc điểm cấu tạo tế bào học, sinh vật nào dưới đây được phân loại vào nhóm nấm có tổ chức cơ thể đơn bào cực kỳ nhỏ bé?",
-    "options": [
-      "Loài nấm rơm thường xuyên mọc thành từng cụm vô cùng to lớn ở trên các đống rơm rạ mục nát ẩm ướt.",
-      "Loài nấm men thường được con người ứng dụng vô cùng phổ biến trong ngành công nghiệp sản xuất bánh mì.",
-      "Loài nấm hương chuyên sinh trưởng và phát triển mạnh mẽ bằng cách bám chặt trên thân cây gỗ mục nát.",
-      "Loài nấm mộc nhĩ có hình dáng uốn lượn giống như tai người thường mọc trên các khúc thân cây khô héo."
-    ],
-    "answer": "Loài nấm men thường được con người ứng dụng vô cùng phổ biến trong ngành công nghiệp sản xuất bánh mì."
-  },
-  {
-    "question": "Tại sao trong quá trình nuôi trồng nấm, người ta bắt buộc phải sử dụng các loại giá thể giàu chất hữu cơ và luôn duy trì độ ẩm ổn định?",
-    "options": [
-      "Nấm cần hấp thụ trực tiếp ánh sáng mặt trời để tự tạo ra thức ăn, và độ ẩm giúp thân nấm duy trì được sự dẻo dai vững chắc.",
-      "Nấm sử dụng nguồn chất vô cơ trong đất để tự phân giải thành dưỡng chất, và độ ẩm giúp bộ rễ phát triển sâu xuống nền đất.",
-      "Nấm có khả năng tự tạo ra nguồn dinh dưỡng nhờ vào vi khuẩn cộng sinh, và độ ẩm giúp chúng tránh bị tia cực tím tiêu diệt.",
-      "Nấm không tự tổng hợp được thức ăn nên cần hút chất hữu cơ từ rơm rạ, và độ ẩm giúp chúng sinh trưởng tạo thành quả thể."
-    ],
-    "answer": "Nấm không tự tổng hợp được thức ăn nên cần hút chất hữu cơ từ rơm rạ, và độ ẩm giúp chúng sinh trưởng tạo thành quả thể."
-  },
-  {
-    "question": "Đâu là nguyên nhân cốt lõi khiến cho nhiều người dân dễ gặp phải tình trạng ngộ độc cực kỳ nguy hiểm khi hái và sử dụng các loại nấm mọc tự nhiên trong rừng?",
-    "options": [
-      "Do trong môi trường rừng có vô số các loài nấm mang độc tố chết người nhưng lại có hình dáng giống hệt nấm ăn được.",
-      "Do môi trường rừng luôn ẩn chứa rất nhiều vi khuẩn độc hại bám dính chặt chẽ vào phần bề mặt của tất cả các loại nấm.",
-      "Do nấm mọc tự nhiên trong rừng thường xuyên hấp thụ lượng lớn khí độc từ quá trình phân hủy xác động vật chết xung quanh.",
-      "Do các loại nấm tự nhiên khi không được chăm sóc và bón phân đúng quy trình sẽ tự động sản sinh ra các hóa chất độc hại."
-    ],
-    "answer": "Do trong môi trường rừng có vô số các loài nấm mang độc tố chết người nhưng lại có hình dáng giống hệt nấm ăn được."
-  },
-  {
-    "question": "Khi nghiên cứu sự tiến hóa của giới thực vật, đặc điểm cấu tạo sinh học nào dưới đây minh chứng rêu là nhóm thực vật có tổ chức cơ thể đơn giản nhất?",
-    "options": [
-      "Toàn bộ cơ thể của rêu chỉ có thể sinh sản được thông qua việc tạo ra các loại hạt phấn phát tán nhờ vào sức mạnh gió.",
-      "Toàn bộ cơ thể của rêu hoàn toàn chưa có cấu trúc rễ chính thức để hút nước và bên trong thân cũng chưa có mạch dẫn.",
-      "Toàn bộ cơ thể của rêu đã có hệ thống rễ thật đâm sâu nhưng lại thiếu đi phần lá và cành để thực hiện việc quang hợp.",
-      "Toàn bộ cơ thể của rêu mang kích thước rất lớn với hệ thống lá non cuộn tròn ở đầu và sinh sản thông qua nón cái lớn."
-    ],
-    "answer": "Toàn bộ cơ thể của rêu hoàn toàn chưa có cấu trúc rễ chính thức để hút nước và bên trong thân cũng chưa có mạch dẫn."
-  },
-  {
-    "question": "Đặc điểm hình thái đặc trưng nào dưới đây giúp chúng ta dễ dàng nhận biết và phân biệt chính xác một cây dương xỉ so với các loài cây thuộc ngành rêu?",
-    "options": [
-      "Dương xỉ sở hữu một hệ thống thân gỗ vô cùng to lớn vững chắc và có khả năng sinh sản mạnh mẽ bằng các nón thông.",
-      "Dương xỉ sở hữu hệ thống rễ giả đâm sâu xuống lòng đất ngập nước và đẻ ra những bông hoa có màu sắc vô cùng rực rỡ.",
-      "Dương xỉ sở hữu những chiếc lá non thường cuộn tròn lại ở phần đầu lá và bên trong cấu trúc thân cây đã có mạch dẫn.",
-      "Dương xỉ sở hữu bộ rễ cọc bám chặt vào đá, thân cây hoàn toàn không có mạch dẫn nước nhưng lại cho ra rất nhiều quả."
-    ],
-    "answer": "Dương xỉ sở hữu những chiếc lá non thường cuộn tròn lại ở phần đầu lá và bên trong cấu trúc thân cây đã có mạch dẫn."
-  },
-  {
-    "question": "Sự khác biệt lớn nhất về vị trí và cấu trúc bảo vệ hạt giúp phân biệt rõ ràng giữa nhóm thực vật Hạt trần và nhóm thực vật Hạt kín là gì?",
-    "options": [
-      "Hạt của nhóm thực vật Hạt trần mọc lộ trần ra bên ngoài trên các phiến lá noãn hở và chúng hoàn toàn chưa có quả.",
-      "Hạt của nhóm thực vật Hạt trần luôn được bao bọc an toàn bên trong phần thịt quả, trong khi Hạt kín không có quả.",
-      "Hạt của nhóm thực vật Hạt trần hình thành từ bên trong túi bào tử mặt dưới lá, trong khi Hạt kín hình thành từ nón.",
-      "Hạt của nhóm thực vật Hạt trần có kích thước cực kỳ nhỏ bé và phát tán nhờ gió, trong khi Hạt kín thì cực kỳ khổng lồ."
-    ],
-    "answer": "Hạt của nhóm thực vật Hạt trần mọc lộ trần ra bên ngoài trên các phiến lá noãn hở và chúng hoàn toàn chưa có quả."
-  },
-  {
-    "question": "Hệ thống cây xanh luôn được các nhà khoa học ví von là \"lá phổi xanh\" của môi trường tự nhiên chủ yếu là nhờ vào chức năng sinh lý đặc biệt nào?",
-    "options": [
-      "Khả năng thực hiện hô hấp, hấp thụ một lượng lớn khí O2 tinh khiết và nhả ra khí CO2 sưởi ấm bầu khí quyển.",
-      "Khả năng thực hiện quang hợp, hấp thụ một lượng lớn khí CO2 độc hại và nhả ra khí O2 duy trì sự sống.",
-      "Khả năng hút nước ngầm sâu dưới lòng đất rồi thoát hơi nước qua lá giúp điều hòa nhiệt độ toàn cầu.",
-      "Khả năng tỏa bóng râm rộng lớn bao phủ mặt đất giúp làm mát không gian và chống lại hiện tượng xói mòn."
-    ],
-    "answer": "Khả năng thực hiện quang hợp, hấp thụ một lượng lớn khí CO2 độc hại và nhả ra khí O2 duy trì sự sống."
-  },
-  {
-    "question": "Lớp vỏ ngoài cấu tạo từ chất chitin vững chắc, cơ thể phân chia thành ba phần rõ rệt và các phần phụ khớp động với nhau là đặc điểm của ngành động vật nào?",
-    "options": [
-      "Đó là đặc điểm điển hình của nhóm ngành động vật Giun đốt, thường sinh sống chui rúc ở dưới bề mặt lớp đất mùn.",
-      "Đó là đặc điểm điển hình của nhóm ngành động vật Ruột khoang, thường sinh sống bám chặt vào các rạn san hô biển.",
-      "Đó là đặc điểm điển hình của nhóm ngành động vật Chân khớp, nhóm động vật được đánh giá là đa dạng nhất hành tinh.",
-      "Đó là đặc điểm điển hình của nhóm ngành động vật Thân mềm, thường được bao bọc bởi một lớp vỏ đá vôi vô cùng cứng."
-    ],
-    "answer": "Đó là đặc điểm điển hình của nhóm ngành động vật Chân khớp, nhóm động vật được đánh giá là đa dạng nhất hành tinh."
-  },
-  {
-    "question": "Khi tiến hành nghiên cứu về sự đa dạng sinh học của lớp Lưỡng cư (như ếch, nhái), phát biểu nào dưới đây là hoàn toàn sai lệch với đặc tính của chúng?",
-    "options": [
-      "Chúng là những loài sinh vật sở hữu một làn da trần trụi, luôn luôn duy trì độ ẩm ướt và rất dễ bị tổn thương vật lý.",
-      "Chúng là những loài sinh vật mang khả năng hô hấp linh hoạt thông qua cả cấu trúc bề mặt da và hệ thống phổi bên trong.",
-      "Chúng là những loài sinh vật tiến hành quá trình sinh sản thông qua hình thức thụ tinh ở bên ngoài môi trường nước ngọt.",
-      "Chúng là những loài sinh vật sở hữu một làn da thô ráp phủ đầy vảy sừng cứng chắc và chỉ sinh sống ở nơi khô ráo."
-    ],
-    "answer": "Chúng là những loài sinh vật sở hữu một làn da thô ráp phủ đầy vảy sừng cứng chắc và chỉ sinh sống ở nơi khô ráo."
-  },
-  {
-    "question": "Trong số các đại diện động vật được liệt kê dưới đây, sinh vật nào tuy sở hữu hình dáng bên ngoài vô cùng giống loài cá nhưng lại được xếp vào lớp Thú?",
-    "options": [
-      "Loài cá mập trắng với bộ hàm sắc nhọn và hệ thống hô hấp hoạt động hiệu quả nhờ vào cấu trúc của màng mang.",
-      "Loài cá chuồn với vây ngực phát triển cực lớn giúp chúng có khả năng phóng vọt và lướt đi trên mặt nước biển.",
-      "Loài cá ngựa với kích thước nhỏ bé, thường bơi thẳng đứng và cá ngựa đực chịu trách nhiệm ấp trứng trong túi.",
-      "Loài cá heo với khả năng bơi lội xuất sắc, duy trì hô hấp bằng phổi và nuôi dưỡng con non bằng hệ tuyến sữa."
-    ],
-    "answer": "Loài cá heo với khả năng bơi lội xuất sắc, duy trì hô hấp bằng phổi và nuôi dưỡng con non bằng hệ tuyến sữa."
-  },
-  {
-    "question": "Khi khảo sát sự phân bố các loài sinh vật trên toàn cầu, những sinh cảnh tự nhiên nào dưới đây thường được ghi nhận có mức độ đa dạng sinh học thấp nhất?",
-    "options": [
-      "Các vùng rừng mưa nhiệt đới rậm rạp trải dài và khu vực thảo nguyên ôn đới mát mẻ nhiều cỏ.",
-      "Các vùng hoang mạc khô cằn thiếu nước nghiêm trọng và khu vực hai cực Trái Đất vô cùng lạnh giá.",
-      "Các vùng đồng bằng châu thổ sông ngòi trù phú và khu vực các rạn san hô nông ven bờ biển nhiệt đới.",
-      "Các vùng rừng lá kim taiga trải rộng ở phương bắc và khu vực các khu rừng ngập mặn sát bờ biển sâu."
-    ],
-    "answer": "Các vùng hoang mạc khô cằn thiếu nước nghiêm trọng và khu vực hai cực Trái Đất vô cùng lạnh giá."
-  },
-  {
-    "question": "Trong thực tiễn đời sống xã hội con người, yếu tố nào dưới đây KHÔNG PHẢI là một trong những vai trò cốt lõi của hệ thống đa dạng sinh học tự nhiên?",
-    "options": [
-      "Hệ thống đa dạng sinh học là nguồn cung cấp dồi dào các loại lương thực và thực phẩm thiết yếu cho toàn nhân loại.",
-      "Hệ thống đa dạng sinh học là nguồn cung cấp trực tiếp các loại khoáng sản kim loại vô giá nằm sâu dưới lòng đất đá.",
-      "Hệ thống đa dạng sinh học là nguồn cung cấp phong phú các loại dược liệu quý hiếm phục vụ cho ngành y tế chữa bệnh.",
-      "Hệ thống đa dạng sinh học là nguồn cung cấp liên tục các nguyên vật liệu thô sơ cho hàng loạt ngành sản xuất công nghiệp."
-    ],
-    "answer": "Hệ thống đa dạng sinh học là nguồn cung cấp trực tiếp các loại khoáng sản kim loại vô giá nằm sâu dưới lòng đất đá."
-  },
-  {
-    "question": "Trong lĩnh vực vật lý cơ học, khái niệm cốt lõi về \"Lực\" được các chuyên gia định nghĩa một cách đầy đủ và chính xác nhất theo phương án nào dưới đây?",
-    "options": [
-      "Lực được định nghĩa là sự gia tăng khối lượng liên tục của một vật thể khi nó di chuyển với một tốc độ cực kỳ nhanh chóng.",
-      "Lực được định nghĩa là sự biến đổi trạng thái nhiệt độ đột ngột của một vật thể khi nó ma sát trực tiếp với một vật thể khác.",
-      "Lực được định nghĩa là sự sụt giảm khối lượng liên tục của một vật thể khi nó di chuyển với một tốc độ cực kỳ chậm chạp.",
-      "Lực được định nghĩa là sự tác dụng đẩy hoặc kéo trực tiếp của vật thể này lên trên bề mặt của một vật thể khác trong không gian."
-    ],
-    "answer": "Lực được định nghĩa là sự tác dụng đẩy hoặc kéo trực tiếp của vật thể này lên trên bề mặt của một vật thể khác trong không gian."
-  },
-  {
-    "question": "Khi người học sinh cần biểu diễn một lực kéo bằng hình vẽ kỹ thuật, yếu tố chiều dài của mũi tên được sử dụng nhằm mục đích mô tả cho đại lượng vật lý nào?",
-    "options": [
-      "Chiều dài mũi tên được vẽ để thể hiện chính xác hướng chuyển động tịnh tiến của vật thể trên không gian.",
-      "Chiều dài mũi tên được vẽ để thể hiện chính xác điểm đặt của lực tác dụng ngay tại tâm của vật thể đó.",
-      "Chiều dài mũi tên được vẽ để thể hiện chính xác độ lớn của lực kéo dựa trên một tỉ xích đã cho từ trước.",
-      "Chiều dài mũi tên được vẽ để thể hiện chính xác gia tốc mà vật thể đạt được sau khi nhận lực tác động."
-    ],
-    "answer": "Chiều dài mũi tên được vẽ để thể hiện chính xác độ lớn của lực kéo dựa trên một tỉ xích đã cho từ trước."
-  }
+{
+"subject":"Sinh học",
+"difficulty":"hell",
+"content":"Đặc điểm sinh sản nổi bật nhất của các loài nấm đảm (ví dụ như nấm rơm) là gì?",
+"a":"Hình thành các túi bào tử để duy trì và phát triển nòi giống.",
+"b":"Hình thành các đảm bào tử để duy trì và phát triển nòi giống.",
+"c":"Phân chia các tế bào soma để duy trì và phát triển nòi giống.",
+"d":"Nảy chồi từ tế bào cơ thể mẹ để phát triển thành nòi giống.",
+"correct":"Hình thành các đảm bào tử để duy trì và phát triển nòi giống.",
+"explain":"Nấm đảm sinh sản bằng đảm bào tử hình thành trên cấu trúc gọi là đảm."
+},
+{
+"subject":"Sinh học",
+"difficulty":"hell",
+"content":"Trong thế giới tự nhiên, loài nấm nào dưới đây được các nhà khoa học xếp vào nhóm nấm đơn bào?",
+"a":"Nấm hương, loài nấm thường mọc ở trên các thân cây gỗ bị mục.",
+"b":"Nấm mộc nhĩ, loài nấm thường mọc ở trên các thân cây bị mục.",
+"c":"Nấm men, loài nấm thường được sử dụng phổ biến trong ngành lên men.",
+"d":"Nấm rơm, loài nấm thường mọc rải rác trên các đống rơm rạ ẩm.",
+"correct":"Nấm men, loài nấm thường được sử dụng phổ biến trong ngành lên men.",
+"explain":"Nấm men là nấm đơn bào, thường dùng trong quá trình lên men."
+},
+{
+"subject":"Sinh học",
+"difficulty":"hell",
+"content":"Dấu hiệu nhận biết bên ngoài nào sau đây giúp chúng ta phân biệt được một loài nấm có chứa độc tố?",
+"a":"Màu sắc vô cùng sặc sỡ, phần thân có vòng cuống và bao gốc nấm.",
+"b":"Màu sắc rất đỗi tối tăm, phần thân không vòng cuống và không bao gốc.",
+"c":"Màu sắc khá nhạt nhòa, phần mũ nấm có kích thước cực kỳ to lớn.",
+"d":"Màu sắc rất trắng sáng, phần thân nấm có rất nhiều rễ giả bám chặt.",
+"correct":"Màu sắc vô cùng sặc sỡ, phần thân có vòng cuống và bao gốc nấm.",
+"explain":"Nhiều loài nấm độc có màu sắc sặc sỡ và có vòng cuống cùng bao gốc."
+},
+{
+"subject":"Sinh học",
+"difficulty":"hell",
+"content":"Khi thực hiện kỹ thuật trồng nấm rơm, nếu người trồng tưới quá nhiều nước thì nấm sẽ phát triển kém hoặc chết. Nguyên nhân chính là do đâu?",
+"a":"Tình trạng nước thừa rửa trôi hết lượng chất dinh dưỡng khiến nấm không còn thức ăn sinh trưởng.",
+"b":"Vi khuẩn có hại sinh sôi vô cùng mạnh mẽ, trực tiếp tấn công và tiêu diệt hoàn toàn nấm.",
+"c":"Môi trường sống bị ứ đọng nước khiến nấm bị thiếu hụt nguồn dưỡng khí để duy trì sự hô hấp.",
+"d":"Nhiệt độ xung quanh môi trường giảm xuống quá sâu khiến cấu trúc tế bào nấm bị đóng băng vỡ vụn.",
+"correct":"Môi trường sống bị ứ đọng nước khiến nấm bị thiếu hụt nguồn dưỡng khí để duy trì sự hô hấp.",
+"explain":"Nấm cần oxy để hô hấp; nước ứ đọng làm giảm lượng oxy trong giá thể."
+},
+{
+"subject":"Sinh học",
+"difficulty":"hell",
+"content":"Đặc điểm sinh học nào dưới đây là hoàn toàn chính xác khi mô tả về nhóm thực vật thuộc ngành Rêu?",
+"a":"Cơ thể tương đối nhỏ bé, sống tại nơi ẩm ướt, chưa có rễ thật, sinh sản bằng nón cái.",
+"b":"Cơ thể tương đối nhỏ bé, sống tại nơi ẩm ướt, chưa có rễ thật, sinh sản bằng bào tử.",
+"c":"Cơ thể sinh trưởng cực tốt, sống tại nơi khô hạn, đã có rễ thật, sinh sản bằng bào tử.",
+"d":"Cơ thể sinh trưởng cực tốt, sống tại nơi ẩm ướt, đã có mạch dẫn, sinh sản bằng hoa quả.",
+"correct":"Cơ thể tương đối nhỏ bé, sống tại nơi ẩm ướt, chưa có rễ thật, sinh sản bằng bào tử.",
+"explain":"Rêu là thực vật bậc thấp, chưa có rễ thật và sinh sản bằng bào tử."
+}
 ]
-

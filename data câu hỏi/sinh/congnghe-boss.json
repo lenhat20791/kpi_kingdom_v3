@@ -1,402 +1,252 @@
- [
+[
   {
-    "question": "Loại vải nào sau đây thường được ưu tiên sử dụng để may các loại áo sơ mi?",
+    "question": "Vải nào thường được dùng để may áo sơ mi?",
     "options": [
-      "Chất liệu vải len tự nhiên",
-      "Chất liệu vải sợi cotton",
-      "Chất liệu vải nỉ nhân tạo",
-      "Chất liệu vải dạ giữ ấm"
+      "Vải len",
+      "Vải cotton",
+      "Vải nỉ",
+      "Vải dạ"
     ],
-    "answer": "Chất liệu vải sợi cotton"
+    "answer": "Vải cotton"
   },
   {
-    "question": "Khi chọn mua trang phục, việc đọc nhãn có ghi “100% cotton” giúp em nhận biết được điều gì quan trọng?",
+    "question": "Nhãn “100% cotton” trên quần áo cho biết điều gì?",
     "options": [
-      "Trang phục được may hoàn toàn bằng vải tổng hợp",
-      "Trang phục có pha thêm sợi nilon để tăng độ bền",
-      "Trang phục rất dễ bị nhàu và co rút khi mang giặt",
-      "Trang phục làm từ sợi bông tự nhiên, thấm hút tốt"
+      "May từ vải tổng hợp",
+      "Pha sợi nilon",
+      "Dễ nhăn và co rút",
+      "Làm từ sợi bông tự nhiên, thấm hút tốt"
     ],
-    "answer": "Trang phục làm từ sợi bông tự nhiên, thấm hút tốt"
+    "answer": "Làm từ sợi bông tự nhiên, thấm hút tốt"
   },
   {
-    "question": "Thành phần sợi dệt của vải ghi “100% polyester” trên nhãn quần áo cung cấp thông tin loại vải đó được làm từ loại sợi nào?",
+    "question": "Nhãn “100% polyester” cho biết vải được làm từ loại sợi nào?",
     "options": [
-      "Được dệt từ loại sợi tổng hợp",
-      "Được dệt từ loại sợi tự nhiên",
-      "Được dệt từ sợi bán tổng hợp",
-      "Được dệt từ các loại sợi len"
+      "Sợi tổng hợp",
+      "Sợi tự nhiên",
+      "Sợi bán tổng hợp",
+      "Sợi len"
     ],
-    "answer": "Được dệt từ loại sợi tổng hợp"
+    "answer": "Sợi tổng hợp"
   },
   {
-    "question": "Vì sao trong quá trình may quần thể thao, người ta thường ưu tiên chọn vải thun co giãn thay vì vải lụa?",
+    "question": "Vì sao quần thể thao thường dùng vải thun thay vì vải lụa?",
     "options": [
-      "Vì vải thun thường có màu sắc tươi sáng hơn nhiều.",
-      "Vì vải lụa có giá thành rẻ hơn và dễ dàng giặt giũ.",
-      "Vì vải thun có đặc tính không bị nhăn và khỏi ủi.",
-      "Vì vải thun có độ co giãn tốt, dễ dàng vận động."
+      "Màu sắc tươi sáng hơn",
+      "Rẻ hơn",
+      "Không nhăn",
+      "Co giãn tốt, dễ vận động"
     ],
-    "answer": "Vì vải thun có độ co giãn tốt, dễ dàng vận động."
+    "answer": "Co giãn tốt, dễ vận động"
   },
   {
-    "question": "Khi lựa chọn chất liệu vải để may váy đi dự tiệc, yếu tố nào sau đây cần được người mặc ưu tiên hàng đầu?",
+    "question": "Khi may váy dự tiệc, yếu tố vải nào thường được ưu tiên?",
     "options": [
-      "Tiêu chí về độ co giãn và sự thoải mái của vải",
-      "Tiêu chí về màu sắc và độ bóng của bề mặt vải",
-      "Tiêu chí về khả năng thấm hút mồ hôi của vải",
-      "Tiêu chí về độ dày và khả năng giữ ấm của vải"
+      "Độ co giãn",
+      "Màu sắc và độ bóng",
+      "Khả năng thấm hút",
+      "Độ dày giữ ấm"
     ],
-    "answer": "Tiêu chí về màu sắc và độ bóng của bề mặt vải"
+    "answer": "Màu sắc và độ bóng"
   },
   {
-    "question": "Khi thiết kế và may quần áo dành cho trẻ nhỏ, nên chọn loại vải nào là phù hợp nhất và vì lý do gì?",
+    "question": "Quần áo cho trẻ nhỏ nên dùng loại vải nào?",
     "options": [
-      "Vải polyester, vì chất liệu này ít bị nhăn và rất bền.",
-      "Vải sợi len, vì khả năng giữ ấm rất tốt trong quanh năm.",
-      "Vải cotton, vì đặc tính mềm, thoáng, thấm mồ hôi tốt.",
-      "Vải thun dày, vì chất liệu này có độ co giãn cực kỳ ít."
+      "Polyester",
+      "Len",
+      "Cotton",
+      "Thun dày"
     ],
-    "answer": "Vải cotton, vì đặc tính mềm, thoáng, thấm mồ hôi tốt."
+    "answer": "Cotton"
   },
   {
-    "question": "Trang phục đối với đời sống con người mang lại vai trò nào là quan trọng và thiết thực nhất?",
+    "question": "Vai trò quan trọng nhất của trang phục là gì?",
     "options": [
-      "Giúp thể hiện rõ cá tính và địa vị cao trong xã hội.",
-      "Giúp phân biệt rõ ràng giới tính riêng của mỗi cá nhân.",
-      "Dùng để làm những món quà tặng vô cùng ý nghĩa cho bạn.",
-      "Bảo vệ an toàn cơ thể và làm đẹp thêm cho con người."
+      "Thể hiện địa vị",
+      "Phân biệt giới tính",
+      "Làm quà tặng",
+      "Bảo vệ cơ thể và làm đẹp"
     ],
-    "answer": "Bảo vệ an toàn cơ thể và làm đẹp thêm cho con người."
+    "answer": "Bảo vệ cơ thể và làm đẹp"
   },
   {
-    "question": "Trang phục của con người trong đời sống thường có sự thay đổi linh hoạt dựa theo những yếu tố cơ bản nào sau đây?",
+    "question": "Trang phục thay đổi theo yếu tố nào?",
     "options": [
-      "Môi trường thời tiết, khí hậu, văn hóa và nghề nghiệp.",
-      "Mức độ tuổi tác, chiều cao cơ thể và đặc điểm giới tính.",
-      "Những sở thích cá nhân của từng người trong đời sống.",
-      "Những màu sắc yêu thích của mỗi cá nhân trong các vùng."
+      "Thời tiết, khí hậu, văn hóa, nghề nghiệp",
+      "Tuổi và chiều cao",
+      "Sở thích cá nhân",
+      "Màu sắc yêu thích"
     ],
-    "answer": "Môi trường thời tiết, khí hậu, văn hóa và nghề nghiệp."
+    "answer": "Thời tiết, khí hậu, văn hóa, nghề nghiệp"
   },
   {
-    "question": "Những loại trang phục có thiết kế rộng rãi và chất liệu thoáng mát thường phù hợp để mặc trong điều kiện nào?",
+    "question": "Trang phục rộng và thoáng mát phù hợp khi nào?",
     "options": [
-      "Mặc trong điều kiện thời tiết mùa đông vô cùng giá lạnh.",
-      "Mặc trong điều kiện thời tiết mùa hè vô cùng nóng bức.",
-      "Mặc khi tham gia vào các buổi dạ tiệc vô cùng sang trọng.",
-      "Mặc khi tham gia vào các buổi biểu diễn nghệ thuật lớn."
+      "Mùa đông",
+      "Mùa hè",
+      "Dạ tiệc",
+      "Biểu diễn"
     ],
-    "answer": "Mặc trong điều kiện thời tiết mùa hè vô cùng nóng bức."
+    "answer": "Mùa hè"
   },
   {
-    "question": "Những người có dáng người thấp và tròn nên ưu tiên chọn trang phục như thế nào để vóc dáng trông cao và thon gọn hơn?",
+    "question": "Người thấp và tròn nên chọn trang phục như thế nào?",
     "options": [
-      "Mặc các loại áo có họa tiết kẻ sọc ngang và màu sáng.",
-      "Mặc các loại áo có họa tiết to bản và màu sắc sặc sỡ.",
-      "Mặc trang phục có màu sẫm, họa tiết nhỏ và kẻ sọc dọc.",
-      "Mặc quần áo có thiết kế rộng rãi và màu sắc tươi sáng."
+      "Sọc ngang màu sáng",
+      "Họa tiết to",
+      "Màu sẫm, sọc dọc",
+      "Quần áo rộng sáng màu"
     ],
-    "answer": "Mặc trang phục có màu sẫm, họa tiết nhỏ và kẻ sọc dọc."
+    "answer": "Màu sẫm, sọc dọc"
   },
   {
-    "question": "Để luôn giữ cho bộ trang phục ở trạng thái phẳng phiu và thật sự gọn gàng, chúng ta cần thực hiện thao tác nào?",
+    "question": "Để trang phục luôn gọn gàng cần làm gì?",
     "options": [
-      "Gấp gọn hoặc treo móc đúng cách, ủi phẳng trước khi mặc.",
-      "Cất ngay quần áo vào trong tủ đồ ngay cả khi chúng còn ướt.",
-      "Phơi tất cả các loại quần áo trong phòng kín thiếu ánh nắng.",
-      "Chỉ cần dùng nước xịt thơm để khử mùi thay cho việc giặt."
+      "Gấp/treo đúng cách và ủi trước khi mặc",
+      "Cất vào tủ khi còn ướt",
+      "Phơi trong phòng kín",
+      "Xịt nước thơm"
     ],
-    "answer": "Gấp gọn hoặc treo móc đúng cách, ủi phẳng trước khi mặc."
+    "answer": "Gấp/treo đúng cách và ủi trước khi mặc"
   },
   {
-    "question": "Vì sao người tiêu dùng cần phải đọc kỹ nhãn hướng dẫn sử dụng trước khi mua hoặc tiến hành giặt một bộ trang phục?",
+    "question": "Vì sao cần đọc nhãn hướng dẫn trên quần áo?",
     "options": [
-      "Để nắm rõ giá tiền sản phẩm và thông tin về nơi sản xuất.",
-      "Để biết cách giặt, ủi, bảo quản phù hợp với từng loại vải.",
-      "Để biết chính xác danh tính của người thiết kế trang phục.",
-      "Để nắm rõ thông số kích thước cơ thể của người mặc đồ đó."
+      "Biết giá tiền",
+      "Biết cách giặt, ủi, bảo quản",
+      "Biết nhà thiết kế",
+      "Biết kích thước người mặc"
     ],
-    "answer": "Để biết cách giặt, ủi, bảo quản phù hợp với từng loại vải."
+    "answer": "Biết cách giặt, ủi, bảo quản"
   },
   {
-    "question": "Trong quá trình lựa chọn trang phục, yếu tố quan trọng nhất mà người mặc cần phải xem xét và ưu tiên đầu tiên là gì?",
+    "question": "Yếu tố quan trọng nhất khi chọn trang phục là gì?",
     "options": [
-      "Màu sắc của trang phục phải hoàn toàn phù hợp với sở thích.",
-      "Kiểu dáng phải được cập nhật theo xu hướng thời trang mới.",
-      "Phù hợp với vóc dáng cơ thể, hoàn cảnh và mục đích sử dụng.",
-      "Giá thành sản phẩm phải thật thấp để tiết kiệm nhiều chi phí."
+      "Màu sắc yêu thích",
+      "Xu hướng thời trang",
+      "Phù hợp vóc dáng và hoàn cảnh",
+      "Giá rẻ"
     ],
-    "answer": "Phù hợp với vóc dáng cơ thể, hoàn cảnh và mục đích sử dụng."
+    "answer": "Phù hợp vóc dáng và hoàn cảnh"
   },
   {
-    "question": "Trang phục sử dụng để đi học của học sinh nên ưu tiên đáp ứng những đặc điểm nào sau đây?",
+    "question": "Trang phục đi học nên có đặc điểm gì?",
     "options": [
-      "Sử dụng màu sắc sặc sỡ, thiết kế kiểu dáng vô cùng cầu kỳ.",
-      "Sử dụng chất vải bóng rủ, tạo nên vẻ đẹp sang trọng quý phái.",
-      "Thiết kế theo phong cách hoàn toàn tự do và mang tính phá cách.",
-      "Thiết kế đảm bảo sự thoải mái, gọn gàng và thật sự lịch sự."
+      "Sặc sỡ",
+      "Sang trọng",
+      "Phá cách",
+      "Thoải mái, gọn gàng, lịch sự"
     ],
-    "answer": "Thiết kế đảm bảo sự thoải mái, gọn gàng và thật sự lịch sự."
+    "answer": "Thoải mái, gọn gàng, lịch sự"
   },
   {
-    "question": "Khi lựa chọn trang phục dành riêng cho các hoạt động thể thao, tiêu chí cốt lõi nào cần được chú trọng nhất?",
+    "question": "Trang phục thể thao cần ưu tiên điều gì?",
     "options": [
-      "Ưu tiên màu sắc thật tươi sáng và chất liệu vải may cứng cáp.",
-      "Ưu tiên chất liệu vải co giãn tốt và thấm hút mồ hôi hiệu quả.",
-      "Ưu tiên chất liệu vải may thật dày dặn và có độ co giãn rất ít.",
-      "Ưu tiên chất liệu vải bóng bẩy, bắt mắt và mang vẻ sang trọng."
+      "Màu sáng",
+      "Co giãn và thấm mồ hôi tốt",
+      "Vải dày",
+      "Vải bóng"
     ],
-    "answer": "Ưu tiên chất liệu vải co giãn tốt và thấm hút mồ hôi hiệu quả."
+    "answer": "Co giãn và thấm mồ hôi tốt"
   },
   {
-    "question": "Loại trang phục nào dưới đây là sự lựa chọn phù hợp và chuẩn mực nhất khi tham gia các buổi dạ tiệc?",
+    "question": "Trang phục phù hợp khi dự dạ tiệc là gì?",
     "options": [
-      "Phong cách cực kỳ đơn giản, chủ yếu sử dụng các màu trung tính.",
-      "Phong cách thật sự năng động, chất liệu vải có độ thấm hút tốt.",
-      "Phong cách thật sự lịch sự, chất vải mềm mại và có độ bóng bẩy.",
-      "Phong cách sinh hoạt hàng ngày với các loại áo phông, quần jean."
+      "Đơn giản",
+      "Năng động",
+      "Lịch sự, vải mềm và bóng",
+      "Áo phông quần jean"
     ],
-    "answer": "Phong cách thật sự lịch sự, chất vải mềm mại và có độ bóng bẩy."
+    "answer": "Lịch sự, vải mềm và bóng"
   },
   {
-    "question": "Trong nguyên tắc phối hợp trang phục, yếu tố nào đóng vai trò quyết định giúp tạo nên vẻ ngoài hài hòa và cân đối nhất?",
+    "question": "Yếu tố nào giúp phối trang phục hài hòa?",
     "options": [
-      "Kết hợp hài hòa giữa màu sắc, kiểu dáng và những phụ kiện đi kèm.",
-      "Chỉ tập trung kết hợp nhiều gam màu sặc sỡ để tạo sự nổi bật.",
-      "Chỉ tập trung chú ý duy nhất vào thiết kế kiểu dáng của trang phục.",
-      "Chỉ chọn đồ theo sở thích cá nhân mà bỏ qua yếu tố hoàn cảnh mặc."
+      "Màu sắc, kiểu dáng và phụ kiện",
+      "Nhiều màu sặc sỡ",
+      "Chỉ chú ý kiểu dáng",
+      "Chỉ theo sở thích"
     ],
-    "answer": "Kết hợp hài hòa giữa màu sắc, kiểu dáng và những phụ kiện đi kèm."
+    "answer": "Màu sắc, kiểu dáng và phụ kiện"
   },
   {
-    "question": "Đối với người có vóc dáng thấp và tròn, thủ thuật chọn trang phục nào sau đây sẽ giúp cơ thể trông cao và thon gọn hơn?",
+    "question": "Nguyên tắc sử dụng trang phục hàng ngày là gì?",
     "options": [
-      "Nên chọn áo có đường sọc ngang bản to và màu sắc tươi sáng rực rỡ.",
-      "Nên chọn quần áo có thiết kế rộng thùng thình để che đi khuyết điểm.",
-      "Nên chọn các loại váy xòe thật rộng và có màu sắc vô cùng nổi bật.",
-      "Nên chọn quần áo có màu tối sẫm, họa tiết nhỏ và thiết kế kẻ sọc dọc."
+      "Mặc theo ý thích",
+      "Giữ sạch sẽ và phù hợp hoàn cảnh",
+      "Mặc đồ bẩn",
+      "Chỉ cần hợp mốt"
     ],
-    "answer": "Nên chọn quần áo có màu tối sẫm, họa tiết nhỏ và thiết kế kẻ sọc dọc."
+    "answer": "Giữ sạch sẽ và phù hợp hoàn cảnh"
   },
   {
-    "question": "Trong thói quen sử dụng trang phục hàng ngày, nguyên tắc nào dưới đây được xem là quan trọng và cần thiết nhất?",
+    "question": "Vì sao không giặt chung đồ màu đậm với đồ trắng?",
     "options": [
-      "Có thể mặc đồ hoàn toàn theo ý thích cá nhân, không quan tâm hoàn cảnh.",
-      "Phải giữ gìn trang phục luôn sạch sẽ, gọn gàng và phù hợp với hoàn cảnh.",
-      "Nên mặc lại những bộ quần áo đã bị bẩn để có thể tiết kiệm chi phí giặt.",
-      "Chỉ cần ưu tiên yếu tố hợp thời trang và bắt mốt hơn là sự thoải mái."
+      "Dễ phai màu sang quần áo trắng",
+      "Làm rách vải",
+      "Tốn nước",
+      "Khó phơi"
     ],
-    "answer": "Phải giữ gìn trang phục luôn sạch sẽ, gọn gàng và phù hợp với hoàn cảnh."
+    "answer": "Dễ phai màu sang quần áo trắng"
   },
   {
-    "question": "Việc đọc kỹ phần nhãn mác trước khi tiến hành giặt quần áo sẽ giúp người sử dụng nắm bắt được thông tin quan trọng nào?",
+    "question": "Ký hiệu tam giác có dấu X trên nhãn quần áo nghĩa là gì?",
     "options": [
-      "Các thông tin chính xác về giá bán và thương hiệu của sản phẩm quần áo.",
-      "Các thông tin chính xác về kích thước cơ thể của người mặc bộ quần áo đó.",
-      "Các kí hiệu hướng dẫn về cách giặt, phơi, ủi và bảo quản sao cho đúng.",
-      "Các thông tin chính xác về các tông màu sắc được sử dụng trên bộ quần áo."
+      "Không dùng máy sấy",
+      "Không dùng chất tẩy",
+      "Không được ủi",
+      "Chỉ giặt tay"
     ],
-    "answer": "Các kí hiệu hướng dẫn về cách giặt, phơi, ủi và bảo quản sao cho đúng."
+    "answer": "Không dùng chất tẩy"
   },
   {
-    "question": "Loại vải nào sau đây thường được ưu tiên sử dụng để may các loại áo sơ mi?",
+    "question": "Thuật ngữ “thời trang” được hiểu là gì?",
     "options": [
-      "Chất liệu vải len tự nhiên",
-      "Chất liệu vải sợi cotton",
-      "Chất liệu vải nỉ nhân tạo",
-      "Chất liệu vải dạ giữ ấm"
+      "Trang phục xa xỉ",
+      "Trang phục lỗi mốt",
+      "Sự đổi mới kiểu dáng và màu sắc theo xu hướng",
+      "Cách ăn mặc tùy ý"
     ],
-    "answer": "Chất liệu vải sợi cotton"
+    "answer": "Sự đổi mới kiểu dáng và màu sắc theo xu hướng"
   },
   {
-    "question": "Khi chọn mua trang phục, việc đọc nhãn có ghi “100% cotton” giúp em nhận biết được điều gì quan trọng?",
+    "question": "Vì sao vải dạ và vải nỉ không phù hợp mùa hè?",
     "options": [
-      "Trang phục được may hoàn toàn bằng vải tổng hợp, có độ bền cực cao nhưng ít thấm mồ hôi.",
-      "Trang phục được pha trộn thêm thành phần nilon nhằm hạn chế tối đa tình trạng nhăn nhúm.",
-      "Trang phục được dệt chủ yếu bằng các loại sợi len nhân tạo, giúp giữ ấm cơ thể rất hiệu quả.",
-      "Trang phục được may hoàn toàn từ sợi bông tự nhiên, mang lại khả năng thấm hút rất tốt."
+      "Quá mỏng",
+      "Gây kích ứng",
+      "Giữ nhiệt cao, ít thoáng khí",
+      "Màu quá sáng"
     ],
-    "answer": "Trang phục được may hoàn toàn từ sợi bông tự nhiên, mang lại khả năng thấm hút rất tốt."
+    "answer": "Giữ nhiệt cao, ít thoáng khí"
   },
   {
-    "question": "Chất liệu vải polyester (sợi tổng hợp) thường mang lại những ưu điểm và nhược điểm gì khi ứng dụng vào việc thiết kế và may mặc các loại trang phục thường ngày?",
+    "question": "Vải sợi tự nhiên gồm những loại nào?",
     "options": [
-      "Ít bị nhăn và có độ bền màu rất cao, tuy nhiên khả năng thấm hút mồ hôi lại khá kém.",
-      "Mềm mại và vô cùng thoáng mát, tuy nhiên lại rất dễ bị nhăn nhúm khi hoạt động mạnh.",
-      "Giữ ấm vô cùng vượt trội, tuy nhiên lại rất dễ bị co rút nếu như giặt ở nhiệt độ quá cao.",
-      "Thấm hút mồ hôi cực kỳ hiệu quả, tuy nhiên lại rất dễ bị phai màu sau nhiều lần giặt."
+      "Cotton và lụa tơ tằm",
+      "Len và thun tổng hợp",
+      "Polyester và nilon",
+      "Lanh và dạ"
     ],
-    "answer": "Ít bị nhăn và có độ bền màu rất cao, tuy nhiên khả năng thấm hút mồ hôi lại khá kém."
+    "answer": "Cotton và lụa tơ tằm"
   },
   {
-    "question": "Để thiết kế một bộ trang phục dành riêng cho các buổi dạ tiệc sang trọng, yếu tố nào dưới đây thường được các nhà thiết kế đặt lên hàng đầu trong khâu chọn vải?",
+    "question": "Ký hiệu bàn là có 1 chấm nghĩa là gì?",
     "options": [
-      "Ưu tiên lựa chọn các loại chất liệu vải có màu sắc bắt mắt và bề mặt mang độ bóng bẩy cao.",
-      "Ưu tiên lựa chọn các loại chất liệu vải có độ dày dặn cao nhằm mục đích giữ ấm cho cơ thể.",
-      "Ưu tiên lựa chọn các loại chất liệu vải có khả năng thấm hút mồ hôi và thoáng khí cực kỳ tốt.",
-      "Ưu tiên lựa chọn các loại chất liệu vải có độ co giãn tối đa để đảm bảo sự thoải mái tuyệt đối."
+      "Ủi được mọi mức nhiệt",
+      "Không được ủi",
+      "Ủi ở nhiệt độ thấp",
+      "Ủi ở nhiệt độ cao"
     ],
-    "answer": "Ưu tiên lựa chọn các loại chất liệu vải có màu sắc bắt mắt và bề mặt mang độ bóng bẩy cao."
+    "answer": "Ủi ở nhiệt độ thấp"
   },
   {
-    "question": "Trong đời sống của con người, trang phục không chỉ cố định mà luôn có sự thay đổi linh hoạt nhằm mục đích thích ứng với những yếu tố khách quan nào dưới đây?",
+    "question": "Vì sao không nên mặc quần áo quá rộng hoặc quá chật?",
     "options": [
-      "Thường thay đổi dựa trên các tiêu chuẩn về độ tuổi, chiều cao và đặc điểm giới tính cơ thể.",
-      "Chỉ thay đổi để làm nổi bật mức độ giàu có cũng như địa vị quyền lực ở trong xã hội.",
-      "Thường thay đổi theo điều kiện thời tiết, khí hậu, nét văn hóa và đặc thù của nghề nghiệp.",
-      "Chỉ thay đổi để chạy theo những sở thích cá nhân và phong cách mang tính chất tạm thời."
+      "Dễ bị chú ý",
+      "Mất thẩm mỹ và gây khó chịu",
+      "Trái xu hướng",
+      "Dễ nhăn"
     ],
-    "answer": "Thường thay đổi theo điều kiện thời tiết, khí hậu, nét văn hóa và đặc thù của nghề nghiệp."
-  },
-  {
-    "question": "Theo nguyên tắc phối đồ, một người sở hữu vóc dáng cơ thể thấp bé và hơi tròn trịa thì nên ưu tiên lựa chọn những kiểu trang phục như thế nào để cải thiện ngoại hình?",
-    "options": [
-      "Nên mặc các loại trang phục thiết kế xòe rộng, kết hợp nhiều tầng lớp và phụ kiện cầu kỳ.",
-      "Nên mặc các loại trang phục mang gam màu sẫm tối, kết hợp họa tiết nhỏ và đường kẻ sọc dọc.",
-      "Nên mặc các loại trang phục có màu sắc tươi sáng, dáng may thật rộng và có họa tiết sọc ngang.",
-      "Nên mặc các loại trang phục có thiết kế bó sát vào cơ thể, kết hợp hoa văn to bản và rực rỡ."
-    ],
-    "answer": "Nên mặc các loại trang phục mang gam màu sẫm tối, kết hợp họa tiết nhỏ và đường kẻ sọc dọc."
-  },
-  {
-    "question": "Đối với những cá nhân có vóc dáng cơ thể gầy gò và mảnh khảnh, bí quyết lựa chọn trang phục nào sau đây sẽ giúp họ trông có vẻ đầy đặn và cân đối hơn?",
-    "options": [
-      "Sử dụng trang phục có thiết kế đơn giản nhất, mang gam màu trung tính và không có họa tiết.",
-      "Sử dụng trang phục có gam màu trầm tối, kết hợp đường kẻ sọc dọc và thiết kế bó sát cơ thể.",
-      "Sử dụng trang phục có gam màu tươi sáng, kết hợp họa tiết to bản và kiểu dáng thiết kế hơi rộng.",
-      "Sử dụng trang phục có chất liệu mỏng nhẹ, mang gam màu lạnh và hạn chế tối đa các họa tiết."
-    ],
-    "answer": "Sử dụng trang phục có gam màu tươi sáng, kết hợp họa tiết to bản và kiểu dáng thiết kế hơi rộng."
-  },
-  {
-    "question": "Thói quen sinh hoạt nào dưới đây được đánh giá là quan trọng nhất để giúp chúng ta luôn duy trì được vẻ ngoài thanh lịch và giữ cho các bộ trang phục luôn bền đẹp theo thời gian?",
-    "options": [
-      "Thường xuyên dùng nước xịt thơm để khử đi các mùi hôi thay cho việc giặt giũ bằng xà phòng.",
-      "Giữ gìn quần áo sạch sẽ, phơi và gấp đúng cách, luôn ủi thật phẳng phiu trước khi sử dụng.",
-      "Liên tục mua sắm các bộ trang phục mới nhất để bắt kịp mọi xu hướng thời trang thịnh hành.",
-      "Mặc các loại quần áo đắt tiền ở mọi nơi mà không cần quan tâm đến mục đích và hoàn cảnh."
-    ],
-    "answer": "Giữ gìn quần áo sạch sẽ, phơi và gấp đúng cách, luôn ủi thật phẳng phiu trước khi sử dụng."
-  },
-  {
-    "question": "Khi chuẩn bị trang phục để đi đến trường học, học sinh cần ưu tiên lựa chọn những bộ quần áo đáp ứng được tiêu chí cơ bản và quan trọng nhất nào dưới đây?",
-    "options": [
-      "Quần áo phải sử dụng các loại chất liệu vải bóng rủ, mang lại vẻ ngoài vô cùng sang trọng.",
-      "Quần áo phải mang kiểu dáng hoàn toàn tự do, thể hiện được cá tính phá cách của bản thân.",
-      "Quần áo phải được thiết kế với màu sắc sặc sỡ, nhiều phụ kiện và theo xu hướng người lớn.",
-      "Quần áo phải đảm bảo sự thoải mái tuyệt đối, kiểu dáng gọn gàng và mang nét đẹp lịch sự."
-    ],
-    "answer": "Quần áo phải đảm bảo sự thoải mái tuyệt đối, kiểu dáng gọn gàng và mang nét đẹp lịch sự."
-  },
-  {
-    "question": "Trong quá trình giặt giũ và bảo quản quần áo hàng ngày, vì sao chúng ta tuyệt đối không nên giặt chung các loại trang phục có màu sẫm đậm cùng với các loại quần áo màu trắng sáng?",
-    "options": [
-      "Vì việc giặt chung sẽ khiến quần áo màu sẫm bị phai màu ra và làm vấy bẩn lên quần áo sáng.",
-      "Vì việc giặt chung sẽ làm cho cấu trúc sợi vải bị tác động mạnh và dẫn đến tình trạng dễ rách.",
-      "Vì việc giặt chung sẽ gây tốn kém một lượng nước lớn hơn nhiều so với việc phân loại để giặt.",
-      "Vì việc giặt chung sẽ gây ra khó khăn trong quá trình phân loại quần áo trước khi đem đi phơi."
-    ],
-    "answer": "Vì việc giặt chung sẽ khiến quần áo màu sẫm bị phai màu ra và làm vấy bẩn lên quần áo sáng."
-  },
-  {
-    "question": "Khi quan sát phần nhãn mác hướng dẫn bảo quản đính kèm trên áo, nếu thấy xuất hiện một kí hiệu hình tam giác có đánh dấu chữ X đè lên trên, điều này mang ý nghĩa cảnh báo gì?",
-    "options": [
-      "Tuyệt đối không được phép sử dụng máy sấy khô đối với sản phẩm này dưới mọi hình thức nào.",
-      "Tuyệt đối không được phép sử dụng bất kỳ hóa chất tẩy trắng nào lên trên sản phẩm quần áo này.",
-      "Tuyệt đối không được phép sử dụng bàn là nhiệt đối với sản phẩm này dưới mọi hình thức nào.",
-      "Tuyệt đối không được phép giặt sản phẩm này bằng các loại máy giặt mà chỉ được giặt bằng tay."
-    ],
-    "answer": "Tuyệt đối không được phép sử dụng bất kỳ hóa chất tẩy trắng nào lên trên sản phẩm quần áo này."
-  },
-  {
-    "question": "Dưới góc độ của ngành may mặc và thiết kế, thuật ngữ \"thời trang\" được các chuyên gia định nghĩa một cách đầy đủ và chính xác nhất theo phương án nào sau đây?",
-    "options": [
-      "Là những loại trang phục cực kỳ xa xỉ, được thiết kế vô cùng cầu kỳ chỉ dành riêng cho giới nghệ sĩ.",
-      "Là tập hợp những loại trang phục đã trở nên vô cùng lỗi mốt và không còn được xã hội ưa chuộng nữa.",
-      "Là sự đổi mới và sáng tạo không ngừng về kiểu dáng, màu sắc trang phục theo xu hướng của xã hội.",
-      "Là cách ăn mặc hoàn toàn dựa trên sở thích cá nhân tự do, không hề tuân theo bất kỳ một quy luật nào."
-    ],
-    "answer": "Là sự đổi mới và sáng tạo không ngừng về kiểu dáng, màu sắc trang phục theo xu hướng của xã hội."
-  },
-  {
-    "question": "Việc phối hợp các loại trang phục hàng ngày sẽ được đánh giá là đạt tiêu chuẩn thẩm mỹ và mang lại ấn tượng thanh lịch cho người mặc khi thỏa mãn điều kiện cốt lõi nào?",
-    "options": [
-      "Chọn lựa các loại trang phục có kích cỡ cực kỳ rộng rãi để mang lại cảm giác thoải mái tối đa.",
-      "Tập trung sử dụng các tông màu sắc có sự tương phản cực kỳ mạnh mẽ để tạo hiệu ứng thị giác.",
-      "Luôn luôn kết hợp nhiều loại phụ kiện sặc sỡ và đồ trang sức đắt tiền để tạo sự thu hút mạnh mẽ.",
-      "Kết hợp thật hài hòa giữa màu sắc và kiểu dáng đơn giản, đồng thời phải phù hợp với hoàn cảnh."
-    ],
-    "answer": "Kết hợp thật hài hòa giữa màu sắc và kiểu dáng đơn giản, đồng thời phải phù hợp với hoàn cảnh."
-  },
-  {
-    "question": "Tại sao các loại chất liệu như vải dạ và vải nỉ lại không được khuyến khích sử dụng để thiết kế và may các loại trang phục dành cho mùa hè oi bức?",
-    "options": [
-      "Vì các chất liệu này có trọng lượng cực kỳ mỏng nhẹ và thoáng khí, khiến cơ thể dễ dàng bị nhiễm lạnh.",
-      "Vì các chất liệu này có tính chất bề mặt vô cùng thô ráp, gây ra hiện tượng kích ứng mạnh trên làn da.",
-      "Vì các chất liệu này có kết cấu sợi cực kỳ dày dặn, tính chất giữ nhiệt rất cao và thấm hút mồ hôi kém.",
-      "Vì các chất liệu này thường mang những tông màu rất rực rỡ, dễ dàng hấp thụ lượng bức xạ từ mặt trời."
-    ],
-    "answer": "Vì các chất liệu này có kết cấu sợi cực kỳ dày dặn, tính chất giữ nhiệt rất cao và thấm hút mồ hôi kém."
-  },
-  {
-    "question": "Trong quá trình lựa chọn trang phục phục vụ cho các sinh hoạt hàng ngày, nguyên tắc điều chỉnh quần áo theo từng môi trường hoạt động nào sau đây là hợp lý và văn minh nhất?",
-    "options": [
-      "Chỉ chọn duy nhất một kiểu trang phục từ nhà ra phố nhằm mục đích tiết kiệm tối đa mọi khoản chi phí.",
-      "Khi đến trường cần trang phục gọn gàng lịch sự, khi trở về nhà nên ưu tiên trang phục rộng rãi thoải mái.",
-      "Tại môi trường trường học nên sử dụng đồ ngủ để thoải mái, tại nhà nên mặc đồ công sở để thêm nghiêm túc.",
-      "Khi đi học cần mặc các bộ trang phục dự tiệc lộng lẫy để luôn tạo ấn tượng mạnh với tất cả mọi người."
-    ],
-    "answer": "Khi đến trường cần trang phục gọn gàng lịch sự, khi trở về nhà nên ưu tiên trang phục rộng rãi thoải mái."
-  },
-  {
-    "question": "Theo nguồn gốc nguyên liệu chế tạo trong ngành dệt may, nhóm các loại vải nào dưới đây được xếp vào danh mục vải sợi tự nhiên hoàn toàn 100%?",
-    "options": [
-      "Nhóm các loại vải bao gồm vải cotton dệt từ sợi bông và vải lụa tơ tằm dệt từ kén của con tằm.",
-      "Nhóm các loại vải bao gồm vải len dệt từ lông cừu và vải thun co giãn kết hợp nhiều sợi tổng hợp.",
-      "Nhóm các loại vải bao gồm vải polyester chiết xuất từ dầu mỏ và vải nilon được kéo thành sợi mỏng.",
-      "Nhóm các loại vải bao gồm vải lanh dệt từ thân cây lanh và vải dạ được ép từ các sợi nilon nhân tạo."
-    ],
-    "answer": "Nhóm các loại vải bao gồm vải cotton dệt từ sợi bông và vải lụa tơ tằm dệt từ kén của con tằm."
-  },
-  {
-    "question": "Khi tiến hành công đoạn là (ủi) phẳng quần áo, nếu người dùng nhìn thấy kí hiệu một chiếc bàn là bên trong có một dấu chấm tròn, điều đó mang ý nghĩa kĩ thuật gì?",
-    "options": [
-      "Đây là kí hiệu chỉ dẫn người dùng được phép thực hiện công đoạn là (ủi) khô hoặc là (ủi) hơi nước đều an toàn.",
-      "Đây là kí hiệu chỉ dẫn người dùng tuyệt đối không được phép thực hiện công đoạn là (ủi) dưới bất kỳ hình thức nào.",
-      "Đây là kí hiệu chỉ dẫn người dùng được phép thực hiện công đoạn là (ủi) nhưng bắt buộc phải ở mức nhiệt độ thấp.",
-      "Đây là kí hiệu chỉ dẫn người dùng được phép thực hiện công đoạn là (ủi) nhưng bắt buộc phải ở mức nhiệt độ cao."
-    ],
-    "answer": "Đây là kí hiệu chỉ dẫn người dùng được phép thực hiện công đoạn là (ủi) nhưng bắt buộc phải ở mức nhiệt độ thấp."
-  },
-  {
-    "question": "Những thay đổi liên tục về kiểu dáng và màu sắc trong thế giới thời trang thường chịu sự tác động mạnh mẽ nhất từ những nhóm yếu tố cơ bản nào sau đây?",
-    "options": [
-      "Sở thích trong việc lựa chọn món ăn hàng ngày và vị trí địa lý của khu vực sinh sống hiện tại.",
-      "Các chỉ số liên quan đến màu tóc tự nhiên, cân nặng cơ thể và thói quen sinh hoạt tại gia đình.",
-      "Chỉ phụ thuộc hoàn toàn vào những quy định cứng nhắc do các nhà thiết kế nổi tiếng trên thế giới đưa ra.",
-      "Đặc điểm về thời tiết, khí hậu, độ tuổi người mặc, tính chất công việc và sự giao lưu của văn hóa."
-    ],
-    "answer": "Đặc điểm về thời tiết, khí hậu, độ tuổi người mặc, tính chất công việc và sự giao lưu của văn hóa."
-  },
-  {
-    "question": "Hành động đọc kỹ nhãn mác đính kèm trên quần áo vừa mua trước khi mang đi giặt lần đầu tiên đem lại lợi ích thiết thực nhất nào cho người sử dụng?",
-    "options": [
-      "Giúp người dùng phân biệt được rõ ràng các nhóm màu sắc khác nhau để kết hợp cùng phụ kiện đi kèm.",
-      "Giúp người dùng nắm bắt được chính xác kích cỡ cơ thể phù hợp nhất để lựa chọn người mặc cho chuẩn.",
-      "Giúp người dùng nhận biết các kí hiệu hướng dẫn giặt, phơi, ủi nhằm bảo quản chất lượng sợi vải lâu bền.",
-      "Giúp người dùng nắm bắt được chính xác giá trị tiền bạc và thương hiệu sản xuất để đánh giá chất lượng."
-    ],
-    "answer": "Giúp người dùng nhận biết các kí hiệu hướng dẫn giặt, phơi, ủi nhằm bảo quản chất lượng sợi vải lâu bền."
-  },
-  {
-    "question": "Xét về mặt tính năng và độ thẩm mỹ, tại sao chúng ta tuyệt đối không nên chọn mặc những bộ trang phục có kích cỡ quá rộng thùng thình hoặc quá chật chội so với cơ thể?",
-    "options": [
-      "Nguyên nhân chính là vì quần áo sai kích cỡ sẽ khiến người mặc trở thành tâm điểm chú ý tiêu cực của mọi người.",
-      "Nguyên nhân chính là vì nó làm mất đi vẻ đẹp thẩm mỹ vốn có và gây ra cảm giác vô cùng khó chịu khi vận động.",
-      "Nguyên nhân chính là vì việc sử dụng quần áo như vậy sẽ đi ngược lại hoàn toàn với xu hướng thời trang hiện đại.",
-      "Nguyên nhân chính là vì quần áo sai kích cỡ sẽ rất dễ bị nhăn nhúm và hư hỏng cấu trúc trong quá trình mang đi giặt."
-    ],
-    "answer": "Nguyên nhân chính là vì nó làm mất đi vẻ đẹp thẩm mỹ vốn có và gây ra cảm giác vô cùng khó chịu khi vận động."
+    "answer": "Mất thẩm mỹ và gây khó chịu"
   }
 ]
