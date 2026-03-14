@@ -1375,19 +1375,26 @@ def recall_troops(campaign_id: int, req: BaseRequest, db: Session = Depends(get_
         my_troop = db.exec(select(TroopMovement).where(TroopMovement.campaign_id == campaign_id, TroopMovement.player_id == player.player_id)).first()
 
         if not my_troop: return {"success": False, "message": "Chưa xuất quân!"}
-        if my_troop.status == "MARCHING": return {"success": False, "message": "Quân đoàn đang di chuyển!"}
-        if my_troop.target_node_id == base_node.id: return {"success": False, "message": "Ngài đang ở Bệ Đá Cổ rồi!"}
+        
+        # 🔥 ĐIỂM CHỐT CHẶN ĐÃ ĐƯỢC GỠ BỎ 🔥
+        # Xóa hẳn dòng chặn "MARCHING" để cho phép người chơi bấm lúc đang bị kẹt
+        
+        # Tinh chỉnh: Chỉ chặn bấm nếu quân đang ở yên tại Nhà Chính và hoàn toàn bình thường
+        if my_troop.target_node_id == base_node.id and my_troop.status == "GARRISONED": 
+            return {"success": False, "message": "Ngài đang đồn trú ở Bệ Đá Cổ an toàn rồi!"}
 
+        # ⚔️ THI THIẾT QUÂN LUẬT: BẤT CHẤP LÀ ĐANG LÀM GÌ, TỐNG HẾT VỀ NHÀ VÀ RESET TRẠNG THÁI
         my_troop.target_node_id = base_node.id
-        my_troop.source_node_code = None # Xóa dấu vết đường đi
+        my_troop.source_node_code = None # Xóa dấu vết đường đi cũ để chống kẹt radar
         my_troop.start_time = datetime.now()
-        my_troop.arrival_time = datetime.now() # Đến nơi ngay lập tức
-        my_troop.status = "GARRISONED" # Chuyển thành trạng thái Đang đồn trú tại Nhà chính
+        my_troop.arrival_time = datetime.now() # Đặt mốc thời gian là 'Đến nơi ngay lập tức'
+        my_troop.status = "GARRISONED" # Reset về trạng thái an toàn: Đang đồn trú
 
         db.add(my_troop)
         db.commit()
 
-        return {"success": True, "message": "✨ Dịch chuyển tức thời thành công! Toàn quân đã về tới Bệ Đá Cổ."}
+        # Thông báo rõ ràng cho user biết họ đã được gỡ bug
+        return {"success": True, "message": "✨ Giải cứu thành công! Toàn quân đã Dịch chuyển tức thời về Bệ Đá Cổ."}
 
     except Exception as e:
         print(f"❌ LỖI RECALL:\n{traceback.format_exc()}")
