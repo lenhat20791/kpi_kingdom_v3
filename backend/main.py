@@ -1320,7 +1320,7 @@ def march_troops_by_code(campaign_id: int, req: MarchByCodeRequest, db: Session 
             return {"success": False, "message": "Tướng quân, chúng ta đang đóng quân tại đây rồi!"}
 
         # 6. CẬP NHẬT LẠI LỰC CHIẾN 
-        # (Phòng hờ người chơi đứng ở trụ và lén thay Tướng mạnh hơn trước khi đi)
+        # (Phòng hờ người chơi đứng ở Cứ điểm và lén thay Tướng mạnh hơn trước khi đi)
         my_troop.bonus_percent = bonus_percent
         my_troop.real_power = int(my_troop.base_troops + (my_troop.base_troops * bonus_percent))
         # Lấy mã Cứ điểm xuất phát
@@ -1611,7 +1611,7 @@ def get_campaign_state(username: str, db: Session = Depends(get_db)):
                     loc_node = db.get(MapNode, my_troop.target_node_id)
                     if loc_node: my_location = loc_node.node_code
 
-        # 3. Lấy DANH SÁCH TÊN NGƯỜI CHƠI TRÊN SA BÀN (Trụ)
+        # 3. Lấy DANH SÁCH TÊN NGƯỜI CHƠI TRÊN SA BÀN (Cứ điểm)
         garrisoned_troops = db.exec(
             select(TroopMovement.target_node_id, Player.username)
             .join(Player, TroopMovement.player_id == Player.id) 
@@ -1887,20 +1887,20 @@ def admin_start_campaign(db: Session = Depends(get_db)):
     # Chuyển trạng thái sang ACTIVE (Bản đồ sẽ mở)
     campaign.status = "ACTIVE"
     
-    # Sinh ra 14 Cứ điểm trên bản đồ (Gồm 2 Nhà Chính + 12 Trụ)
+    # Sinh ra 14 Cứ điểm trên bản đồ (Gồm 2 Nhà Chính + 12 Cứ điểm)
     # Format: (Mã, Tên Cứ Điểm, Phe, VP mỗi giờ)
     nodes_data = [
         # --- NHÀ CHÍNH (Không sinh điểm VP) ---
         ("TL_BASE", "Bệ Đá Cổ (Thanh Long)", "THANH_LONG", 0),
         ("BH_BASE", "Bệ Đá Cổ (Bạch Hổ)", "BACH_HO", 0),
         
-        # --- 12 TRỤ (Sinh 1 điểm VP/giờ) ---
-        ("TL_TOP_2", "Trụ 2 Sơn Lâm (TL)", "THANH_LONG", 1), ("TL_TOP_1", "Trụ 1 Sơn Lâm (TL)", "THANH_LONG", 1),
-        ("BH_TOP_1", "Trụ 1 Sơn Lâm (BH)", "BACH_HO", 1), ("BH_TOP_2", "Trụ 2 Sơn Lâm (BH)", "BACH_HO", 1),
-        ("TL_MID_2", "Trụ 2 Đồng Bằng (TL)", "THANH_LONG", 1), ("TL_MID_1", "Trụ 1 Đồng Bằng (TL)", "THANH_LONG", 1),
-        ("BH_MID_1", "Trụ 1 Đồng Bằng (BH)", "BACH_HO", 1), ("BH_MID_2", "Trụ 2 Đồng Bằng (BH)", "BACH_HO", 1),
-        ("TL_BOT_2", "Trụ 2 Duyên Hải (TL)", "THANH_LONG", 1), ("TL_BOT_1", "Trụ 1 Duyên Hải (TL)", "THANH_LONG", 1),
-        ("BH_BOT_1", "Trụ 1 Duyên Hải (BH)", "BACH_HO", 1), ("BH_BOT_2", "Trụ 2 Duyên Hải (BH)", "BACH_HO", 1),
+        # --- 12 Cứ điểm (Sinh 1 điểm VP/giờ) ---
+        ("TL_TOP_2", "Cứ điểm 2 Sơn Lâm (TL)", "THANH_LONG", 1), ("TL_TOP_1", "Cứ điểm 1 Sơn Lâm (TL)", "THANH_LONG", 1),
+        ("BH_TOP_1", "Cứ điểm 1 Sơn Lâm (BH)", "BACH_HO", 1), ("BH_TOP_2", "Cứ điểm 2 Sơn Lâm (BH)", "BACH_HO", 1),
+        ("TL_MID_2", "Cứ điểm 2 Đồng Bằng (TL)", "THANH_LONG", 1), ("TL_MID_1", "Cứ điểm 1 Đồng Bằng (TL)", "THANH_LONG", 1),
+        ("BH_MID_1", "Cứ điểm 1 Đồng Bằng (BH)", "BACH_HO", 1), ("BH_MID_2", "Cứ điểm 2 Đồng Bằng (BH)", "BACH_HO", 1),
+        ("TL_BOT_2", "Cứ điểm 2 Duyên Hải (TL)", "THANH_LONG", 1), ("TL_BOT_1", "Cứ điểm 1 Duyên Hải (TL)", "THANH_LONG", 1),
+        ("BH_BOT_1", "Cứ điểm 1 Duyên Hải (BH)", "BACH_HO", 1), ("BH_BOT_2", "Cứ điểm 2 Duyên Hải (BH)", "BACH_HO", 1),
     ]
     
     for code, name, faction, vp in nodes_data:
@@ -2341,7 +2341,7 @@ def check_engine_status():
     return {"success": False, "message": "❌ THREAD ĐÃ CHẾT!"}
 
 # =====================================================================
-# [GAME LOOP] XỬ LÝ TRANH CHẤP TRỤ VÀ ĐIỂM CHIẾN DỊCH (CHẠY MỖI PHÚT)
+# [GAME LOOP] XỬ LÝ TRANH CHẤP Cứ điểm VÀ ĐIỂM CHIẾN DỊCH (CHẠY MỖI PHÚT)
 # =====================================================================
 async def campaign_game_loop():
     print("🚀 BATTLE ENGINE: Đã khởi động hệ thống điều hành tập trung!")
@@ -2658,7 +2658,7 @@ def force_reset_campaign(db: Session = Depends(get_db)):
         for mov in all_movements:
             db.delete(mov)
             
-        # 3. Trả toàn bộ trụ về trạng thái trung lập ban đầu
+        # 3. Trả toàn bộ Cứ điểm về trạng thái trung lập ban đầu
         nodes = db.exec(select(MapNode)).all()
         for node in nodes:
             node.is_contested = False
