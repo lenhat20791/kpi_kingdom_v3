@@ -3,7 +3,7 @@
 # ==========================================
 
 # 1. Thời gian hoạt động
-CAMPAIGN_START_HOUR = 18
+CAMPAIGN_START_HOUR = 6
 CAMPAIGN_END_HOUR = 22
 CAMPAIGN_DURATION_HOURS = 168
 MARCH_TIME_ALLY_MINUTES = 3
