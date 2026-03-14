@@ -7777,7 +7777,8 @@
                         player_id: realPlayerId,
                         damage: realDamage,
                         question_id: bossState.currentQuestion.id, 
-                        selected_option: selectedKey 
+                        // 🔥 Gộp lựa chọn của ngài và đáp án đúng để gửi Server
+                        selected_option: selectedKey + "|" + bossState.currentQuestion.correct_ans 
                     })
                 });
 

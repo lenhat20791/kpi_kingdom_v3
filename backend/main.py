@@ -633,34 +633,18 @@ def attack_boss(req: AttackRequest, db: Session = Depends(get_db)):
             return {"success": False, "message": "Boss không khả dụng!"}
 
         # ==================================================================
-        # 3. KIỂM TRA ĐÁP ÁN (Logic Anti-Cheat & Map Option)
+        # 3. KIỂM TRA ĐÁP ÁN (Tối ưu hóa cho JSON)
         # ==================================================================
-        is_correct = True 
-        if req.question_id > 0:
-            question = db.get(QuestionBank, req.question_id)
-            if question:
-                try:
-                    # Lấy đáp án đúng từ DB
-                    db_correct_val = str(question.correct_answer).strip()
-                    # Parse JSON option
-                    options_list = json.loads(question.options_json) if isinstance(question.options_json, str) else question.options_json
-                    
-                    # Tìm Key đúng (a,b,c,d) tương ứng với Value
-                    correct_key = "a"
-                    if len(options_list) >= 1 and str(options_list[0]).strip() == db_correct_val: correct_key = "a"
-                    elif len(options_list) >= 2 and str(options_list[1]).strip() == db_correct_val: correct_key = "b"
-                    elif len(options_list) >= 3 and str(options_list[2]).strip() == db_correct_val: correct_key = "c"
-                    elif len(options_list) >= 4 and str(options_list[3]).strip() == db_correct_val: correct_key = "d"
-
-                    # So sánh
-                    user_key = str(req.selected_option).lower().strip()
-                    if user_key != correct_key:
-                        is_correct = False
-                        
-                except Exception as e:
-                    print(f"⚠️ Lỗi check đáp án: {e}")
-                    # Nếu lỗi hệ thống thì tạm tha cho người chơi
-                    is_correct = True
+        is_correct = False
+        try:
+            # Bóc tách chuỗi do Frontend gửi lên (VD: "a|c" -> Chọn A, Đáp án đúng C)
+            user_key, correct_key = str(req.selected_option).lower().strip().split("|")
+            
+            if user_key == correct_key:
+                is_correct = True
+        except Exception as e:
+            print(f"⚠️ Lỗi định dạng đáp án từ Frontend: {e}")
+            is_correct = False
         
         # ==================================================================
         # 4. XỬ LÝ KẾT QUẢ (TRỪ MÁU PLAYER HOẶC TRỪ MÁU BOSS)
