@@ -5,15 +5,15 @@
 # 1. Thời gian hoạt động
 CAMPAIGN_START_HOUR = 18
 CAMPAIGN_END_HOUR = 22
-CAMPAIGN_DURATION_HOURS = 168
+CAMPAIGN_DURATION_HOURS = 72
 MARCH_TIME_ALLY_MINUTES = 3
 MARCH_TIME_ENEMY_MINUTES = 5
 DEFEND_TO_CAPTURE_MINUTES = 20
 RESPAWN_PENALTY_MINUTES = 5
 
 # 2. Mini-game & Lính
-MINIGAME1_TROOPS_REWARD = 150  # Số lính nhận được mỗi lần Chiêu binh
-MINIGAME2_EXP_REWARD = 30      # Số EXP nhận được mỗi lần Luyện binh
+MINIGAME1_TROOPS_REWARD = 100  # Số lính nhận được mỗi lần Chiêu binh
+MINIGAME2_EXP_REWARD = 35      # Số EXP nhận được mỗi lần Luyện binh
 TROOPS_FOR_ONE_H_POINT = 1000  # Cứ cày 1000 lính = 1 điểm Hậu Phương (H)
 
 # 3. Quân đoàn (Level & Sức chứa)

@@ -2443,6 +2443,7 @@
                                 <button onclick="switchGuideTab('tab-minigame')" class="guide-tab-btn text-left px-4 py-3 rounded bg-gray-800 text-gray-300 hover:bg-gray-700 border border-transparent transition whitespace-nowrap md:whitespace-normal">6. Chiêu Binh & Luyện Binh</button>
                                 <button onclick="switchGuideTab('tab-time')" class="guide-tab-btn text-left px-4 py-3 rounded bg-gray-800 text-gray-300 hover:bg-gray-700 border border-transparent transition whitespace-nowrap md:whitespace-normal">7. Đóng Băng & Đếm Ngược</button>
                                 <button onclick="switchGuideTab('tab-reward')" class="guide-tab-btn text-left px-4 py-3 rounded bg-gray-800 text-gray-300 hover:bg-gray-700 border border-transparent transition whitespace-nowrap md:whitespace-normal">8. Ghi Danh & Phần Thưởng</button>
+                                <button onclick="switchGuideTab('tab-strategy')" class="guide-tab-btn text-left px-4 py-3 rounded bg-gray-800 text-gray-300 hover:bg-gray-700 border border-transparent transition whitespace-nowrap md:whitespace-normal">9. Chiến Thuật & Đội Hình</button>
                             </div>
                             
                             <div class="flex-1 p-6 overflow-y-auto custom-scrollbar text-gray-300 leading-relaxed text-base">
@@ -2651,6 +2652,74 @@
                                             <li><b>Phe thua sẽ nhân:</b> phần thưởng an ủi khích lệ tinh thần = Điểm Tri Thức: 20 - KPI: 20 - Chiến Tích: 10 </li>
                                         </ul>
                                     </div>
+                                </div>
+                                
+                                <div id="tab-strategy" class="guide-tab-content hidden animate-fade-in space-y-4">
+                                    <h4 class="text-xl font-bold text-yellow-500 mb-4 border-b border-gray-700 pb-2"><i class="fa-solid fa-chess-knight"></i> CẨM NANG CHIẾN THUẬT & ĐỘI HÌNH</h4>
+                                    
+                                    <p class="text-gray-300 leading-relaxed">Trong chiến trường rực lửa của Quần Anh Tranh Tài, số lượng người tham chiến của mỗi phe là không giới hạn. Dù đông đảo đến đâu, mọi binh đoàn đều phải hướng đến một mục tiêu duy nhất: <b>Giành chiến thắng.</b></p>
+                                    <p class="text-gray-300">Có 2 con đường để phe của bạn bước lên đài vinh quang:</p>
+
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
+                                        <div class="bg-gray-800/50 p-4 rounded border border-red-900/50">
+                                            <h5 class="font-bold text-red-400 mb-2"><i class="fa-solid fa-swords"></i> 1. Chiến Thắng Tuyệt Đối</h5>
+                                            <p class="text-sm text-gray-300">Đây là phương pháp phô trương sức mạnh áp đảo nhất. Quân đoàn của bạn cần tập trung hỏa lực, hạ gục lần lượt 2 cứ điểm trên cùng một đường để xé toạc phòng tuyến địch. Khi con đường đã mở, hãy tiến thẳng vào Thủ phủ và đánh sập Nhà Chính của đối phương. Trận đấu sẽ lập tức kết thúc với thắng lợi huy hoàng thuộc về bạn!</p>
+                                        </div>
+                                        <div class="bg-gray-800/50 p-4 rounded border border-blue-900/50">
+                                            <h5 class="font-bold text-blue-400 mb-2"><i class="fa-solid fa-shield-halved"></i> 2. Chiến Thắng Điểm Số</h5>
+                                            <p class="text-sm text-gray-300">Nếu thế trận giằng co và không thể khoan thủng Nhà Chính, hãy dùng mưu lược. Phe bạn cần phân bổ lực lượng chiếm giữ thật nhiều cứ điểm trên bản đồ và tử thủ trước các đợt phản công. Các cứ điểm này sẽ liên tục sản sinh <b>Điểm Chiến Dịch</b>. Khi thời gian mùa giải kết thúc, phe nào tích lũy được nhiều Điểm Chiến Dịch hơn trên bảng tỷ số sẽ trở thành người chiến thắng chung cuộc.</p>
+                                        </div>
+                                    </div>
+
+                                    <h5 class="text-lg font-bold text-yellow-500 mt-6 border-b border-gray-700 pb-2"><i class="fa-solid fa-users-rays"></i> FORMATION KHUYÊN DÙNG: BINH PHÁP 5 NGƯỜI</h5>
+                                    <p class="text-sm text-gray-300">Dù chiến trường cho phép vô số anh tài tham gia, một nhóm nòng cốt 5 người phối hợp ăn ý hoàn toàn có thể xoay chuyển cục diện. Dưới đây là các đội hình chiến thuật kinh điển:</p>
+
+                                    <div class="space-y-4 mt-2">
+                                        <div class="bg-gray-800/50 p-4 rounded border border-gray-700">
+                                            <h6 class="font-bold text-orange-400 mb-2">🚀 Đội hình 0-5-0: "Mũi Khoan Tổng Lực" (All-in)</h6>
+                                            <ul class="list-disc pl-5 space-y-1 text-sm text-gray-300">
+                                                <li><b>Chiến thuật:</b> "Năm anh em trên một chiếc xe tăng". Từ bỏ việc phòng ngự diện rộng, toàn bộ 5 thành viên dồn 100% binh lực vào một đường duy nhất.</li>
+                                                <li><b>Mục tiêu:</b> Tạo ra một mũi giáo sắc bén không thể cản phá, nghiền nát mọi cứ điểm cản đường và đâm thẳng vào Nhà Chính địch với tốc độ chớp nhoáng, dứt điểm ván đấu trước khi đối phương kịp hiểu chuyện gì đang xảy ra.</li>
+                                            </ul>
+                                        </div>
+
+                                        <div class="bg-gray-800/50 p-4 rounded border border-gray-700">
+                                            <h6 class="font-bold text-purple-400 mb-2">🃏 Đội hình 1-3-1: "Lá Bài Tẩy" (The Bullet)</h6>
+                                            <p class="text-sm text-gray-300 mb-2">Đây là chiến thuật phân công nhiệm vụ cực kỳ tinh vi và mang tính kiểm soát cao:</p>
+                                            <ul class="list-disc pl-5 space-y-2 text-sm text-gray-300">
+                                                <li><b>3 Tuyến Đầu (Tiên Phong):</b> Ba người chơi sẽ chia nhau cắm chốt và tử thủ tại các cứ điểm ngoài cùng của cả 3 đường. Nhiệm vụ của họ là tạo bức tường thành vững chắc, kìm hãm bước tiến của địch.</li>
+                                                <li><b>1 Hậu Phương (Tiếp Viện):</b> Người chơi này đóng vai trò mỏ neo của team. Không ra tiền tuyến, họ ở nhà liên tục "chiêu binh mãi mã" để lấp đầy kho lính, sẵn sàng bơm máu và quân viện trợ lên tuyến đầu ngay khi đồng đội ngã xuống.</li>
+                                                <li><b>1 Át Chủ Bài (The Bullet):</b> Đây là nhân tố quyết định ván đấu. Người này hoàn toàn ẩn mình, tuyệt đối không tham gia giao tranh hay lộ diện trên radar. Nhiệm vụ duy nhất của họ là <b>Luyện Binh Thần Tốc</b>. Một khi đạt đến cấp độ tối đa (Level 20) với giới hạn quân đoàn lên tới 480 lính, "Lá bài tẩy" này sẽ chính thức xuất quan. Với binh lực khổng lồ, The Bullet dư sức cân 2, cân 3 tướng địch, càn quét bản đồ và mang về một chiến thắng hủy diệt.</li>
+                                            </ul>
+                                        </div>
+
+                                        <div class="bg-gray-800/50 p-4 rounded border border-gray-700">
+                                            <h6 class="font-bold text-cyan-400 mb-2">🎭 Đội hình 4-1-0: "Dương Đông Kích Tây" (Bait & Split Push)</h6>
+                                            <p class="text-sm text-gray-300 mb-2">Đây là chiến thuật đánh lừa thị giác và ép đối thủ phải đưa ra những quyết định sai lầm.</p>
+                                            <ul class="list-disc pl-5 space-y-2 text-sm text-gray-300">
+                                                <li><b>Chiến thuật:</b> Phân bổ 4 thành viên tập trung toàn bộ binh lực đẩy cực mạnh vào một đường duy nhất với khí thế dời non lấp biển. Trong khi đó, 1 thành viên có khả năng cơ động cao sẽ âm thầm đánh lẻ ở một đường.</li>
+                                                <li><b>Mục tiêu:</b> Nhóm 4 người thực chất chỉ là "Mồi nhử" để thu hút toàn bộ quân chủ lực của địch kéo ra phòng ngự. Khi địch đã say máu def trụ ở đường đó, thành viên đánh lẻ sẽ như một mũi dao găm, lặng lẽ phá hủy các cứ điểm không người và chọc thẳng vào Nhà Chính. Nếu địch chia quân ra cứu vãn, nhóm 4 người sẽ ngay lập tức tràn lên nghiền nát đường đang chiếm giữ!</li>
+                                            </ul>
+                                        </div>
+
+                                        <div class="bg-gray-800/50 p-4 rounded border border-gray-700">
+                                            <h6 class="font-bold text-green-400 mb-2">🏰 Đội hình 2-1-2: "Tường sắt" (Kiểm soát toàn diện)</h6>
+                                            <p class="text-sm text-gray-300 mb-2">Nếu phe bạn không thích rủi ro và muốn giành Chiến Thắng Chiến Thuật (Điểm số), đây là đội hình hoàn hảo nhất.</p>
+                                            <ul class="list-disc pl-5 space-y-2 text-sm text-gray-300">
+                                                <li><b>Chiến thuật:</b> Chia đều lực lượng: 2 người trấn thủ đường Trên, 2 người đường Dưới, 1 người cơ động ở đường Giữa làm nhiệm vụ cảnh giới và tiếp viện hai cánh khi cần.</li>
+                                                <li><b>Mục tiêu:</b> Không cần dâng cao, không cần ham hố Nhà Chính. Nhiệm vụ duy nhất là đẩy lùi địch khỏi ranh giới giữa bản đồ và giữ vững 3 cứ điểm hàng ngang. Chỉ cần số lượng cứ điểm phe ta sở hữu nhiều hơn địch, Điểm Chiến Dịch sẽ tăng liên tục. Đối phương càng sốt ruột lao lên, họ càng dễ mắc sai lầm và bào mòn binh lực trước "Bức tường sắt" của bạn.</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+
+                                    <div class="mt-6 p-4 bg-yellow-900/20 border-l-4 border-yellow-500 rounded text-sm text-gray-300">
+                                        <h6 class="font-bold text-yellow-400 mb-2 text-base"><i class="fa-regular fa-lightbulb"></i> MẸO TÁC CHIẾN</h6>
+                                        <ul class="list-disc pl-5 space-y-2">
+                                            <li><span class="text-red-300 font-bold">Binh Quý Thần Tốc:</span> Nếu thấy phe bạn đang có ưu thế vượt trội về tổng quân lực, đừng chần chừ! Hãy tổ chức tấn công chớp nhoáng thẳng vào Nhà Chính để dứt điểm trận đấu. Đừng để đối phương có thời gian farm lính lật kèo.</li>
+                                            <li><span class="text-blue-300 font-bold">Phòng Ngự Phản Công:</span> Nếu trận đấu rơi vào thế trận giằng co đẫm máu, sự kiên nhẫn là chìa khóa. Hãy co cụm đội hình, phòng thủ chặt chẽ và cố gắng duy trì quyền kiểm soát số lượng cứ điểm nhiều hơn địch. Quản lý tốt Điểm Chiến Dịch sẽ giúp phe bạn từ từ bóp nghẹt hy vọng của đối thủ khi thời gian cạn dần!</li>
+                                        </ul>
+                                    </div>
+                                </div>
 
                             </div>
                         </div>
@@ -2901,7 +2970,7 @@
                 const activeState = window.activeCampaignState || 'WAITING'; 
                 
                 // 2. Mở tạm đúng màn hình người chơi đang xem dở trước đó để tránh "nháy" UI
-                const mapEl = document.getElementById('main-view-campaign');
+                const mapEl = document.getElementById('main-view-campaign-map');
                 const lobbyEl = document.getElementById('main-view-campaign-lobby');
                 const waitEl = document.getElementById('main-view-campaign-waiting');
 
@@ -9942,7 +10011,13 @@
                     // 📌 GIAI ĐOẠN 1: BÁO DANH (LOBBY)
                     if (realStatus === "REGISTERING") {
                         if (isCampaignTabActive && typeof switchCampaignScreen === 'function') switchCampaignScreen('LOBBY');
-                        
+                        // 🔥 SỬA LỖI: Cập nhật tên Mùa Giải hiển thị trên sảnh chờ
+                        const seasonNameEl = document.getElementById('lobby-season-name');
+                        // Bổ sung thêm data.campaign_id để làm số thứ tự Mùa giải
+                        const seasonNumber = data.campaign_name || data.name || data.campaign_id; 
+                        if (seasonNameEl && seasonNumber) {
+                            seasonNameEl.innerText = `MÙA GIẢI ${seasonNumber}`;
+                        }
                         if (data.lobby_counts) {
                             const countTL = document.getElementById('count-tl');
                             const countBH = document.getElementById('count-bh');
