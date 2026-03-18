@@ -99,6 +99,21 @@ app = FastAPI(
     title="KPI Kingdom V3 API",  # Cấu hình tiêu đề
     lifespan=lifespan            # Cấu hình tự động tạo Admin
 )
+# 1. Khai báo danh sách các "vùng đất" được phép truy cập
+origins = [
+    "http://localhost",
+    "http://localhost:8000",
+    "https://editor.construct.net",
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 # --- HÀM PHỤ TRỢ (HELPER): KIỂM TRA & HỒI SINH ---
 # Hàm này không cần @app vì nó chỉ được gọi bởi các hàm khác
 def check_and_revive_player(player: Player, db: Session):
