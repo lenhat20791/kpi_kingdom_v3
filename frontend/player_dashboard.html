@@ -5788,32 +5788,71 @@
 
             if (isCorrect) {
                 // === NGƯỜI CHƠI ĐÁNH QUÁI ===
-                // Logic mới: Chia đều máu Boss theo số câu hỏi. 
-                // Ví dụ: 5 câu -> Mỗi câu trừ 20% máu. Trả lời đúng hết mới thắng tuyệt đối.
-                // Thêm +1 để tránh trường hợp chia lẻ còn dư 1-2 máu.
                 const totalQuestions = towerState.questions.length || 5;
-                const damage = Math.ceil(towerState.maxMonsterHP / totalQuestions) + 1; 
+                const damage = Math.ceil(towerState.maxMonsterHP / totalQuestions) + 1;
                 
                 towerState.monsterHP = Math.max(0, towerState.monsterHP - damage);
                 
-                // Hiệu ứng Visual
+                // -------------------------------------------------------------
+                // 🔥 [MỚI] KÍCH HOẠT HIỆU ỨNG KỸ NĂNG CHỦ ĐỘNG (ACTIVE SKILL VFX)
+                // Bọc toàn bộ trong try-catch để đảm bảo an toàn tuyệt đối
+                // -------------------------------------------------------------
+                try {
+                    const MONSTER_TARGET_ID = 'combat-monster-img';
+                    let vfxToPlay = null;
+                    let isProjectile = false;
+
+                    // 1. Kiểm tra kỹ năng đang trang bị trong myStatus
+                    const equippedId = window.myStatus ? window.myStatus.equipped : null;
+
+                    if (equippedId && Array.isArray(window.globalSkillsList)) {
+                        // 2. Tìm thông tin chi tiết của skill trong kho danh sách
+                        const skillInfo = window.globalSkillsList.find(s => s.skill_id === equippedId);
+                        
+                        if (skillInfo) {
+                            let conf = {};
+                            if (skillInfo.config_data) {
+                                try {
+                                    conf = typeof skillInfo.config_data === 'string' ? JSON.parse(skillInfo.config_data) : skillInfo.config_data;
+                                } catch (e) { conf = {}; }
+                            }
+
+                            // Lấy class VFX đã cấu hình (ưu tiên trường gốc hoặc trong config_data)
+                            vfxToPlay = (skillInfo.vfx_class || conf.vfx_class || conf.vfx || "").trim();
+                            
+                            // Nếu là skill dạng đạn bay (như fx-fireball)
+                            if (vfxToPlay.includes('fireball') || vfxToPlay.includes('bullet') || conf.is_projectile) {
+                                isProjectile = true;
+                            }
+                        }
+                    }
+
+                    // 3. Thi triển VFX: Nếu có skill thì dùng skill đó, nếu không có fallback về đánh thường
+                    if (vfxToPlay && typeof playVFX === 'function') {
+                        playVFX(vfxToPlay, MONSTER_TARGET_ID, isProjectile);
+                    }
+                } catch (err) {
+                    console.warn("⚠️ [VFX Skill Safe-Catch] Bỏ qua hiệu ứng skill do lỗi dữ liệu:", err);
+                }
+                // -------------------------------------------------------------
+
+                // Hiệu ứng Visual mặc định (Giữ nguyên gốc 100%)
                 showDamagePopup('combat-monster', damage);
                 const monImg = document.getElementById('combat-monster-img');
-                if(monImg) {
+                if (monImg) {
                     monImg.classList.add('shake-effect');
                     setTimeout(() => monImg.classList.remove('shake-effect'), 500);
                 }
 
             } else {
-                // === QUÁI ĐÁNH NGƯỜI CHƠI ===
-                // Logic mới: Trừ máu theo chỉ số ATK của Quái (lấy từ Server)
-                const damage = towerState.monsterAtk || 20; 
+                // === QUÁI ĐÁNH NGƯỜI CHƠI (Giữ nguyên gốc 100%) ===
+                const damage = towerState.monsterAtk || 20;
                 towerState.playerHP = Math.max(0, towerState.playerHP - damage);
                 
                 // Hiệu ứng Visual
                 showDamagePopup('combat-player', damage);
                 const mainView = document.getElementById('main-view-tower');
-                if(mainView) {
+                if (mainView) {
                     mainView.classList.add('shake-effect');
                     setTimeout(() => mainView.classList.remove('shake-effect'), 500);
                 }
@@ -5821,7 +5860,7 @@
 
             updateHealthBars();
 
-            // KIỂM TRA KẾT QUẢ NGAY LẬP TỨC
+            // KIỂM TRA KẾT QUẢ NGAY LẬP TỨC (Giữ nguyên gốc 100%)
             if (towerState.monsterHP <= 0) {
                 setTimeout(() => endTowerCombat(true), 800); // Thắng
             } else if (towerState.playerHP <= 0) {
