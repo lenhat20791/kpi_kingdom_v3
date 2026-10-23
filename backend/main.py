@@ -5,38 +5,54 @@ import threading
 import time
 import pytz
 from contextlib import asynccontextmanager
-from typing import Optional
+from typing import Optional, List, Dict, Any
 
 # --- IMPORT CHUẨN CHO DATETIME ---
-# Bỏ cái 'import datetime as dt' đi cho đỡ rối
-from datetime import datetime, timedelta 
+from datetime import datetime, timedelta, timezone
+
 # --- IMPORT CHUẨN CHO FASTAPI ---
 from fastapi import FastAPI, Depends, HTTPException, status, Query, Body, APIRouter, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import JSONResponse, FileResponse
+from pydantic import BaseModel
 
 # --- IMPORT CHUẨN CHO SQLMODEL & SQLALCHEMY ---
 from sqlmodel import Session, select, update, col, func, or_, and_
-from sqlalchemy import func, desc, or_ 
+from sqlalchemy import desc
 
-# --- IMPORT FILE CẤU HÌNH & DB ---
+# --- IMPORT CẤU HÌNH & DATABASE MODELS ---
 import campaign_config as cfg
-from pydantic import BaseModel
 from database import (
-    create_db_and_tables, engine, Player, get_db, Item, Inventory, 
+    create_db_and_tables, engine, get_db, Player, Item, Inventory, 
     Title, TowerProgress, Boss, QuestionBank, BossLog, ArenaMatch, 
     ArenaParticipant, SystemStatus, ChatLog, Campaign, CampaignPlayer, 
-    MapNode, TroopMovement, Companion, CompanionTemplate, BattleReport, CampaignChat, ScoreLog, CampaignChat
+    MapNode, TroopMovement, Companion, CompanionTemplate, BattleReport, 
+    CampaignChat, ScoreLog,
+    # 🔥 BỔ SUNG MODELS TRẠM KHÔNG GIAN
+    SpaceStationMatch, SpaceStationPlayer, SpaceStationAction, SpaceStationLog
 )
 
-# --- IMPORT ROUTES & LOGIC ---
+# --- IMPORT LOGIC ENGINE CỦA TRẠM KHÔNG GIAN ---
+from game_logic.space_station_engine import resolve_night_phase
+
+# --- IMPORT ROUTES & SERVICES ---
 from routes import (
-    admin, users, shop, tower, pets, inventory_api, arena_api, 
-    auth, skills, market_api, notifications, chat_api, companion
+    admin, users, shop, tower, pets, inventory_api,
+    auth, skills, market_api, notifications, chat_api, companion,
+    # 🔥 BỔ SUNG ROUTE TRẠM KHÔNG GIAN
+    space_station_api
 )
+from routes.space_station_api import router as space_station_router
+from routes.study_game_api import router as study_spire_router
+from routes.study_pvp_api import router as study_pvp_router
+from routes.study_pvp_api import router as study_pvp_router
+from routes.study_ranked_api import router as study_ranked_router
 from routes.auth import get_password_hash
 from game_logic.level import add_exp_to_player
+
+
+
 # 2. Viết hàm tạo Admin mặc định (Đây là giải pháp gốc rễ)
 def create_default_admin():
     with Session(engine) as session:
@@ -68,6 +84,7 @@ def create_default_admin():
             print("👌 Tài khoản Admin đã tồn tại. Bỏ qua.")
 
 # 3. Cấu hình sự kiện khởi động (Lifespan)
+# 3. Cấu hình sự kiện khởi động (Lifespan)
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     print("="*50)
@@ -81,19 +98,35 @@ async def lifespan(app: FastAPI):
     # 2. KÍCH HOẠT BATTLE ENGINE (Chạy ngầm liên tục)
     print("🚀 Khởi động luồng BATTLE ENGINE (asyncio)...")
     engine_task = asyncio.create_task(campaign_game_loop())
+    app.state.campaign_engine_task = engine_task
     
-    # 3. Giao lại quyền điều khiển cho Web Server
+    # 🔥 3. KÍCH HOẠT WORKER TRẠM KHÔNG GIAN LẠC VIỆT-Y26
+    print("🛰️ Khởi động luồng TRẠM KHÔNG GIAN ENGINE (asyncio)...")
+    st_engine_task = asyncio.create_task(space_station_engine_worker())
+    
+    # 4. Giao lại quyền điều khiển cho Web Server
     yield 
     
     # ==========================================
     # PHẦN NÀY CHẠY KHI BẠN NHẤN CTRL+C TẮT SERVER
     # ==========================================
     print("🛑 Server shutting down... Đang dọn dẹp tài nguyên...")
-    engine_task.cancel() # Ra lệnh dừng vòng lặp hành quân
+    
+    # Dừng luồng Battle Engine
+    engine_task.cancel()
+    
+    # Dừng luồng Trạm Không Gian
+    st_engine_task.cancel()
+    
     try:
-        await engine_task # Đợi nó dừng hẳn
+        await engine_task
     except asyncio.CancelledError:
         print("✅ Đã tắt BATTLE ENGINE an toàn.")
+
+    try:
+        await st_engine_task
+    except asyncio.CancelledError:
+        print("✅ Đã tắt TRẠM KHÔNG GIAN ENGINE an toàn.")
 
 app = FastAPI(
     title="KPI Kingdom V3 API",  # Cấu hình tiêu đề
@@ -151,7 +184,6 @@ app.include_router(shop.router, tags=["Shop"])
 app.include_router(tower.router, prefix="/api/tower", tags=["Tower"])
 app.include_router(pets.router, prefix="/api/pets", tags=["Pet System"])
 app.include_router(inventory_api.router, prefix="/api", tags=["Inventory"])
-app.include_router(arena_api.router, prefix="/api", tags=["Arena"])
 app.include_router(users.router_public, prefix="/api", tags=["Public Info"])
 app.include_router(auth.router, prefix="/api", tags=["Authentication"])
 app.include_router(skills.router, prefix="/api/skills", tags=["Skills System"])
@@ -159,6 +191,11 @@ app.include_router(market_api.router)
 app.include_router(notifications.router, prefix="/api/noti", tags=["Notifications"])
 app.include_router(chat_api.router, prefix="/api/chat", tags=["Chat"])
 app.include_router(companion.router, prefix="/api", tags=["Companion"])
+app.include_router(space_station_router)
+app.include_router(study_spire_router)
+app.include_router(study_pvp_router)
+app.include_router(study_pvp_router)
+app.include_router(study_ranked_router)
 # --- CẤU HÌNH ĐƯỜNG DẪN FILE (Phiên bản Tuyệt Đối - Chống Lỗi) ---
 
 # 1. Lấy đường dẫn tuyệt đối của file main.py đang chạy
@@ -288,6 +325,20 @@ async def view_player_dashboard():
         if os.path.exists(path):
             return FileResponse(path)
     return {"error": "File player_dashboard.html not found"}
+
+@app.get("/study-spire.html")
+async def view_study_spire():
+    study_spire_page = os.path.join(frontend_path, "study_spire.html")
+    if os.path.exists(study_spire_page):
+        return FileResponse(study_spire_page)
+    return JSONResponse(content={"error": "Study Spire page not found"}, status_code=404)
+
+@app.get("/study-spire-assets/ruong.png")
+async def view_study_spire_chest_image():
+    chest_image = os.path.join(assets_dir, "background", "ruong")
+    if os.path.exists(chest_image):
+        return FileResponse(chest_image, media_type="image/png")
+    return JSONResponse(content={"error": "Chest image not found"}, status_code=404)
 
 # Trang Admin (HTML)
 @app.get("/admin.html")
@@ -2333,11 +2384,11 @@ def get_my_companions(username: str, db: Session = Depends(get_db)):
 # API KIỂM TRA TRẠNG THÁI (ĐỂ BẠN YÊN TÂM)
 # =========================================================
 @app.get("/api/campaign/engine-status")
-def check_engine_status():
-    global engine_run_count
-    if engine_thread.is_alive():
-        return {"success": True, "message": f"✅ HOÀN HẢO! Thread Engine đang hoạt động cực mạnh. Đã quét {engine_run_count} vòng."}
-    return {"success": False, "message": "❌ THREAD ĐÃ CHẾT!"}
+async def check_engine_status(request: Request):
+    engine_task = getattr(request.app.state, "campaign_engine_task", None)
+    is_running = engine_task is not None and not engine_task.done()
+    message = "BATTLE ENGINE đang hoạt động." if is_running else "BATTLE ENGINE không hoạt động."
+    return {"success": is_running, "message": message}
 
 # =====================================================================
 # [GAME LOOP] XỬ LÝ TRANH CHẤP Cứ điểm VÀ ĐIỂM CHIẾN DỊCH (CHẠY MỖI PHÚT)
@@ -2795,11 +2846,43 @@ def process_kill_streak(db, campaign, killer_player, victim_player, killer_name:
         
     db.commit()
 
+#trạm không gian
+# Worker chạy nền kiểm tra mốc 22h00 hàng ngày (Giờ Việt Nam UTC+7)
+async def space_station_engine_worker():
+    last_resolved_day_tracker = {}
+    
+    while True:
+        try:
+            # Lấy giờ Việt Nam (UTC+7)
+            vn_now = datetime.now(timezone(timedelta(hours=7)))
+            
+            # Kiểm tra thời điểm 22:00 (từ 22:00:00 đến 22:00:59)
+            if vn_now.hour == 22 and vn_now.minute == 0:
+                with Session(engine) as db:
+                    active_matches = db.exec(
+                        select(SpaceStationMatch).where(SpaceStationMatch.status == "RUNNING")
+                    ).all()
+                    
+                    for match in active_matches:
+                        # Tránh chạy trùng lặp nhiều lần trong cùng 1 phút
+                        track_key = f"{match.id}_{match.current_day}"
+                        if track_key not in last_resolved_day_tracker:
+                            print(f"🚀 [TRẠM LẠC VIỆT] Đang giải quyết pha đêm lúc 22h00 cho Match #{match.id} (Ngày {match.current_day})...")
+                            resolve_night_phase(match.id, db)
+                            last_resolved_day_tracker[track_key] = True
+            
+            # Xóa cache tracking sau khi qua khung 22h00
+            if vn_now.hour != 22:
+                last_resolved_day_tracker.clear()
 
+        except Exception as e:
+            print(f"❌ Lỗi Space Station Worker: {e}")
+
+        # Quét định kỳ mỗi 30 giây
+        await asyncio.sleep(30)
 
 # 👇 ĐOẠN CODE KHỞI ĐỘNG SERVER (PHẢI CÓ Ở CUỐI FILE)
 if __name__ == "__main__":
     import uvicorn
     # Chạy server ở cổng 8000
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
-

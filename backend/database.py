@@ -1,6 +1,8 @@
 import os
 import json
+import uuid
 from sqlmodel import SQLModel, Field, create_engine, Session, select, Column, Text, TEXT, Relationship
+from sqlalchemy import UniqueConstraint, inspect
 from typing import Optional, List
 from unidecode import unidecode 
 from datetime import datetime, timezone
@@ -9,12 +11,51 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DB_PATH = os.path.join(BASE_DIR, "data", "game.db")
 sqlite_url = f"sqlite:///{DB_PATH}"
 connect_args = {"check_same_thread": False}
-engine = create_engine(sqlite_url, echo=True, connect_args=connect_args)
+engine = create_engine(sqlite_url, echo=False, connect_args=connect_args)
 
 # . Hàm khởi tạo Database
 def create_db_and_tables():
     os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
     SQLModel.metadata.create_all(engine)
+    migrate_study_spire_schema(engine)
+
+
+def migrate_study_spire_schema(database_engine=None):
+    target_engine = database_engine or engine
+    additions = {
+        "studydeck": {
+            "state_version": "INTEGER NOT NULL DEFAULT 1",
+            "must_remain_full": "BOOLEAN NOT NULL DEFAULT 0",
+            "starter_version": "INTEGER NOT NULL DEFAULT 0",
+        },
+        "studyplayerpack": {"state_version": "INTEGER NOT NULL DEFAULT 1"},
+        "studycardtemplate": {
+            "card_type": "TEXT NOT NULL DEFAULT 'spell'",
+            "tags_json": "TEXT NOT NULL DEFAULT '[]'",
+            "effects_json": "TEXT NOT NULL DEFAULT '[]'",
+            "effect_tooltips_json": "TEXT NOT NULL DEFAULT '[]'",
+            "exhaust": "BOOLEAN NOT NULL DEFAULT 0",
+            "is_active": "BOOLEAN NOT NULL DEFAULT 1",
+        },
+        "studybattleresolution": {"player_id": "INTEGER"},
+        "studyactionledger": {"player_id": "INTEGER"},
+    }
+    with target_engine.begin() as connection:
+        available_tables = set(inspect(connection).get_table_names())
+        for table_name, columns in additions.items():
+            if table_name not in available_tables:
+                continue
+            existing_columns = {column["name"] for column in inspect(connection).get_columns(table_name)}
+            for column_name, column_definition in columns.items():
+                if column_name not in existing_columns:
+                    connection.exec_driver_sql(
+                        f'ALTER TABLE "{table_name}" ADD COLUMN "{column_name}" {column_definition}'
+                    )
+        for table_name in ("studybattleresolution", "studyactionledger"):
+            if table_name in available_tables:
+                connection.exec_driver_sql(
+                    f'CREATE INDEX IF NOT EXISTS "ix_{table_name}_player_id" ON "{table_name}" ("player_id")'
+                )
 
 # Hàm cấp phát session chuẩn cho FastAPI 
 def get_db():
@@ -564,10 +605,276 @@ class CampaignChat(SQLModel, table=True):
     message: str
     channel: str # "ALL" hoặc "ALLY"
     timestamp: datetime = Field(default_factory=datetime.now)
+
+# ==========================================
+# MODULE: TRẠM KHÔNG GIAN LẠC VIỆT-Y26
+# ==========================================
+
+class SpaceStationMatch(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    season_name: str = Field(default="Trạm Không Gian Lạc Việt-Y26")
+    status: str = Field(default="LOBBY", index=True)  # LOBBY, RUNNING, ENDED
+    current_day: int = Field(default=1)
+    current_phase: str = Field(default="DAY_ACTION")  # DAY_ACTION (06:00-22:00), NIGHT_PROCESSING (22:00-06:00)
+    skip_vote_penalty: int = Field(default=0)  # Số lượng cắn thêm đêm sau nếu hòa phiếu/bỏ phiếu trắng
+    winner_faction: Optional[str] = Field(default=None)  # ASTRONAUT, MARS_SPY_COND1, MARS_SPY_COND2, ALIEN
+    started_at: datetime = Field(default_factory=datetime.now)
+    ended_at: Optional[datetime] = Field(default=None)
+
+
+class SpaceStationPlayer(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    match_id: int = Field(foreign_key="spacestationmatch.id", index=True)
+    player_id: int = Field(foreign_key="player.id", index=True)
     
+    registered_faction_choice: str = Field(default="ASTRONAUT")  # Lựa chọn ẩn danh lúc đăng ký
+    actual_role: Optional[str] = Field(default=None)  # Role thực tế (ALIEN, MARS_SPY, INVESTIGATOR, BODYGUARD, ...)
+    
+    # Dữ liệu 5 module sinh trắc học và vị trí module unique (Lưu chuỗi JSON)
+    biometrics_json: str = Field(default="{}")
+    
+    # Trạng thái sinh tồn & loại khỏi game
+    is_alive: bool = Field(default=True)
+    death_reason: Optional[str] = Field(default=None)  # VOTE, ALIEN_BITE, GUN, POISON, SUICIDE
+    death_day: Optional[int] = Field(default=None)
+    
+    # Kho kỹ năng/vật phẩm giới hạn của từng vai trò (dạng JSON)
+    # Ví dụ: {"has_revive": true, "has_poison": true, "has_bullet": true, "has_dna_scan": true, "has_switched": false}
+    items_state_json: str = Field(default="{}")
+
+class SpaceStationAction(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    match_id: int = Field(foreign_key="spacestationmatch.id", index=True)
+    day_number: int = Field(default=1, index=True)
+    sender_id: int = Field(foreign_key="spacestationplayer.id", index=True)
+    
+    action_type: str = Field(index=True)  # VOTE_DAY, ALIEN_BITE, PROTECT, INVESTIGATE, SPY_LETTER, SHOOT, POISON, REVIVE, SCAN_DNA, SWITCH_FACTION
+    target_id_1: Optional[int] = Field(default=None)
+    target_id_2: Optional[int] = Field(default=None)
+    target_ids_json: str = Field(default="[]")  # Lưu mảng JSON cho Điều tra viên (4 người)
+    
+    # Xác thực bài học
+    lesson_text_verified: Optional[str] = Field(default=None)
+    
+    status: str = Field(default="PENDING")  # PENDING, EXECUTED, CANCELLED
+    created_at: datetime = Field(default_factory=datetime.now)
+
+
+class SpaceStationLog(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    match_id: int = Field(foreign_key="spacestationmatch.id", index=True)
+    day_number: int = Field(default=1, index=True)
+    
+    log_type: str = Field(index=True)  # MORNING_REPORT_PUBLIC, PSYCHIC_DREAM_PRIVATE, INVESTIGATOR_CLUE_PRIVATE, SPY_MAIL_PRIVATE, SPY_CLUE_REJECTED, CAPTAIN_DNA_PUBLIC
+    receiver_id: Optional[int] = Field(default=None, foreign_key="spacestationplayer.id", index=True)  # None = Public toàn tàu
+    
+    content_text: str = Field(sa_column=Column(Text))
+    created_at: datetime = Field(default_factory=datetime.now)
+
+
+# ==========================================
+# MODULE: STUDY SPIRE PVE
+# ==========================================
+
+class StudyCardTemplate(SQLModel, table=True):
+    card_id: str = Field(primary_key=True)
+    name: str
+    subject: str = Field(index=True)
+    rarity: str = Field(default="common", index=True)
+    mana_cost: int = Field(default=1)
+    description: str = Field(default="")
+    image_url: str = Field(default="")
+    effect_json: str = Field(default="{}", sa_column=Column(Text, nullable=False))
+    card_type: str = Field(default="spell")
+    tags_json: str = Field(default="[]", sa_column=Column(Text, nullable=False))
+    effects_json: str = Field(default="[]", sa_column=Column(Text, nullable=False))
+    effect_tooltips_json: str = Field(default="[]", sa_column=Column(Text, nullable=False))
+    exhaust: bool = Field(default=False)
+    is_active: bool = Field(default=True)
+
+
+class StudyCardInstance(SQLModel, table=True):
+    instance_id: str = Field(default_factory=lambda: uuid.uuid4().hex, primary_key=True)
+    player_id: int = Field(foreign_key="player.id", index=True)
+    card_id: str = Field(foreign_key="studycardtemplate.card_id", index=True)
+    obtained_at: datetime = Field(default_factory=datetime.now)
+
+
+class StudyDeck(SQLModel, table=True):
+    __table_args__ = (UniqueConstraint("player_id", name="uq_study_deck_player"),)
+
+    id: Optional[int] = Field(default=None, primary_key=True)
+    player_id: int = Field(foreign_key="player.id", index=True)
+    name: str = Field(default="Bộ bài hành trình")
+    state_version: int = Field(default=1)
+    must_remain_full: bool = Field(default=False)
+    starter_version: int = Field(default=1)
+    updated_at: datetime = Field(default_factory=datetime.now)
+
+
+class StudyDeckCard(SQLModel, table=True):
+    __table_args__ = (
+        UniqueConstraint("deck_id", "position", name="uq_study_deck_position"),
+        UniqueConstraint("card_instance_id", name="uq_study_deck_card_instance"),
+    )
+
+    id: Optional[int] = Field(default=None, primary_key=True)
+    deck_id: int = Field(foreign_key="studydeck.id", index=True)
+    card_instance_id: str = Field(foreign_key="studycardinstance.instance_id", unique=True)
+    position: int
+
+
+class StudyPackTemplate(SQLModel, table=True):
+    pack_id: str = Field(primary_key=True)
+    name: str
+    subject: str
+    card_pool_json: str = Field(default="[]", sa_column=Column(Text, nullable=False))
+    is_active: bool = Field(default=True)
+
+
+class StudyPlayerPack(SQLModel, table=True):
+    __table_args__ = (UniqueConstraint("player_id", "pack_id", name="uq_study_player_pack"),)
+
+    id: Optional[int] = Field(default=None, primary_key=True)
+    player_id: int = Field(foreign_key="player.id", index=True)
+    pack_id: str = Field(foreign_key="studypacktemplate.pack_id")
+    quantity: int = Field(default=0)
+    state_version: int = Field(default=1)
+
+
+class StudyPvpRoom(SQLModel, table=True):
+    __table_args__ = (UniqueConstraint("room_code", name="uq_study_pvp_room_code"),)
+
+    room_id: str = Field(default_factory=lambda: uuid.uuid4().hex, primary_key=True)
+    room_code: str = Field(index=True)
+    room_name: str
+    host_player_id: int = Field(foreign_key="player.id", index=True)
+    guest_player_id: Optional[int] = Field(default=None, foreign_key="player.id", index=True)
+    password_hash: Optional[str] = None
+    spectators_allowed: bool = Field(default=True)
+    status: str = Field(default="WAITING", index=True)
+    host_ready: bool = Field(default=False)
+    guest_ready: bool = Field(default=False)
+    state_version: int = Field(default=1)
+    battle_state_json: str = Field(default="{}", sa_column=Column(Text, nullable=False))
+    winner_player_id: Optional[int] = Field(default=None, foreign_key="player.id")
+    created_at: datetime = Field(default_factory=datetime.now, index=True)
+    updated_at: datetime = Field(default_factory=datetime.now)
+
+
+class StudyPvpActionLedger(SQLModel, table=True):
+    __table_args__ = (UniqueConstraint("action_key", name="uq_study_pvp_action_key"),)
+
+    id: Optional[int] = Field(default=None, primary_key=True)
+    action_key: str = Field(index=True)
+    room_id: str = Field(foreign_key="studypvproom.room_id", index=True)
+    player_id: int = Field(foreign_key="player.id", index=True)
+    action_type: str
+    result_json: str = Field(default="{}", sa_column=Column(Text, nullable=False))
+    created_at: datetime = Field(default_factory=datetime.now)
+
+
+class StudyRankedPlayer(SQLModel, table=True):
+    player_id: int = Field(foreign_key="player.id", primary_key=True)
+    placement_matches: int = Field(default=0)
+    placement_wins: int = Field(default=0)
+    rank_position: Optional[int] = Field(default=None, index=True)
+    created_at: datetime = Field(default_factory=datetime.now)
+    updated_at: datetime = Field(default_factory=datetime.now)
+
+
+class StudyRankedMatch(SQLModel, table=True):
+    match_id: str = Field(default_factory=lambda: uuid.uuid4().hex, primary_key=True)
+    challenger_player_id: int = Field(foreign_key="player.id", index=True)
+    opponent_player_id: int = Field(foreign_key="player.id", index=True)
+    match_type: str = Field(index=True)
+    status: str = Field(default="ACTIVE", index=True)
+    state_version: int = Field(default=1)
+    battle_state_json: str = Field(default="{}", sa_column=Column(Text, nullable=False))
+    winner_player_id: Optional[int] = Field(default=None, foreign_key="player.id")
+    challenger_rank_at_start: Optional[int] = None
+    opponent_rank_at_start: Optional[int] = None
+    rank_result_json: str = Field(default="{}", sa_column=Column(Text, nullable=False))
+    created_at: datetime = Field(default_factory=datetime.now, index=True)
+    updated_at: datetime = Field(default_factory=datetime.now)
+
+
+class StudyPassage(SQLModel, table=True):
+    passage_id: str = Field(primary_key=True)
+    grade: int = Field(index=True)
+    subject: str = Field(index=True)
+    content: str = Field(sa_column=Column(Text, nullable=False))
+    is_active: bool = Field(default=True, index=True)
+
+
+class StudyActiveRun(SQLModel, table=True):
+    run_id: str = Field(default_factory=lambda: uuid.uuid4().hex, primary_key=True)
+    player_id: int = Field(foreign_key="player.id", index=True, unique=True)
+    run_status: str = Field(default="IN_NODE", index=True)
+    state_version: int = Field(default=1)
+    current_floor: int = Field(default=1)
+    current_node_id: Optional[str] = Field(default=None)
+    grade: int
+    map_graph_json: str = Field(default="{}", sa_column=Column(Text, nullable=False))
+    history_path_json: str = Field(default="[]", sa_column=Column(Text, nullable=False))
+    player_core_json: str = Field(default="{}", sa_column=Column(Text, nullable=False))
+    pending_pack_choices_json: str = Field(default="[]", sa_column=Column(Text, nullable=False))
+    room_state_json: str = Field(default="{}", sa_column=Column(Text, nullable=False))
+    created_at: datetime = Field(default_factory=datetime.now)
+    updated_at: datetime = Field(default_factory=datetime.now)
+
+
+class StudyBattle(SQLModel, table=True):
+    battle_id: str = Field(default_factory=lambda: uuid.uuid4().hex, primary_key=True)
+    run_id: str = Field(foreign_key="studyactiverun.run_id", unique=True, index=True)
+    battle_phase: str = Field(default="PLAYER_TURN", index=True)
+    state_version: int = Field(default=1)
+    battle_state_json: str = Field(default="{}", sa_column=Column(Text, nullable=False))
+    created_at: datetime = Field(default_factory=datetime.now)
+    updated_at: datetime = Field(default_factory=datetime.now)
+
+
+class StudyBattleResolution(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    idempotency_key: str = Field(unique=True, index=True)
+    player_id: Optional[int] = Field(default=None, index=True)
+    run_id: str = Field(index=True)
+    battle_id: str = Field(index=True)
+    result_json: str = Field(default="{}", sa_column=Column(Text, nullable=False))
+    committed_at: datetime = Field(default_factory=datetime.now)
+
+
+class StudyActionLedger(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    idempotency_key: str = Field(unique=True, index=True)
+    player_id: Optional[int] = Field(default=None, index=True)
+    run_id: str = Field(index=True)
+    action_type: str
+    result_json: str = Field(default="{}", sa_column=Column(Text, nullable=False))
+    committed_at: datetime = Field(default_factory=datetime.now)
+
+
+class StudyRunHistory(SQLModel, table=True):
+    run_id: str = Field(primary_key=True)
+    player_id: int = Field(foreign_key="player.id", index=True)
+    outcome: str = Field(index=True)
+    summary_json: str = Field(default="{}", sa_column=Column(Text, nullable=False))
+    ended_at: datetime = Field(default_factory=datetime.now)
+
+
+class StudyPlayerRelic(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    player_id: int = Field(foreign_key="player.id", index=True)
+    relic_id: str
+    obtained_at: datetime = Field(default_factory=datetime.now)
+
+
+class StudyPvpRelicLoadout(SQLModel, table=True):
+    player_id: int = Field(foreign_key="player.id", primary_key=True)
+    relic_ids_json: str = Field(default="[]", sa_column=Column(Text, nullable=False))
+
+
 if __name__ == "__main__":
     create_db_and_tables()
     print(f"✅ Đã khởi tạo thành công Database tại: {DB_PATH}")
 #thông báo admin
-
-

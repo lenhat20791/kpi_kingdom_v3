@@ -1,0 +1,1369 @@
+==================================================
+===   BẢN BÁO CÁO CỤC BỘ: SKILL_TOWER ===
+===   Mục đích: Chẩn đoán lỗi kích hoạt Kỹ năng trong Tháp
+==================================================
+
+
+==================================================
+📄 TẬP TIN: backend\database.py
+==================================================
+📦 [MODEL/CLASS] Player:
+```python
+class Player(SQLModel, table=True):
+    # --- 1. ĐỊNH DANH ---
+    id: Optional[int] = Field(default=None, primary_key=True)
+    username: str = Field(index=True, unique=True)
+    password_hash: str
+    plain_password: Optional[str] = Field(default=None)
+    full_name: str
+    role: str = Field(default="student") # admin / student
+    parent_of_id: Optional[int] = Field(default=None, foreign_key="player.id")
+
+    # --- 2. CHỈ SỐ SỨC MẠNH (LEVEL UP SYSTEM) ---
+    level: int = Field(default=1)
+    
+    # EXP: Hiện tại / Cần thiết (Mặc định 100 theo yêu cầu)
+    exp: int = Field(default=0)
+    next_level_exp: int = Field(default=100) 
+    
+    # Chỉ số chiến đấu (Sẽ tăng khi lên cấp)
+    hp: int = Field(default=100)      # Máu hiện tại (Biến động trong trận)
+    hp_max: int = Field(default=100)  # Máu tối đa (Tăng khi Warrior lên cấp)
+    atk: int = Field(default=10)      # 👈 [MỚI] Sức tấn công (Tăng khi Mage lên cấp)
+
+    # Hệ thống Class & Skill
+    class_type: str = Field(default="NOVICE") # WARRIOR / MAGE
+    skill_points: int = Field(default=0)
+    equipped_skill: Optional[str] = Field(default=None)
+    skills_data: str = Field(default="{}")    # Lưu danh sách skill đã học (JSON)
+
+    # --- 3. HỆ THỐNG KPI & HỌC TẬP ---
+    kpi: float = Field(default=0.0) # Điểm KPI
+    
+    diem_vi_pham: int = Field(default=0)
+    diem_phat_bieu: int = Field(default=0)
+    diem_tx: float = Field(default=0.0)       # Kiểm tra thường xuyên
+    diem_hk: float = Field(default=0.0)       # Kiểm tra học kỳ
+    diem_san_pham: float = Field(default=0.0) # Điểm sản phẩm
+
+    # ĐIỂM HỌC KỲ 1
+    toan_hk1: Optional[float] = Field(default=0.0)
+    van_hk1: Optional[float] = Field(default=0.0)
+    anh_hk1: Optional[float] = Field(default=0.0)
+    gdcd_hk1: Optional[float] = Field(default=0.0)
+    cong_nghe_hk1: Optional[float] = Field(default=0.0)
+    tin_hk1: Optional[float] = Field(default=0.0)
+    khtn_hk1: Optional[float] = Field(default=0.0)
+    lsdl_hk1: Optional[float] = Field(default=0.0)
+
+    # ĐIỂM HỌC KỲ 2
+    toan_hk2: Optional[float] = Field(default=0.0)
+    van_hk2: Optional[float] = Field(default=0.0)
+    anh_hk2: Optional[float] = Field(default=0.0)
+    gdcd_hk2: Optional[float] = Field(default=0.0)
+    cong_nghe_hk2: Optional[float] = Field(default=0.0)
+    tin_hk2: Optional[float] = Field(default=0.0)
+    khtn_hk2: Optional[float] = Field(default=0.0)
+    lsdl_hk2: Optional[float] = Field(default=0.0)
+    
+    # --- 4. KINH TẾ ---
+    tri_thuc: int = Field(default=0)   
+    chien_tich: int = Field(default=0) 
+    vinh_du: int = Field(default=0)    
+
+    # --- 5. THÔNG TIN KHÁC (Metadata) ---
+    team_id: int = Field(default=0)
+    stats_json: str = Field(default="{}") 
+    titles_json: str = Field(default="[]")
+    
+    # --- 6. HỆ THỐNG THÁP & TRANG BỊ ---
+    tower_floor: int = Field(default=1)       # Tầng tháp cao nhất
+    revive_at: Optional[datetime] = Field(default=None) # Thời điểm hồi sinh
+    #điểm bonus từ item
+    item_atk_bonus: int = Field(default=0)
+    item_hp_bonus: int = Field(default=0)
+    # Slot trang bị (Charm/Items)
+    equip_slot_1: Optional[int] = Field(default=None)
+    equip_slot_2: Optional[int] = Field(default=None)
+    equip_slot_3: Optional[int] = Field(default=None)
+    equip_slot_4: Optional[int] = Field(default=None)
+
+    companion_slot_1: Optional[str] = Field(default=None)
+    companion_slot_2: Optional[str] = Field(default=None)
+    companion_slot_3: Optional[str] = Field(default=None)
+```
+📦 [MODEL/CLASS] SkillTemplate:
+```python
+class SkillTemplate(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    skill_id: str = Field(index=True, unique=True) # Ví dụ: MAGE_FIRE_01
+    name: str
+    description: Optional[str] = None
+    class_type: str # WARRIOR / MAGE
+    skill_type: str # ACTIVE / PASSIVE
+    min_level: int = Field(default=1)  # Cấp độ tối thiểu để học
+    
+    prerequisite_id: Optional[str] = Field(default=None) # ID skill cha (để tạo cây)
+    # Lưu toàn bộ logic chiến đấu và nâng cấp vào JSON để linh hoạt
+    # Cấu trúc: {"base_mult": 1.5, "vfx": "fx-meteor", "currency": "TRI_THUC", "base_cost": 100, "scaling": 1.2}
+    config_data: str = Field(default="{}")
+```
+📦 [MODEL/CLASS] PlayerSkill:
+```python
+class PlayerSkill(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    player_id: int = Field(foreign_key="player.id", index=True)
+    
+    skill_id: str = Field(index=True) # Link với skill_id bên trên
+    
+    level: int = Field(default=1)     # Cấp độ hiện tại của skill
+    is_equipped: bool = Field(default=False) # True = Đang lắp để dùng
+```
+
+==================================================
+📄 TẬP TIN: backend\routes\skills.py
+==================================================
+⚙️ [BACKEND FUNCTION] learn_skill():
+```python
+def learn_skill(
+    skill_id: str, 
+    db: Session = Depends(get_db),
+    current_user: Player = Depends(get_current_user) # 👈 LẤY USER THẬT
+):
+    # Lưu ý: Code dưới đây dùng 'current_user' thay vì 'player'
+    
+    # 1. Lấy thông tin Skill
+    skill_temp = db.exec(select(SkillTemplate).where(SkillTemplate.skill_id == skill_id)).first()
+    if not skill_temp:
+        raise HTTPException(status_code=404, detail="Kỹ năng không tồn tại")
+
+    # 2. Lấy giá tiền từ Config
+    config = {}
+    if skill_temp.config_data:
+        try:
+            config = json.loads(skill_temp.config_data)
+        except:
+            pass
+    
+    cost = config.get("base_cost", 0) 
+
+    # --- KIỂM TRA ĐIỀU KIỆN ---
+
+    # A. Kiểm tra Level
+    required_level = skill_temp.min_level
+    if current_user.level < required_level:
+        raise HTTPException(
+            status_code=400, 
+            detail=f"Trình độ chưa đủ! Bạn cần đạt Level {required_level} để học kỹ năng này (Hiện tại: Lv.{current_user.level})"
+        )
+
+    # B. Kiểm tra Tiền (Tri Thức)
+    if current_user.tri_thuc < cost:
+        missing = cost - current_user.tri_thuc
+        raise HTTPException(
+            status_code=400, 
+            detail=f"Không đủ Tri Thức! Cần {cost} (Thiếu {missing} điểm). Yêu cầu Level {required_level}."
+        )
+
+    # C. Kiểm tra đã học chưa
+    player_skills = json.loads(current_user.skills_data or "{}")
+    if skill_id in player_skills:
+        raise HTTPException(status_code=400, detail="Bạn đã học kỹ năng này rồi!")
+
+    # --- XỬ LÝ GIAO DỊCH ---
+    
+    # 1. Trừ tiền
+    current_user.tri_thuc -= cost
+    
+    # 2. Lưu skill vào danh sách
+    player_skills[skill_id] = 1
+    current_user.skills_data = json.dumps(player_skills)
+
+    # 3. Auto trang bị nếu là Active
+    message = "Lĩnh ngộ thành công!"
+    if skill_temp.skill_type == "ACTIVE":
+        current_user.equipped_skill = skill_id
+        message += " Đã tự động trang bị."
+    
+    # 4. Lưu vào Database
+    db.add(current_user)
+    db.commit()
+    
+    return {"status": "success", "message": message}
+```
+⚙️ [BACKEND FUNCTION] equip_skill():
+```python
+def equip_skill(
+    skill_id: str, 
+    db: Session = Depends(get_db),
+    current_user: Player = Depends(get_current_user) # 👈 Dùng User thật
+):
+    # Tìm skill trong DB để kiểm tra xem có phải skill ACTIVE không
+    skill_temp = db.exec(select(SkillTemplate).where(SkillTemplate.skill_id == skill_id)).first()
+    
+    if not skill_temp:
+        raise HTTPException(404, detail="Kỹ năng không tồn tại")
+    
+    if skill_temp.skill_type != "ACTIVE":
+        raise HTTPException(400, detail="Chỉ trang bị được skill Chủ Động (Active)")
+        
+    # Cập nhật cho user hiện tại
+    current_user.equipped_skill = skill_id
+    
+    db.add(current_user)
+    db.commit()
+    
+    return {"status": "success", "message": f"Đã trang bị {skill_temp.name}"}
+```
+⚙️ [BACKEND FUNCTION] get_status():
+```python
+def get_status(
+    current_user: Player = Depends(get_current_user) # 👈 Dùng User thật
+):
+    # Hàm này chỉ cần đọc dữ liệu từ current_user, không cần query DB thêm
+    return {
+        "tri_thuc": current_user.tri_thuc,
+        # Parse JSON an toàn (tránh lỗi nếu data null)
+        "learned": json.loads(current_user.skills_data or "{}"),
+        "equipped": current_user.equipped_skill,
+        "class_type": current_user.class_type
+    }
+```
+
+==================================================
+📄 TẬP TIN: backend\routes\tower.py
+==================================================
+📦 [MODEL/CLASS] TowerCompleteRequest:
+```python
+class TowerCompleteRequest(BaseModel):
+    floor: int
+    is_win: bool
+```
+📦 [MODEL/CLASS] StartCombatRequest:
+```python
+class StartCombatRequest(BaseModel):
+    floor: int
+```
+⚙️ [BACKEND FUNCTION] start_floor_combat():
+```python
+async def start_floor_combat(
+    req: StartCombatRequest, 
+    current_user: Player = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    floor = req.floor
+    """Phiên bản sửa lỗi Tiếng Việt & Logic tìm đáp án"""
+
+    # 1. KIỂM TRA TIẾN ĐỘ
+    progress = db.exec(select(TowerProgress).where(TowerProgress.player_id == current_user.id)).first()
+    if not progress:
+        progress = TowerProgress(player_id=current_user.id, current_floor=1, max_floor=1)
+        db.add(progress)
+        db.commit()
+    
+    current_floor_allowed = progress.current_floor
+    if floor > current_floor_allowed:
+         raise HTTPException(status_code=400, detail=f"Chưa mở tầng {floor}!")
+
+    # 2. LẤY CÂU HỎI
+    target_diff = get_difficulty_by_floor(floor)
+    statement = select(QuestionBank).where(func.lower(QuestionBank.difficulty) == target_diff.lower()).order_by(func.random()).limit(10)
+    questions_db = db.exec(statement).all()
+
+    if not questions_db:
+        fallback_stmt = select(QuestionBank).order_by(func.random()).limit(10)
+        questions_db = db.exec(fallback_stmt).all()
+
+    if not questions_db:
+         raise HTTPException(status_code=404, detail="Kho câu hỏi rỗng!")
+
+    # =========================================================
+    # 3. LOGIC TÌM ĐÁP ÁN ĐÚNG (FIX UNICODE TIẾNG VIỆT)
+    # =========================================================
+    
+    def clean_text(s):
+        if not s: return ""
+        # 1. Chuyển thành chuỗi
+        s = str(s)
+        # 2. Chuẩn hóa Unicode (NFC) để sửa lỗi font tiếng Việt (á vs a + sắc)
+        s = unicodedata.normalize('NFC', s)
+        # 3. Chữ thường + Xóa khoảng trắng thừa + Xóa dấu chấm cuối câu
+        return s.strip().lower().rstrip('.')
+
+    formatted_questions = []
+    
+    for q in questions_db:
+        try:
+            options_list = json.loads(q.options_json)
+            while len(options_list) < 4: options_list.append("")
+
+            val_a = options_list[0]
+            val_b = options_list[1]
+            val_c = options_list[2]
+            val_d = options_list[3]
+
+            # Làm sạch đáp án đúng từ DB
+            raw_correct = str(q.correct_answer).strip()
+            target_ans = clean_text(raw_correct)
+            
+            # --- CHIẾN THUẬT SO SÁNH 3 LỚP ---
+            final_char = None # Không đặt mặc định là 'a' vội để dễ debug
+
+            # Lớp 1: Kiểm tra xem DB có lưu thẳng là "a", "b", "c", "d" không?
+            if raw_correct.lower() in ['a', 'b', 'c', 'd', 'a.', 'b.', 'c.', 'd.']:
+                final_char = raw_correct.lower().replace('.', '')
+            
+            # Lớp 2: So sánh nội dung (Text vs Text) - Chính xác 100%
+            elif target_ans == clean_text(val_a): final_char = "a"
+            elif target_ans == clean_text(val_b): final_char = "b"
+            elif target_ans == clean_text(val_c): final_char = "c"
+            elif target_ans == clean_text(val_d): final_char = "d"
+
+            # Lớp 3: So sánh tương đối (Chứa trong nhau) - Dùng khi dữ liệu DB thiếu/thừa từ
+            else:
+                # Kiểm tra: Đáp án DB nằm trong Option (VD: DB="So sánh", Option="B. So sánh")
+                if target_ans in clean_text(val_a): final_char = "a"
+                elif target_ans in clean_text(val_b): final_char = "b"
+                elif target_ans in clean_text(val_c): final_char = "c"
+                elif target_ans in clean_text(val_d): final_char = "d"
+                # Kiểm tra ngược lại: Option nằm trong DB (VD: DB="Biện pháp so sánh", Option="So sánh")
+                elif clean_text(val_a) in target_ans: final_char = "a"
+                elif clean_text(val_b) in target_ans: final_char = "b"
+                elif clean_text(val_c) in target_ans: final_char = "c"
+                elif clean_text(val_d) in target_ans: final_char = "d"
+
+            # CỨU CÁNH CUỐI CÙNG: Nếu vẫn không tìm thấy -> Buộc phải gán A và in Log lỗi
+            if final_char is None:
+                print(f"❌ LỖI DATA ID {q.id}: Không khớp đáp án nào!")
+                print(f"   - DB Correct: '{q.correct_answer}' (Clean: {target_ans})")
+                print(f"   - Option A: '{val_a}' (Clean: {clean_text(val_a)})")
+                print(f"   - Option B: '{val_b}' (Clean: {clean_text(val_b)})")
+                final_char = "a" # Fallback để game không crash
+
+            formatted_questions.append({
+                "id": q.id,
+                "content": q.content,
+                "option_a": val_a,
+                "option_b": val_b,
+                "option_c": val_c,
+                "option_d": val_d,
+                "correct_ans": final_char, 
+                "explain": q.explanation if hasattr(q, "explanation") else f"Đáp án đúng: {final_char.upper()}"
+            })
+
+        except Exception as e:
+            print(f"Lỗi parse câu hỏi ID {q.id}: {e}")
+            continue
+
+    return {
+        "floor": floor,
+        "difficulty": target_diff,
+        "monster": get_monster_stats_by_floor(floor),
+        "questions": formatted_questions
+    }
+```
+⚙️ [BACKEND FUNCTION] complete_floor():
+```python
+async def complete_floor(
+    req: TowerCompleteRequest,
+    current_user: Player = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Xử lý kết quả trận đấu: Tính quà & Mở tầng mới"""
+    
+    # 1. TÌM HOẶC TẠO TIẾN ĐỘ CHO NGƯỜI MỚI
+    progress = db.exec(select(TowerProgress).where(TowerProgress.player_id == current_user.id)).first()
+    if not progress:
+        progress = TowerProgress(player_id=current_user.id, current_floor=1, max_floor=1)
+        db.add(progress)
+        db.commit()
+        db.refresh(progress)
+
+    # Biến an toàn (Khởi tạo trước để tránh lỗi UnboundLocalError)
+    new_floor_val = progress.current_floor 
+    is_new_record = False
+    received_rewards = []
+
+    # Ép kiểu dữ liệu ngay từ đầu để so sánh chuẩn xác
+    client_floor = int(req.floor)
+    server_floor = int(progress.current_floor)
+
+    # Check gian lận
+    if client_floor > server_floor:
+         return {"status": "cheat", "message": "Gian lận! Tầng chưa mở."}
+
+    # ---------------------------------------------------------
+    # 2. XỬ LÝ KHI THUA (LOSE)
+    # ---------------------------------------------------------
+    if not req.is_win:
+        consolation_msg = "Thất bại. Hãy cố gắng lần sau!"
+        earned_exp = 0
+        
+        # Logic tính quà an ủi (Giữ nguyên code của bạn)
+        try:
+            setting_record = db.exec(select(TowerSetting).where(TowerSetting.id == 1)).first()
+            if setting_record and setting_record.config_data:
+                config = json.loads(setting_record.config_data)
+                difficulty = get_difficulty_by_floor(client_floor)
+                reward_pool = config.get("rewards", {}).get(difficulty, [])
+                
+                total_config_exp = sum(int(item.get("amount", 0)) for item in reward_pool if item.get("type", "").lower() == "exp")
+                
+                if total_config_exp > 0:
+                    earned_exp = total_config_exp // 3
+                    if earned_exp > 0:
+                        add_exp_to_player(current_user, earned_exp)
+                        db.add(current_user)
+                        db.commit()
+                        consolation_msg = f"Thất bại! Nhận +{earned_exp} EXP an ủi."
+        except Exception as e:
+            print(f"Lỗi tính quà an ủi: {e}")
+
+        return {
+            "status": "failed", 
+            "message": consolation_msg,
+            "rewards_text": [f"+{earned_exp} EXP (An ủi)"] if earned_exp > 0 else []
+        }
+
+    # ---------------------------------------------------------
+    # 3. XỬ LÝ KHI THẮNG (WIN) - TÍNH QUÀ (ĐÃ FIX LỖI NHẬN DIỆN TÊN)
+    # ---------------------------------------------------------
+    try:
+        setting_record = db.exec(select(TowerSetting).where(TowerSetting.id == 1)).first()
+        if setting_record and setting_record.config_data:
+            config = json.loads(setting_record.config_data)
+            difficulty = get_difficulty_by_floor(client_floor)
+            reward_pool = config.get("rewards", {}).get(difficulty, [])
+            
+            for item in reward_pool:
+                # Random tỉ lệ rơi
+                if random.randint(1, 100) <= int(item.get("rate", 0)):
+                    item_type = str(item.get("type", "")).strip().lower()
+                    
+                    # 🔥 Lấy tên gốc từ DB ("Điểm KPI (Chính)", "Tri Thức (Xanh)")
+                    raw_name = str(item.get("name", "")).strip() 
+                    qty = int(item.get("amount", 0))
+
+                    if qty <= 0: continue
+
+                    # --- 1. XỬ LÝ EXP ---
+                    if item_type == "exp":
+                        add_exp_to_player(current_user, qty)
+                        received_rewards.append(f"+{qty} EXP")
+                    
+                    # --- 2. XỬ LÝ TIỀN TỆ (ĐÃ NÂNG CẤP NHẬN DIỆN) ---
+                    elif item_type == "currency":
+                        is_added = False
+                        
+                        # Chuyển về chữ thường để so sánh tìm từ khóa
+                        name_lower = raw_name.lower()
+                        
+                        # 🔥 LOGIC MAP TÊN HIỂN THỊ -> TÊN BIẾN TRONG DB
+                        if "kpi" in name_lower:
+                            current_user.kpi = float(current_user.kpi or 0.0) + float(qty)
+                            received_rewards.append(f"+{qty} KPI")
+                            is_added = True
+                            
+                        elif "tri th" in name_lower or "tri_thuc" in name_lower: # Bắt dính "Tri Thức (Xanh)"
+                            current_user.tri_thuc = int(current_user.tri_thuc or 0) + qty
+                            received_rewards.append(f"+{qty} Tri Thức")
+                            is_added = True
+                            
+                        elif "chien tich" in name_lower or "chiến tích" in name_lower:
+                            current_user.chien_tich = int(current_user.chien_tich or 0) + qty
+                            received_rewards.append(f"+{qty} Chiến Tích")
+                            is_added = True
+                            
+                        elif "vinh du" in name_lower or "vinh dự" in name_lower:
+                            current_user.vinh_du = int(current_user.vinh_du or 0) + qty
+                            received_rewards.append(f"+{qty} Vinh Dự")
+                            is_added = True
+                        
+                        # Nếu cộng thành công thì lưu ngay
+                        if is_added:
+                            db.add(current_user)
+                    
+                    # --- 3. XỬ LÝ VẬT PHẨM ---
+                    elif item_type == "item":
+                        try:
+                            # Nếu tên là số (ID) thì dùng luôn, nếu không thì bỏ qua
+                            if raw_name.isdigit():
+                                item_id = int(raw_name)
+                                inv_item = db.exec(select(PlayerItem).where(
+                                    PlayerItem.player_id == current_user.id,
+                                    PlayerItem.item_id == item_id
+                                )).first()
+                                
+                                if inv_item: 
+                                    inv_item.quantity += qty
+                                    db.add(inv_item)
+                                else: 
+                                    db.add(PlayerItem(player_id=current_user.id, item_id=item_id, quantity=qty))
+                                
+                                game_item = db.get(Item, item_id)
+                                item_name = game_item.name if game_item else f"Item {item_id}"
+                                received_rewards.append(f"+{qty} {item_name}")
+                        except: pass
+                    # --- 4. XỬ LÝ CHARM (MỚI) ---
+                    elif item_type == "charm":
+                        try:
+                            # Lấy mã độ hiếm từ tên (VD: RANDOM_CHARM_MAGIC -> MAGIC)
+                            # Lưu ý: Code này giả định Admin lưu mã charm vào trường "name"
+                            rarity = raw_name.replace("RANDOM_CHARM_", "")
+                            
+                            # Gọi hàm tạo Charm
+                            new_charm = item_processor.generate_charm(db, current_user.id, rarity)
+                            
+                            if new_charm:
+                                received_rewards.append(f"Trang bị: {new_charm.name}")
+                        except Exception as e:
+                            print(f"❌ Lỗi tạo Charm: {e}")
+
+    except Exception as e:
+        print(f"Lỗi chia quà: {e}")
+
+    # ---------------------------------------------------------
+    # 4. LOGIC TĂNG TẦNG & ĐỒNG BỘ DỮ LIỆU (FIXED DEADLOCK)
+    # ---------------------------------------------------------
+    
+    print(f"🔍 DEBUG: Client={client_floor} | Server={server_floor}")
+
+    # A. Nếu đánh đúng tầng hiện tại -> Lên cấp
+    if client_floor == server_floor:
+        progress.current_floor += 1
+        if progress.current_floor > progress.max_floor:
+            progress.max_floor = progress.current_floor
+        is_new_record = True
+        print(f"🚀 UP TẦNG: {server_floor} -> {progress.current_floor}")
+
+    # B. 🔥 BẮT BUỘC ĐỒNG BỘ SANG BẢNG PLAYER (DÙ LÀ FARM HAY LEO THÁP)
+    # Đây là dòng quan trọng nhất để sửa lỗi cái nút không nhảy số
+    if current_user.tower_floor < progress.current_floor:
+        print(f"🔧 AUTO-FIX: Player {current_user.tower_floor} -> {progress.current_floor}")
+        current_user.tower_floor = progress.current_floor
+        db.add(current_user)
+
+    # Cập nhật giá trị trả về
+    new_floor_val = progress.current_floor
+
+    # 5. LƯU TẤT CẢ VÀO DB
+    try:
+        db.add(progress)
+        db.add(current_user) # Lưu tiền, exp, và tower_floor
+        db.commit()
+        
+        db.refresh(progress)
+        db.refresh(current_user)
+        
+    except Exception as e:
+        print(f"❌ LỖI DATABASE: {e}")
+        db.rollback()
+        return {"status": "error", "message": "Lỗi lưu dữ liệu"}
+
+    return {
+        "status": "success",
+        "new_floor": new_floor_val, 
+        "is_new_record": is_new_record,
+        "rewards_text": received_rewards
+    }
+```
+
+==================================================
+📄 TẬP TIN: frontend\player_dashboard.html
+==================================================
+⚡ [FRONTEND JS FUNCTION] startTowerCombat():
+```javascript
+function startTowerCombat(floorIndex) {
+            if (!window.dashboardData || !window.dashboardData.stats) {
+                console.error("❌ Dữ liệu chưa sẵn sàng!", window.dashboardData);
+                alert("Dữ liệu nhân vật đang tải... Vui lòng đợi 1 giây rồi bấm lại!");
+                
+                // Thử gọi nạp lại dữ liệu cứu cánh
+                if (typeof loadDashboardData === 'function') loadDashboardData();
+                return; // Dừng lại ngay, không cho chạy tiếp để tránh lỗi Crash
+            }
+            const token = localStorage.getItem('access_token') || localStorage.getItem('token');
+            if (!token) return (window.location.href = '/login');
+
+            const cleanFloor = parseInt(floorIndex) || towerState.floor || 1;
+            console.log("⚔️ Đang chuẩn bị dữ liệu cho tầng:", cleanFloor);
+
+            try {
+                const [towerRes, statusRes, allSkillsRes] = await Promise.all([
+                    fetch('/api/tower/start', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                        body: JSON.stringify({ floor: cleanFloor })
+                    }),
+                    fetch('/api/skills/my-status', {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    }),
+                    fetch('/api/skills/get-all', {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    })
+                ]);
+
+                if (!towerRes.ok || !statusRes.ok || !allSkillsRes.ok) throw new Error("Lỗi tải dữ liệu");
+
+                const data = await towerRes.json();
+                
+                window.myStatus = await statusRes.json(); 
+                window.globalSkillsList = await allSkillsRes.json();
+
+                console.log("✅ Dữ liệu đã đồng bộ hoàn toàn.");
+
+                // --- CẬP NHẬT STATE TRẬN ĐẤU (QUAN TRỌNG) ---
+                towerState.isCombat = true;
+                towerState.questions = data.questions;
+                
+                // 1. Cập nhật chỉ số Quái
+                towerState.monsterHP = data.monster.monster_hp;
+                towerState.monsterMaxHP = data.monster.monster_hp;
+                towerState.monsterAtk = data.monster.monster_atk || 10; // Đừng quên cái này
+
+                // 2. Cập nhật chỉ số Người chơi (FIX LỖI ATK = 10)
+                // Lấy từ dashboardData.stats (atk, str, hoặc damage tùy backend trả về)
+                const pStats = window.dashboardData.stats || {};
+                towerState.playerHP = pStats.hp;
+                towerState.playerMaxHP = pStats.max_hp;
+                
+                // Ưu tiên lấy atk, nếu không có thì lấy str (Warrior), int (Mage), cuối cùng mới là 15
+                towerState.playerAtk = pStats.atk || pStats.str || pStats.int || pStats.damage || 15;
+
+                // 3. Khởi tạo danh sách Passive kích hoạt (Dành cho Skill Kiên Định)
+                towerState.activePassiveSkills = {}; 
+
+                console.log(`📊 Chỉ số vào trận: Player ATK=${towerState.playerAtk}, HP=${towerState.playerHP}`);
+
+                // Vẽ UI và kích hoạt Passive
+                setupCombatUI(window.dashboardData.info, data.monster);
+                
+                setTimeout(() => {  
+                    triggerPassiveVFX();
+                }, 300); 
+
+                renderTowerQuestion();
+            } catch (error) {
+                console.error("❌ Lỗi hệ thống:", error);
+            }
+        }
+```
+⚡ [FRONTEND JS FUNCTION] setupCombatUI():
+```javascript
+function setupCombatUI(playerInfo, monsterInfo) {
+            console.log("🎨 Đang vẽ giao diện chiến đấu...", playerInfo, monsterInfo);
+
+            // 1. HIỆN KHUNG GIAO DIỆN
+            const combatView = document.getElementById('tower-combat');
+            if (combatView) {
+                combatView.classList.remove('hidden');
+                combatView.classList.add('flex');
+            }
+
+            // --- A. HIỂN THỊ AVATAR NGƯỜI CHƠI (THEO CLASS) ---
+            const pImg = document.getElementById('combat-player-img');
+            if (pImg) {
+                // Lấy class (Warrior/Mage) -> Chuyển thành chữ thường
+                const classType = (playerInfo.class_type || 'warrior').toLowerCase(); 
+                
+                // Đường dẫn chuẩn: assets/character/mage.png
+                pImg.src = `assets/character/${classType}.png`;
+                
+                // Nếu ảnh lỗi -> Dùng Warrior mặc định
+                pImg.onerror = function() {
+                    this.src = 'assets/character/warrior.png';
+                };
+            }
+
+            // --- B. RANDOM BACKGROUND THÁP ---
+            const bgEl = document.getElementById('tower-combat-bg');
+            if (bgEl) {
+                const availableBackgrounds = [
+                    'thap1.jpg', 'thap2.jpg', 'thap3.jpg', 'thap4.jpg',
+                    'thap5.png', 'thap6.png', 'thap7.png', 'thap8.png'
+                ];
+                
+                const randomIndex = Math.floor(Math.random() * availableBackgrounds.length);
+                const selectedBgFilename = availableBackgrounds[randomIndex];
+                
+                bgEl.style.backgroundImage = `url('assets/background/${selectedBgFilename}')`;
+            }
+
+            // --- C. HIỂN THỊ QUÁI VẬT (CẬP NHẬT LOGIC RANDOM) ---
+            const mName = document.getElementById('combat-monster-name');
+            if (mName) mName.innerText = monsterInfo.monster_name || "Quái Vật";
+
+            const mImg = document.getElementById('combat-monster-img');
+            if (mImg) {
+                // Backend trả về đường dẫn ngẫu nhiên: assets/monsters/5.png (ví dụ)
+                mImg.src = monsterInfo.image;
+
+                // Reset class CSS cho ảnh tĩnh (tránh dính class animation cũ nếu có)
+                mImg.className = "h-32 md:h-56 object-contain drop-shadow-[0_0_25px_rgba(255,50,50,0.5)] transition-transform duration-200";
+
+                // Logic Fallback (Chống lỗi ảnh):
+                // Nếu đường dẫn Backend trả về bị lỗi (VD: chưa có ảnh 7.png) -> Load ảnh 1.png
+                mImg.onerror = function() {
+                    console.warn(`⚠️ Ảnh quái lỗi: ${this.src} -> Thử load 1.png`);
+                    this.src = "assets/monsters/1.png"; 
+                    
+                    // Nếu ảnh 1.png cũng không có -> Load warrior.png (chống cháy cuối cùng)
+                    this.onerror = function() { 
+                        this.src = "assets/character/warrior.png"; 
+                    };
+                };
+            }
+
+            // --- D. CÁC CHỈ SỐ MÁU & THANH TRẠNG THÁI ---
+            const playerHP = towerState.playerHP;
+            const playerMaxHP = towerState.playerMaxHP;
+            const playerPct = Math.max(0, (playerHP / playerMaxHP) * 100);
+
+            // Cập nhật Text Máu
+            const pHPText = document.getElementById('combat-player-hp-text');
+            if (pHPText) pHPText.innerText = `${Math.round(playerHP)}/${playerMaxHP}`;
+            
+            const mHPText = document.getElementById('combat-monster-hp-text');
+            if (mHPText) mHPText.innerText = Math.round(towerState.monsterHP);
+
+            // Cập nhật Thanh Máu (Width %)
+            const pBar = document.getElementById('combat-player-hp-bar');
+            if(pBar) pBar.style.width = `${playerPct}%`;
+
+            const mBar = document.getElementById('combat-monster-hp-bar');
+            if(mBar) mBar.style.width = '100%'; // Mới vào quái đầy máu
+
+            // Reset số nhảy damage cũ
+            const pDamage = document.getElementById('combat-player-img-damage');
+            const mDamage = document.getElementById('combat-monster-img-damage');
+            if(pDamage) pDamage.innerText = "";
+            if(mDamage) mDamage.innerText = "";
+
+            // Reset số câu hỏi về 1/10
+            const qIndex = document.getElementById('combat-q-index');
+            if (qIndex) {
+                // ta lấy số lượng câu hỏi thực tế từ towerState
+                const totalQ = (towerState.questions && towerState.questions.length) ? towerState.questions.length : 10;
+                qIndex.innerText = `1/${totalQ}`;
+            }
+            
+            // Reset thanh thời gian
+            const timerBar = document.getElementById('combat-timer-bar');
+            if (timerBar) timerBar.style.width = '100%';
+            towerState.activePassiveSkills = {};
+            // 👇👇👇 THÊM ĐOẠN NÀY VÀO CUỐI HÀM 👇👇👇
+            console.log("🔥 Giao diện đã sẵn sàng. Kích hoạt hiệu ứng Passive...");
+            
+            // Đợi 500ms (nửa giây) cho giao diện hiện mượt mà rồi mới buff hiệu ứng
+            setTimeout(() => {
+                if (typeof triggerPassiveVFX === 'function') {
+                    triggerPassiveVFX();
+                } else {
+                    console.warn("⚠️ Không tìm thấy hàm triggerPassiveVFX!");
+                }
+            }, 500);
+        }
+```
+⚡ [FRONTEND JS FUNCTION] handleTowerAnswer():
+```javascript
+function handleTowerAnswer(isCorrect) {
+            clearInterval(towerState.timer); // Dừng đồng hồ ngay
+
+            if (isCorrect) {
+                // === NGƯỜI CHƠI ĐÁNH QUÁI ===
+                // Logic mới: Chia đều máu Boss theo số câu hỏi. 
+                // Ví dụ: 5 câu -> Mỗi câu trừ 20% máu. Trả lời đúng hết mới thắng tuyệt đối.
+                // Thêm +1 để tránh trường hợp chia lẻ còn dư 1-2 máu.
+                const totalQuestions = towerState.questions.length || 5;
+                const damage = Math.ceil(towerState.maxMonsterHP / totalQuestions) + 1; 
+                
+                towerState.monsterHP = Math.max(0, towerState.monsterHP - damage);
+                
+                // Hiệu ứng Visual
+                showDamagePopup('combat-monster', damage);
+                const monImg = document.getElementById('combat-monster-img');
+                if(monImg) {
+                    monImg.classList.add('shake-effect');
+                    setTimeout(() => monImg.classList.remove('shake-effect'), 500);
+                }
+
+            } else {
+                // === QUÁI ĐÁNH NGƯỜI CHƠI ===
+                // Logic mới: Trừ máu theo chỉ số ATK của Quái (lấy từ Server)
+                const damage = towerState.monsterAtk || 20; 
+                towerState.playerHP = Math.max(0, towerState.playerHP - damage);
+                
+                // Hiệu ứng Visual
+                showDamagePopup('combat-player', damage);
+                const mainView = document.getElementById('main-view-tower');
+                if(mainView) {
+                    mainView.classList.add('shake-effect');
+                    setTimeout(() => mainView.classList.remove('shake-effect'), 500);
+                }
+            }
+
+            updateHealthBars();
+
+            // KIỂM TRA KẾT QUẢ NGAY LẬP TỨC
+            if (towerState.monsterHP <= 0) {
+                setTimeout(() => endTowerCombat(true), 800); // Thắng
+            } else if (towerState.playerHP <= 0) {
+                setTimeout(() => endTowerCombat(false), 800); // Thua
+            } else {
+                // CHƯA CÓ AI CHẾT -> CÂU TIẾP THEO
+                setTimeout(() => {
+                    towerState.currentQIndex++;
+                    renderTowerQuestion();
+                }, 1200);
+            }
+        }
+```
+⚡ [FRONTEND JS FUNCTION] playVFX():
+```javascript
+function playVFX(vfxName, targetId, isProjectile = false) {
+            if (!vfxName) return;
+            
+            // 1. Chuẩn hóa tên class
+            const className = vfxName.replace('.', '').trim();
+            
+            // 2. Tìm container (Giữ nguyên logic cũ)
+            const container = document.getElementById('vfx-container');
+            if (!container) return; // Không tìm thấy container thì thoát êm
+
+            // 👇 THAY ĐỔI QUAN TRỌNG: Tìm mục tiêu TỔNG QUÁT (Player hoặc Monster đều được)
+            const targetEl = document.getElementById(targetId);
+            
+            // Nếu không tìm thấy mục tiêu -> Cảnh báo nhẹ và thoát (Không crash)
+            if (!targetEl) {
+                console.warn(`⚠️ [VFX] Không tìm thấy mục tiêu id='${targetId}'. Bỏ qua hiệu ứng.`);
+                return;
+            }
+
+            // Reset container
+            container.innerHTML = '';
+            container.className = "vfx-container"; 
+            container.classList.remove('hidden');
+            container.style.width = ''; 
+            container.style.height = '';
+            // 3. Tính toán tọa độ ĐÍCH (Dùng chung cho cả Monster và Player)
+            const targetRect = targetEl.getBoundingClientRect();
+            // Tọa độ tâm của mục tiêu
+            const endX = targetRect.left + targetRect.width / 2;
+            const endY = targetRect.top + targetRect.height / 2;
+
+            console.log(`📍 VFX Target [${targetId}]: X=${endX}, Y=${endY}`);
+
+            // Tạo thẻ hiệu ứng
+            const vfxEl = document.createElement('div');
+            vfxEl.classList.add(className);
+            container.appendChild(vfxEl);
+
+            // --- LOGIC XỬ LÝ RIÊNG (GIỮ NGUYÊN LOGIC CŨ, CHỈ THAY ĐỔI BIẾN) ---
+            
+            if (className === 'fx-meteor') {
+                // [CASE 1: THIÊN THẠCH]
+                // Logic: Bay từ trên trời xuống đầu mục tiêu (endX, endY)
+                let startX = endX - 50; // Bay chéo nhẹ từ trái sang
+                let startY = -150;      // Từ ngoài màn hình
+
+                // Setup vị trí xuất phát
+                container.style.transition = 'none';
+                container.style.left = startX + 'px';
+                container.style.top = startY + 'px';
+                container.style.transform = 'translate(-50%, -50%) rotate(-45deg)'; 
+
+                // Kích hoạt bay
+                requestAnimationFrame(() => {
+                    container.style.transition = 'top 0.8s ease-in, left 0.8s linear'; 
+                    container.style.left = endX + 'px';
+                    container.style.top = endY + 'px';
+                });
+
+                // Xóa
+                setTimeout(() => { vfxEl.remove(); container.classList.add('hidden'); }, 1200);
+            } 
+            else if (className === 'fx-flame-pillar') {
+                // [CASE 2: CỘT LỬA]
+                // Logic: Mọc từ chân mục tiêu
+                console.log("🔥 Đang chạy logic PILLAR");
+                container.style.transition = 'none';
+                container.style.left = endX + 'px';
+                container.style.top = (targetRect.bottom - 20) + 'px'; // Lấy chân target
+                container.style.transform = 'translate(-50%, -100%)';
+                setTimeout(() => { vfxEl.remove(); container.classList.add('hidden'); }, 1000);
+            }
+            else if (isProjectile && targetId !== 'combat-player-img') { 
+                // [CASE 3: ĐẠN BAY - FIREBALL]
+                // Lưu ý: Chỉ bay nếu mục tiêu KHÔNG PHẢI là bản thân (tránh tự bắn mình)
+                const playerEl = document.getElementById('combat-player-img');
+                if(playerEl) {
+                    const playerRect = playerEl.getBoundingClientRect();
+                    const startX = playerRect.left + playerRect.width / 2;
+                    const startY = playerRect.top + playerRect.height / 2;
+                    
+                    container.style.transition = 'none';
+                    container.style.left = startX + 'px';
+                    container.style.top = startY + 'px';
+                    container.style.transform = 'translate(-50%, -50%)';
+
+                    requestAnimationFrame(() => {
+                        container.style.transition = 'top 0.5s linear, left 0.5s linear';
+                        container.style.left = endX + 'px';
+                        container.style.top = endY + 'px';
+                    });
+                }
+                setTimeout(() => { vfxEl.remove(); container.classList.add('hidden'); }, 600);
+            }
+            else if (className === 'fx-thankiem') {
+                // [CASE ĐẶC BIỆT: THẦN KIẾM] 
+                // Logic: KHÔNG bị giới hạn khung (Overflow visible) để kiếm to thoải mái
+                
+                // 1. Reset container cho thoáng
+                container.style.width = '0px';  // Không quan trọng width/height
+                container.style.height = '0px'; 
+                container.style.overflow = 'visible'; // 👈 QUAN TRỌNG: Để kiếm lòi ra ngoài khung được
+                
+                // 2. Đặt vị trí ngay đỉnh đầu mục tiêu
+                container.style.transition = 'none';
+                container.style.left = endX + 'px';
+                // endY là giữa bụng quái. Kiếm cắm từ đầu xuống -> chỉnh lên trên 1 chút
+                container.style.top = (endY - targetRect.height/2) + 'px'; 
+                
+                // Căn giữa điểm neo
+                container.style.transform = 'translate(-50%, 0)'; 
+
+                // 3. Xóa sau khi diễn xong (1.5 giây)
+                setTimeout(() => { vfxEl.remove(); container.classList.add('hidden'); }, 1500);
+            }
+            else if (className === 'fx-thienphat') {
+                // [CASE MỚI: THIÊN PHẠT]
+                // Logic: Rơi từ trên đầu quái xuống (giống Thần Kiếm nhưng dùng ảnh khác)
+                
+                // 1. Reset container để không bị cắt ảnh
+                container.style.width = '0px';
+                container.style.height = '0px';
+                container.style.overflow = 'visible'; // Quan trọng: Để ảnh to lòi ra ngoài
+                
+                // 2. Định vị: Ngay đỉnh đầu quái
+                container.style.transition = 'none';
+                container.style.left = endX + 'px';
+                container.style.top = (endY - targetRect.height/2) + 'px'; 
+                
+                // 3. Căn giữa
+                container.style.transform = 'translate(-50%, 0)'; 
+
+                // 4. Dọn dẹp sau 1.5s
+                setTimeout(() => { vfxEl.remove(); container.classList.add('hidden'); }, 1500);
+            }
+            else if (className === 'fx-nuilua') {
+                // [CASE MỚI: NÚI LỬA]
+                // Logic: Bùng nổ ngay tại tâm quái (Không rơi)
+                
+                // 1. Reset container
+                container.style.width = '0px';
+                container.style.height = '0px';
+                container.style.overflow = 'visible'; // Để lửa to lòi ra ngoài khung
+                const moveRight = 180;  // Dịch sang phải 60px
+                const moveDown  = 160;
+                // 2. Định vị: Ngay chính giữa bụng quái (Tâm)
+                container.style.transition = 'none';
+                container.style.left = endX + 'px';
+                container.style.top = endY + 'px'; 
+                container.style.transform = 'translate(-50%, -50%)';
+                // (Trong CSS đã có translate(-50%, -50%) để căn chỉnh tâm ảnh trùng tâm quái)
+
+                // 3. Dọn dẹp sau 1.5s
+                setTimeout(() => { vfxEl.remove(); container.classList.add('hidden'); }, 1500);
+            }
+            // passive skill
+            else {
+                // 1. Tính toán kích thước "CỬA SỔ HIỂN THỊ" (Container)
+                // - Chiều ngang: Chỉ bằng 60% chiều rộng nhân vật (Rất hẹp, để tạo dáng cột khí)
+                // - Chiều cao: Bằng 100% chiều cao nhân vật
+                const maskWidth = targetRect.width * 0.6; 
+                const maskHeight = targetRect.height * 1.0;
+
+                // 2. Thiết lập Container thành "MẶT NẠ" (Mask)
+                container.style.width = maskWidth + 'px';
+                container.style.height = maskHeight + 'px';
+                
+                // 👇 QUAN TRỌNG: Cắt bỏ phần thừa 2 bên
+                container.style.overflow = 'hidden'; 
+                
+                // 👇 QUAN TRỌNG: Căn giữa hiệu ứng bên trong
+                // (Để tâm của hiệu ứng luôn nằm giữa cái khung hẹp này)
+                container.style.display = 'flex';
+                container.style.justifyContent = 'center';
+                container.style.alignItems = 'center';
+
+                // Đảm bảo ảnh Sprite bên trong KHÔNG BỊ CO LẠI (Giữ nguyên size gốc của ảnh)
+                vfxEl.style.width = (targetRect.width * 1.8) + 'px'; 
+                vfxEl.style.height = '100%'; 
+                vfxEl.style.flexShrink = '0';   
+
+                // 3. Đặt vị trí Container
+                container.style.transition = 'none';
+                container.style.left = endX + 'px';
+                container.style.top = endY + 'px';
+                container.style.transform = 'translate(-50%, -50%)';
+                
+                // Tăng thời gian hiển thị lên 1.5s cho các hiệu ứng buff
+                setTimeout(() => { vfxEl.remove(); container.classList.add('hidden'); }, 1500);
+            }
+        }
+```
+⚡ [FRONTEND JS FUNCTION] selectSkill():
+```javascript
+function selectSkill(skillId, status) {
+            // 1. Tìm Skill
+            const skill = globalSkillsList.find(s => s.skill_id === skillId);
+            if (!skill) return;
+
+            const iconPath = SKILL_ICONS[skillId] || "/assets/skill_icon/default.png";
+            const isEquipped = myStatus.equipped === skillId;
+            
+            // 2. Parse Config (Giữ nguyên logic cũ của bạn)
+            let config = {};
+            let rawConf = skill.config_data || skill.config || {}; 
+
+            if (typeof rawConf === 'string') {
+                try { config = JSON.parse(rawConf); } catch(e) { config = {}; }
+            } else {
+                config = rawConf;
+            }
+            
+            const cost = config.base_cost !== undefined ? parseInt(config.base_cost) : 0;
+            
+            // ============================================================
+            // 📊 XỬ LÝ HIỂN THỊ SỨC MẠNH (NÂNG CẤP)
+            // ============================================================
+            let mainStatHtml = ""; // Biến chứa các dòng HTML hiển thị chỉ số
+            const sType = (skill.skill_type || "").toUpperCase();
+
+            if (sType === 'PASSIVE') {
+                // --- A. Hiển thị Buff Chỉ số (Nếu có) ---
+                const val = parseFloat(config.value || 0);
+                if (val > 0) {
+                    mainStatHtml += `
+                        <div class="flex justify-between items-center text-xs">
+                            <span class="text-orange-500 font-bold">Hiệu Quả</span>
+                            <span class="text-xl font-bold text-green-400">+${Math.round(val * 100)}%</span>
+                        </div>`;
+                }
+
+                // --- B. Hiển thị Hồi Máu (MỚI THÊM) ---
+                if ((config.heal_percent && config.heal_percent > 0) || (config.heal_flat && config.heal_flat > 0)) {
+                    let healText = "";
+                    // Ghép chuỗi: 30% HP + 500
+                    if (config.heal_percent > 0) healText += `${Math.round(config.heal_percent * 100)}% HP`;
+                    if (config.heal_flat > 0) healText += (healText ? " + " : "") + `${config.heal_flat}`;
+
+                    mainStatHtml += `
+                        <div class="flex justify-between items-center text-xs mt-1">
+                            <span class="text-pink-500 font-bold">Hồi Phục</span>
+                            <span class="text-md font-bold text-pink-300">${healText}</span>
+                        </div>`;
+                }
+
+                // --- C. Hiển thị Điều kiện (MỚI THÊM) ---
+                if (config.condition === 'hp_below') {
+                    const thresh = (config.threshold || 0.5) * 100;
+                    mainStatHtml += `
+                        <div class="text-[10px] text-gray-400 text-right italic mt-1">
+                            (Kích hoạt khi HP dưới ${thresh}%)
+                        </div>`;
+                } else if (config.condition === 'chance_on_hit') {
+                    mainStatHtml += `
+                        <div class="text-[10px] text-gray-400 text-right italic mt-1">
+                            (Khi bị tấn công)
+                        </div>`;
+                }
+
+                // Nếu không có gì để hiện (Skill rỗng)
+                if (mainStatHtml === "") {
+                    mainStatHtml = `<div class="text-center text-gray-500 text-xs">Nội tại ẩn</div>`;
+                }
+
+            } else {
+                // --- ACTIVE SKILL (Giữ nguyên) ---
+                const val = parseFloat(config.base_mult || 1.0); 
+                mainStatHtml = `
+                    <div class="flex justify-between items-center text-xs">
+                        <span class="text-orange-500 font-bold">Sát Thương</span>
+                        <span class="text-xl font-bold text-orange-400">x${val}</span>
+                    </div>`;
+            }
+
+            // --- LOGIC NÚT BẤM (Giữ nguyên logic của bạn) ---
+            let btnHtml = '';
+            
+            if (status === 'LOCKED') {
+                btnHtml = `
+                    <button class="w-full py-3 bg-gray-700 text-gray-400 rounded-lg cursor-not-allowed font-bold border border-gray-600">
+                        <i class="fa-solid fa-lock"></i> YÊU CẦU LEVEL ${skill.min_level || 1}
+                    </button>`;
+            } 
+            else if (status === 'AVAILABLE') {
+                const currentMoney = myStatus.tri_thuc || 0;
+                const canAfford = currentMoney >= cost;
+                
+                if (canAfford) {
+                    btnHtml = `
+                        <button onclick="apiAction('learn', '${skillId}')" class="w-full py-3 rounded-lg font-bold text-white shadow-lg bg-gradient-to-r from-yellow-600 to-orange-600 hover:from-yellow-500 animate-bounce-slow">
+                            <i class="fa-solid fa-book-open"></i> LĨNH NGỘ (${cost} TRI THỨC)
+                        </button>`;
+                } else {
+                    btnHtml = `
+                        <button class="w-full py-3 bg-gray-600 text-gray-300 rounded-lg cursor-not-allowed font-bold border border-gray-500">
+                            <i class="fa-solid fa-ban"></i> THIẾU TIỀN (${cost} TRI THỨC)
+                        </button>`;
+                }
+            } 
+            else if (status === 'LEARNED') {
+                if (sType === 'PASSIVE') {
+                    btnHtml = `<button class="w-full py-3 bg-blue-900/50 text-blue-400 border border-blue-600 rounded-lg cursor-default font-bold">⚡ BỊ ĐỘNG - TỰ KÍCH HOẠT</button>`;
+                } else if (isEquipped) {
+                    btnHtml = `<button onclick="apiAction('unequip')" class="w-full py-3 bg-red-900/80 hover:bg-red-800 text-red-200 border border-red-700 rounded-lg font-bold transition"><i class="fa-solid fa-times"></i> GỠ BỎ</button>`;
+                } else {
+                    btnHtml = `<button onclick="apiAction('equip', '${skillId}')" class="w-full py-3 bg-green-700 hover:bg-green-600 text-white rounded-lg font-bold transition shadow-lg"><i class="fa-solid fa-shield-alt"></i> TRANG BỊ</button>`;
+                }
+            }
+
+            // 3. Render Panel Chi Tiết
+            const detailPanel = document.getElementById('skill-detail-panel');
+            if (detailPanel) {
+                detailPanel.innerHTML = `
+                    <div class="text-center mb-4">
+                        <img src="${iconPath}" class="w-24 h-24 mx-auto rounded-lg border-2 ${isEquipped ? 'border-green-500 shadow-[0_0_15px_#22c55e]' : 'border-yellow-500'} bg-gray-900 object-contain shadow-lg">
+                        <h3 class="text-2xl font-bold text-white mt-4 font-rpg">${skill.name}</h3>
+                    </div>
+                    
+                    <div class="bg-gray-800 p-4 rounded-lg border border-gray-700 mb-4 italic text-gray-300 text-center text-sm">
+                        "${skill.description || 'Chưa có mô tả'}"
+                    </div>
+
+                    <div class="bg-gray-800/50 p-4 rounded-xl border border-gray-700/50 space-y-2 mb-6">
+                        
+                        ${mainStatHtml} 
+
+                        <div class="w-full h-[1px] bg-gray-700 my-2"></div>
+
+                        <div class="flex justify-between items-center text-xs">
+                            <span class="text-blue-400 font-bold">Loại</span>
+                            <span class="text-white">${sType}</span>
+                        </div>
+                        <div class="flex justify-between items-center text-xs">
+                            <span class="text-gray-400 font-bold">Level Yêu Cầu</span>
+                            <span class="text-white font-bold">Lv.${skill.min_level || 1}</span>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-auto">${btnHtml}</div>
+                `;
+            }
+        }
+```
+⚡ [FRONTEND JS FUNCTION] apiAction():
+```javascript
+function apiAction(action, skillId = '') {
+            // 1. Kiểm tra Token
+            const token = localStorage.getItem('access_token') || localStorage.getItem('token');
+            
+            if (!token) {
+                alert("Phiên đăng nhập hết hạn, vui lòng đăng nhập lại!");
+                // 👇 SỬA TẠI ĐÂY: Chuyển về index.html thay vì /login
+                window.location.href = 'index.html'; 
+                return;
+            }
+
+            if (action === 'learn' && !confirm("Bạn chắc chắn muốn học kỹ năng này?")) return;
+
+            // 2. CẤU HÌNH URL CHUẨN (Khớp với file main.py và skill.py của bạn)
+            let url = `/api/skills/${action}`;
+            
+            // Nếu là trang bị (equip) hoặc học (learn) thì mới cộng thêm skillId vào URL
+            if (skillId && action !== 'unequip') {
+                url += `/${skillId}`; 
+            }
+
+            try {
+                console.log(`🚀 Đang gọi API: ${url}`);
+
+                const res = await fetch(url, { 
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({}) 
+                });
+
+                // Kiểm tra nếu là lỗi 401 (Hết hạn token)
+                if (res.status === 401) {
+                    alert("Hết hạn đăng nhập!");
+                    window.location.href = 'index.html'; // 👇 Sửa tiếp ở đây
+                    return;
+                }
+
+                const data = await res.json();
+                
+                if (res.ok) {
+                    console.log("✅ Thành công:", data);
+                    
+                    // Cập nhật trạng thái tạm thời để giao diện đổi màu nút ngay
+                    if (action === 'equip') window.myStatus.equipped = skillId;
+                    if (action === 'unequip') window.myStatus.equipped = null;
+
+                    // Gọi các hàm tải lại dữ liệu của bạn
+                    if (typeof loadSkillTab === 'function') loadSkillTab(); 
+                    if (typeof loadDashboardData === 'function') loadDashboardData();
+
+                } else {
+                    console.error("Server Error:", data);
+                    alert("Lỗi: " + (data.detail || "Không thể thực hiện"));
+                }
+            } catch(e) { 
+                console.error("Lỗi kết nối:", e);
+                alert("Lỗi kết nối server!"); 
+            }
+        }
+```
+⚡ [FRONTEND JS FUNCTION] loadSkillTab():
+```javascript
+function loadSkillTab() {
+            // 1. Lấy token
+            const token = localStorage.getItem('access_token') || localStorage.getItem('token');
+
+            if (!token) {
+                alert("Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại!");
+                window.location.href = '/login';
+                return;
+            }
+
+            const container = document.getElementById('skill-tree-container');
+            container.innerHTML = '<div class="text-center mt-20 text-gray-400"><i class="fa-solid fa-circle-notch fa-spin text-3xl mb-3"></i><p>Đang đồng bộ dữ liệu...</p></div>';
+
+            // 2. Tạo headers dùng chung
+            const authHeaders = {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            };
+
+            try {
+                // 3. Gọi đồng thời 2 API với Header đầy đủ
+                const [resSkills, resStatusResponse] = await Promise.all([
+                    fetch('/api/skills/get-all', { headers: authHeaders }), // API lấy skill theo Class
+                    fetch('/api/skills/my-status', { headers: authHeaders }) // API lấy điểm tri thức, skill đã học
+                ]);
+
+                // 4. Kiểm tra quyền truy cập (401)
+                if (resSkills.status === 401 || resStatusResponse.status === 401) {
+                    alert("Hết hạn đăng nhập!");
+                    window.location.href = '/login';
+                    return;
+                }
+
+                if (!resSkills.ok || !resStatusResponse.ok) throw new Error("Lỗi kết nối Server hoặc bạn không có quyền truy cập");
+
+                // 5. Gán dữ liệu vào biến global
+                globalSkillsList = await resSkills.json();
+                myStatus = await resStatusResponse.json(); 
+
+                // 6. Cập nhật giao diện
+                const skillPointsEl = document.getElementById('skill-points-display');
+                if (skillPointsEl) {
+                    skillPointsEl.innerText = myStatus.tri_thuc;
+                }
+
+                // Vẽ cây skill (Dùng dữ liệu từ myStatus.learned)
+                renderSkillTree(99, myStatus.learned);
+
+            } catch (e) {
+                console.error("❌ Lỗi loadSkillTab:", e);
+                container.innerHTML = `<div class="text-center mt-20 text-red-500">${e.message}</div>`;
+            }
+        }
+```
+⚡ [FRONTEND JS FUNCTION] triggerPassiveVFX():
+```javascript
+function triggerPassiveVFX() {
+            // ============================================================
+            // 🛡️ CHỐNG LẶP (ANTI-DUPLICATE)
+            // Nếu hàm này vừa chạy cách đây dưới 2 giây -> Chặn luôn!
+            // ============================================================
+            const now = Date.now();
+            if (window.lastPassiveTrigger && (now - window.lastPassiveTrigger < 2000)) {
+                console.warn("🚫 Đã chặn gọi trùng lặp triggerPassiveVFX.");
+                return;
+            }
+            window.lastPassiveTrigger = now;
+            // ============================================================
+
+            console.log("--- BẮT ĐẦU QUÉT PASSIVE (SEQUENCE MODE) ---");
+
+            if (!window.myStatus || !window.globalSkillsList || window.globalSkillsList.length === 0) {
+                return;
+            }
+
+            const PLAYER_ID = 'combat-player-img';
+            const MONSTER_ID = 'combat-monster-img';
+            const learnedKeys = Object.keys(window.myStatus.learned || {});
+
+            // Biến đếm thời gian
+            let sequenceDelay = 0;
+            const STEP_DELAY = 1200; // 1.2 giây
+
+            const cleanID = (str) => (!str) ? "" : str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/-/g, '_').trim();
+
+            learnedKeys.forEach(rawSkillID => {
+                const searchID = cleanID(rawSkillID);
+                const skillInfo = window.globalSkillsList.find(s => cleanID(s.skill_id) === searchID);
+
+                if (!skillInfo) return;
+
+                let conf = {};
+                if (skillInfo.config_data) {
+                    try {
+                        conf = typeof skillInfo.config_data === 'string' ? JSON.parse(skillInfo.config_data) : skillInfo.config_data;
+                    } catch (e) { conf = {}; }
+                }
+
+                const vfxClass = (skillInfo.vfx_class || conf.vfx_class || "").trim();
+                let rawCondition = (skillInfo.condition || conf.condition || "always").toString();
+                const sType = (skillInfo.skill_type || "").toUpperCase();
+
+                if (searchID.includes('kien_dinh') && rawCondition === 'always') rawCondition = 'hp_below';
+
+                const isHpBelow = rawCondition.includes('hp_below') || rawCondition.toLowerCase().includes('dưới');
+                
+                // Bỏ qua skill chờ máu
+                if (isHpBelow) return;
+
+                // KÍCH HOẠT VỚI DELAY
+                if (sType === 'PASSIVE' && vfxClass) {
+                    
+                    setTimeout(() => {
+                        const targetKey = skillInfo.vfx_target || conf.vfx_target || 'self';
+                        const finalTargetID = (targetKey === 'enemy') ? MONSTER_ID : PLAYER_ID;
+                        const targetEl = document.getElementById(finalTargetID);
+
+                        if (targetEl) {
+                            console.log(`⏰ [Time: ${sequenceDelay}ms] KÍCH HOẠT: ${skillInfo.name}`);
+                            
+                            if (typeof playVFX === 'function') {
+                                playVFX(vfxClass, finalTargetID);
+                            }
+
+                            if (typeof showFloatingText === 'function') {
+                                let color = '#fbbf24'; 
+                                if (searchID.includes('chien_y')) color = '#f97316';
+                                showFloatingText(`${skillInfo.name}!`, finalTargetID, color);
+                            }
+                        }
+                    }, sequenceDelay);
+
+                    sequenceDelay += STEP_DELAY;
+                }
+            });
+        }
+```

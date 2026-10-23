@@ -1,0 +1,204 @@
+==================================================
+===      BẢN ĐỒ KIẾN TRÚC TOÀN CẢNH HỆ THỐNG    ===
+=== (Context chuẩn dành riêng cho AI Coding)     ===
+==================================================
+
+📄 admin.html
+  🏷️  Title: KPI Kingdom - Admin Dashboard
+  🧩 UI Sections: [modal-create-title, modal-student-select, modal-target-team, modal-title, nav-companion, tab-arena, tab-boss, tab-campaign, tab-charm-settings, tab-chat, tab-companion, tab-dashboard, tab-data, tab-dungeon-tower, tab-gradebook, tab-notifications, tab-security, tab-shop, tab-skills, tab-titles]
+  📝 Form Fields (name): [import-mode, semester]
+  🌐 API Endpoints gọi từ client:
+     ➔ [DELETE] /admin/items/templates/${itemId}
+     ➔ [DELETE] /admin/titles/${id}
+     ➔ [DELETE] /admin/tower/delete-subject/${subject}
+     ➔ [DELETE] /api/noti/delete/${id}
+     ➔ [GET] /admin/arena/data
+     ➔ [GET] /admin/boss/current
+     ➔ [GET] /admin/data/dashboard-stats
+     ➔ [GET] /admin/data/logs?type_filter=${filter}
+     ➔ [GET] /admin/data/maintenance-status
+     ➔ [GET] /admin/get-skills
+     ➔ [GET] /admin/get-system-config
+     ➔ [GET] /admin/gradebook/parents-list
+     ➔ [GET] /admin/items/templates
+     ➔ [GET] /admin/players/overview
+     ➔ [GET] /admin/security/all-players
+     ➔ [GET] /admin/shop/items
+     ➔ [GET] /admin/titles
+     ➔ [GET] /admin/tower/get-config
+     ➔ [GET] /admin/tower/save-config
+     ➔ [GET] /admin/tower/stats
+     ➔ [GET] /api/admin/companions/config
+     ➔ [GET] /api/admin/companions/templates?rarity=${rarityFilter}
+     ➔ [GET] /api/all-items
+     ➔ [GET] /api/boss/logs?limit=50
+     ➔ [GET] /api/chat/admin/all-players
+     ➔ [GET] /api/chat/admin/keywords_list
+     ➔ [GET] /api/chat/admin/warnings
+     ➔ [GET] /api/chat/history
+     ➔ [GET] /api/noti/all
+     ➔ [POST] /admin/arena/cancel/${matchId}
+     ➔ [POST] /admin/boss/delete
+     ➔ [POST] /admin/boss/logs/clear
+     ➔ [POST] /admin/boss/save
+     ➔ [POST] /admin/data/maintenance-update
+     ➔ [POST] /admin/data/restore
+     ➔ [POST] /admin/gradebook/create-parents
+     ➔ [POST] /admin/gradebook/import-scores
+     ➔ [POST] /admin/import-excel
+     ➔ [POST] /admin/save-skill
+     ➔ [POST] /admin/save-system-config
+     ➔ [POST] /admin/security/change-admin-password
+     ➔ [POST] /admin/security/reset-all
+     ➔ [POST] /admin/security/reset-password
+     ➔ [POST] /admin/security/reset-season
+     ➔ [POST] /admin/shop/items/add
+     ➔ [POST] /admin/titles
+     ➔ [POST] /admin/tower/import-questions
+     ➔ [POST] /api/admin/campaign/close
+     ➔ [POST] /api/admin/campaign/create
+     ➔ [POST] /api/admin/campaign/start
+     ➔ [POST] /api/admin/companions/config
+     ➔ [POST] /api/admin/companions/scan
+     ➔ [POST] /api/chat/admin/ban?target_id=${targetId}&hours=${hours}&reason=${encodeURIComponent(reason)}
+     ➔ [POST] /api/chat/admin/keyword?word=${encodeURIComponent(word)}
+     ➔ [POST] /api/noti/create
+     ➔ [PUT] /api/noti/toggle/${id}
+  ⚡ JS Logic (119 hàm):
+     • switchTab(tabName), togglePlayerList(), loadOverview(), handleUpdate(id, mode), sendFormalReward(multiplier), loadPlayersToSelect()
+     • sendGiftCurrency(multiplier), sendGiftItem(multiplier), logSystem(message, type), handleFileUpload(input), renderTeamMemberCard(player), uploadParentExcel()
+     • toggleParentList(), loadParentAccounts(), importGrades(), getInitials(name), openAddMemberModal(teamId), closeAddMemberModal()
+     • submitAddMember(), refreshTeamUI(players), changeRole(playerId), moveToTeam(playerId), kickMember(playerId), toggleTeam(teamId)
+     • confirmResetAll(), loadResetDropdown(), handleSingleReset(), handleChangeAdminPass(), loadSecurityTable(), confirmResetSeason()
+     • updateBossPreview(), saveBoss(), loadCurrentBoss(), updateBossStatusUI(boss), addBossDropItem(), renderBossDropList()
+     • removeBossDrop(index), deleteBoss(), clearBattleLog(), fetchBattleLogs(), loadItemsForBossSelect(), handleFormSubmit(event)
+     • loadShopItems(), deleteItem(itemId), openCreateItemModal(), closeItemModal(), toggleLogicFields(), addGachaRow()
+     • collectItemConfig(), loadItemsToSelect(), openAiImportModal(), closeAiImportModal(), submitAiImport(), loadTowerQuestions()
+     • handleFileSelect(input), loadTowerStats(), deleteSubjectGroup(subject), toggleRewardInputs(), addRewardToPool(), saveTowerFullConfig()
+     • loadSavedTowerConfig(), renderSavedRewardCard(container, item), clearPool(difficulty), switchSubTab(tabName), loadDashboardStats(), loadSystemLogs()
+     • handleRestoreDB(), loadMaintenanceStatus(), saveMaintenance(), bindRateInputs(), checkTotalRate(), saveGachaConfig()
+     • loadAdminSkills(), filterSkills(classType), renderSkillList(skills), selectSkillForEdit(skill), openNewSkillForm(), saveSkill()
+     • testVFX(), spawnExplosion(), loadTitles(), createTitleSubmit(), deleteTitle(id), logoutAdmin()
+     • loadAdminArenaData(), adminCancelMatch(matchId), loadNotifications(), addNotification(type), deleteNoti(id), toggleNoti(id)
+     • loadSystemConfig(), saveSystemConfig(), fillDefaultConfig(), initAdminChat(), loadChatHistory(), appendMessage(msg)
+     • sendChatMessage(), handleChatKey(event), loadStudentListForBan(), banPlayer(), addKeyword(), loadKeywords()
+     • loadWarningLogs(), startSnowEffect(), scanCompanions(), loadTemplates(), loadCompanionConfig(), saveCompanionConfig()
+     • toggleGiftDropdown(), toggleAllGiftPlayers(source), updateGiftButtonText(), adminTriggerCreateCampaign(), adminTriggerStartCampaign(), closeCampaign()
+     • safeSet(id, value), setSafeVal(idSuffix, value), getSafeVal(idSuffix, type = 'string'), num(id), parseRange(str)
+  💾 Key States: [playerSelects, playerId, formData, bossData, configData, errorData, finalData, hasHealData, itemData, errData]
+
+📄 parent.html
+  🏷️  Title: Sổ Liên Lạc Điện Tử
+  🧩 UI Sections: [tab-btn-grades, tab-btn-stats, tab-btn-violations, tab-grades, tab-stats, tab-violations]
+  🌐 API Endpoints gọi từ client:
+     ➔ [GET] /api/user/parent/my-child
+  ⚡ JS Logic (5 hàm):
+     • switchTab(tabName), initGradeList(), loadChildData(), updateAIConsultant(data), renderProgressFlow(containerId, data)
+
+📄 player_dashboard.html
+  🏷️  Title: Học Viện KPI - Hồ Sơ Nhân Vật
+  🧩 UI Sections: [modal-card-atk, modal-card-container, modal-card-hp, modal-card-id, modal-card-img, modal-card-rarity, modal-card-stars, modal-chieu-binh, modal-effect-layer, modal-luyen-binh, nav-arena, nav-arena-badge, nav-campaign, nav-chat, nav-dashboard, nav-grading, nav-inventory, nav-skills, nav-tower, tab-army, tab-chat, tab-commander, tab-guide, tab-kth, tab-market-all, tab-market-charm, tab-market-companion, tab-market-item, tab-minigame, tab-report, tab-reward, tab-strategy, tab-time, tab-tower, tab-victory, view-bag, view-equip, view-market, view-stat-atk, view-stat-hp]
+  🌐 API Endpoints gọi từ client:
+     ➔ [GET] /api/arena/list-my-matches?username=${username}
+     ➔ [GET] /api/arena/lobby
+     ➔ [GET] /api/arena/match/${matchId}
+     ➔ [GET] /api/arena/quiz?match_id=${matchId}&username=${username}
+     ➔ [GET] /api/boss/active-info
+     ➔ [GET] /api/boss/get-question?boss_id=${bossData.id}
+     ➔ [GET] /api/campaign/chat?username=${username}
+     ➔ [GET] /api/campaign/last-result
+     ➔ [GET] /api/campaign/lobby
+     ➔ [GET] /api/campaign/minigame/files?game_type=${gameType}
+     ➔ [GET] /api/campaign/minigame/questions?game_type=${gameType}&file_name=${progress.current_file}
+     ➔ [GET] /api/campaign/reports?username=${username}
+     ➔ [GET] /api/campaign/state?username=${username}
+     ➔ [GET] /api/chat/history
+     ➔ [GET] /api/companions/my-list?username=${username}
+     ➔ [GET] /api/data/maintenance-status
+     ➔ [GET] /api/inventory/get?username=${username}
+     ➔ [GET] /api/inventory/system-config
+     ➔ [GET] /api/market/list
+     ➔ [GET] /api/my-cards?username=${currentUser}
+     ➔ [GET] /api/player/dashboard?username=${username}
+     ➔ [GET] /api/players/${username}
+     ➔ [GET] /api/shop/items
+     ➔ [GET] /api/skills/get-all
+     ➔ [GET] /api/skills/my-status
+     ➔ [GET] /api/user/logs
+     ➔ [GET] /api/user/players/free-agents
+     ➔ [GET] /api/user/team/members
+     ➔ [GET] /users/me
+     ➔ [POST] /api/arena/accept
+     ➔ [POST] /api/arena/cancel
+     ➔ [POST] /api/arena/create?username=${username}
+     ➔ [POST] /api/arena/join-lobby
+     ➔ [POST] /api/arena/submit
+     ➔ [POST] /api/boss/attack
+     ➔ [POST] /api/campaign/${campaign_id}/march_by_code
+     ➔ [POST] /api/campaign/${campaign_id}/recall
+     ➔ [POST] /api/campaign/${campaign_id}/replenish
+     ➔ [POST] /api/campaign/chat
+     ➔ [POST] /api/campaign/join
+     ➔ [POST] /api/campaign/minigame/chieu-binh
+     ➔ [POST] /api/campaign/minigame/luyen-binh
+     ➔ [POST] /api/campaign/set-commander
+     ➔ [POST] /api/change-password
+     ➔ [POST] /api/inventory/breakthrough-companion
+     ➔ [POST] /api/inventory/discard-companion
+     ➔ [POST] /api/inventory/equip
+     ➔ [POST] /api/inventory/equip-companion
+     ➔ [POST] /api/inventory/forge
+     ➔ [POST] /api/inventory/unequip
+     ➔ [POST] /api/inventory/unequip-companion
+     ➔ [POST] /api/inventory/use
+     ➔ [POST] /api/market/buy
+     ➔ [POST] /api/market/cancel
+     ➔ [POST] /api/market/discard-charm
+     ➔ [POST] /api/market/sell
+     ➔ [POST] /api/market/sell-charm
+     ➔ [POST] /api/market/sell-companion
+     ➔ [POST] /api/shop/buy
+     ➔ [POST] /api/tower/complete-floor
+     ➔ [POST] /api/tower/start
+     ➔ [POST] /api/user/team/add-members
+     ➔ [POST] /api/user/team/promote
+  ⚡ JS Logic (187 hàm):
+     • switchMainScreen(screenName), loadDashboardData(), renderUI(data), openClassModal(), closeClassModal(), selectClass(className)
+     • logout(), switchInventoryTab(tabName), openForgeModal(itemId), closeForgeModal(), loadSystemConfig(), doForge()
+     • loadInventoryDataFull(), renderBag(items), renderCharmCard(charm), showEquipOptions(itemId), unequipItem(slotIndex), discardCharm(itemId)
+     • openSellCharm(itemId), closeSellModal(), confirmSellCharm(), getRarityColorClass(rarity), renderEquip(equipped), loadMarketData()
+     • switchMarketTab(type), renderFilteredMarket(itemsToRender), useItem(itemId), openSellPopup(id, name, img, maxQty), confirmSellItem(), buyMarketItem(listingId, name, price)
+     • cancelSell(listingId), loadArenaData(), loadArenaLobby(), renderIncomingMatches(matches), renderOutgoingMatches(matches), renderHistory(matches)
+     • sendChallenge(), acceptMatch(matchId), joinLobby(matchId, team), cancelMatch(matchId), viewMatchResult(matchId), startMatch(matchId)
+     • renderQuestion(), startTimer(), selectAnswer(questionObj, userChoice, indexChoice), showFeedback(isCorrect, explanationText), finishQuiz(), nextQuestion()
+     • resetQuizTimer(), startLobbyAutoUpdate(), stopLobbyAutoUpdate(), loadOpponentsList(), updateWalletUI_Temp(change), resetTowerUI()
+     • startTowerCombat(floorIndex), setupCombatUI(playerInfo, monsterInfo), renderTowerQuestion(), handleTowerAnswer(isCorrect), endTowerCombat(isWin), updateHealthBars()
+     • answerQuestion(selectedKey), checkCombatStatus(), startQuestionTimer(), handleAnswerTimeout(), closeCombatView(), loadSkillTab()
+     • renderSkillTree(level, learned), selectSkill(skillId, status), apiAction(action, skillId = ''), showDamagePopup(targetId, amount, colorClass = "text-yellow-400"), playVFX(vfxName, targetId, isProjectile = false), triggerPassiveVFX()
+     • showFloatingText(text, targetId, color = '#fbbf24'), openShopView(), loadShopItems(), renderShopShelves(items), buyItem(itemId, itemName, price, currencyType), loadGlobalSkills()
+     • loadMyStatus(), resetBossCombat(), checkBossStatus(), updateBossUI(boss), startBossBattle(), quitBossBattle()
+     • startBossTimer(seconds), updateDisplay(), stopBossTimer(), bossGenerateQuestion(), checkAnswerAndAttack(selectedKey, btnElement), updatePlayerHPUI(currentHP, maxHP)
+     • handleNextTurnLogic(), handleGameOver(serverMessage, reviveAtVal), handleReviveConfirm(), showDeathScreen(reviveAtString), updateTimer(), showBossFeedback(isCorrect, explainText)
+     • closeBossFeedback(), handlePlayerTakeDamage(amount), openChangePassModal(), submitChangePass(), loadFreeAgents(), toggleStudentSelection(id, rowElement)
+     • submitRecruitMembers(), loadTeamMembers(), promoteMember(targetId, targetName), loadGradingStudents(), preSubmitScore(category), closeConfirmModal()
+     • loadActivityLogs(), checkMaintenanceIngame(), toggleSidebar(), initChat(), loadChatHistory(), appendMessage(msg)
+     • updateChatStatus(text, colorClass), sendChatMessage(), handleChatKey(event), startSnowEffect(), loadPlayerCompanions(), renderCompanionGrid(cards)
+     • openCardDetail(cardId), cardAction(type), openBreakthroughModal(card), closeBreakthroughModal(), resetFodderSlots(), autoSelectFodder()
+     • showBreakthroughSuccess(data), closeBreakthroughSuccess(), showCompanionGuide(), executeBreakthrough(), confirmSellCompanionToMarket(), closeCardDetail()
+     • showView(viewName), getRarityStyle(rarity), filterCompanions(rarity), equipCompanionAction(companionId), unequipCompanion(slotIndex), triggerEquipFromModal()
+     • checkSavedTab(), reloadWithTab(tabName), initCampaign(), joinCampaignFaction(faction), updateCampaignDisplay(status, data), scanRadar()
+     • formatTroops(num), openWarRoom(nodeCode, nodeName), getRarityColor(rarity), marchTroops(), recallTroops(), replenishTroops()
+     • openCompanionSelection(), confirmSelectCommander(id, name), drawMarchingMovements(movements), step(), updateMapUI(nodesData, myLocationCode), startNodeTimer(id, endTimeStr)
+     • stopNodeTimer(id), switchTab(tab), fetchBattleReports(), renderBattleReports(reports), showPhongThan(), closePhongThan()
+     • switchCampaignScreen(state), loadWaitingRoomData(), handleCampaignChatKeyPress(event), sendCampaignChatMessage(), fetchCampaignChatMessages(), checkRespawnPenalty(respawnAtStr)
+     • openMinigame(type), closeMinigame(type), getNextQuestionFromMemory(gameType), loadChieuBinhQuestion(), loadLuyenBinhQuestion(), submitChieuBinh(selectedOpt, btnEl, container)
+     • handleTyping(e), updateCampaignTimer(endTimeIso), triggerKillAnnouncement(htmlContent), playNextKillAnnouncement(), openGuideModal(), closeGuideModal()
+     • switchGuideTab(tabId), setInactive(el), setActive(el), renderMembers(members), cleanID(str), updateFunc()
+     • renderList(players, isThanhLong)
+  💾 Key States: [currentQuizData, dashboardData, currentBagData, bossData, bossState, currentUser, activeState, companionData, playerStats, lobbyData, errData, towerState, playerHP, playerMaxHP, playerPct, playerClass, playerEl, playerRect, userData, qData, pendingScoreData, emptyState, discardData, cardData, stateData, playerListHtml]
+
+📄 css\skills.css
+  ✨ Animations: [anime-thanh-quang, devil-dark-glow, embers-falling-smooth, explode-run, fire-flicker, flame-erupt, flame-sprite, kiendinh-dark-glitter, lightning-flash, meteor-sprite, nuilua-erupt, nuilua-sprite, play-strip, smoke-ghost, thankiem-drop, thankiem-sprite, thienphat-drop, thienphat-sprite, thiensu-holy-glow]
+  🎨 UI Classes (15 classes):
+     • 15s, fx-chieny, fx-dealdevil, fx-explode, fx-fire-aura, fx-fireball, fx-flame-pillar, fx-kiendinh
+     • fx-meteor, fx-nuilua, fx-thanh-quang, fx-thankiem, fx-thienphat, fx-thiensu, vfx-container

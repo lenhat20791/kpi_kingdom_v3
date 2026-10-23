@@ -1,0 +1,67 @@
+FILE: tchh_axit.png
+TÊN THẺ: Tính chất hóa học của Axit (R)
+PROMPT: A dark green corrosive acid flask bursting over dungeon stones, toxic liquid splashing in a dramatic arc. R rarity card art, 2D game illustration, bold comic lineart, deep teal and navy glow, clear silhouette, centered square composition, single readable focal subject, strong contrast, no text, no letters, no numbers, no watermark, no card frame, no border.
+
+FILE: pu_toa_nhiet.png
+TÊN THẺ: Phản ứng tỏa nhiệt (R)
+PROMPT: An alchemical reaction releasing waves of glowing heat and explosive vapor from a glass vessel, dramatic thermal shimmer. R rarity card art, 2D game illustration, bold comic lineart, deep teal and navy glow, clear silhouette, centered square composition, single readable focal subject, strong contrast, no text, no letters, no numbers, no watermark, no card frame, no border.
+
+FILE: bazo_chi_thi.png
+TÊN THẺ: Dung dịch Bazơ và Chất chỉ thị (R)
+PROMPT: A vivid acid-base indicator solution changing color inside two alchemical glass vials, a precise neutralization swirl. R rarity card art, 2D game illustration, bold comic lineart, deep teal and navy glow, clear silhouette, centered square composition, single readable focal subject, strong contrast, no text, no letters, no numbers, no watermark, no card frame, no border.
+
+FILE: pu_trung_hoa.png
+TÊN THẺ: Phản ứng trung hòa (R)
+PROMPT: A brilliant acid and base collision creating a forceful neutralization burst, balanced streams of opposing colored liquid meeting at the center. R rarity card art, 2D game illustration, bold comic lineart, deep teal and navy glow, clear silhouette, centered square composition, single readable focal subject, strong contrast, no text, no letters, no numbers, no watermark, no card frame, no border.
+
+FILE: khi_clo.png
+TÊN THẺ: Phi kim: Khí Clo (R)
+PROMPT: A dense yellow-green chlorine gas cloud leaking from a cracked ancient sealed vessel, curling through a ruined laboratory. R rarity card art, 2D game illustration, bold comic lineart, deep teal and navy glow, clear silhouette, centered square composition, single readable focal subject, strong contrast, no text, no letters, no numbers, no watermark, no card frame, no border.
+
+FILE: muoi_nacl.png
+TÊN THẺ: Muối NaCl và Hợp chất (R)
+PROMPT: A crystalline cube of salt forming from sparkling droplets beside a small alchemical compound vial, sturdy protective energy. R rarity card art, 2D game illustration, bold comic lineart, deep teal and navy glow, clear silhouette, centered square composition, single readable focal subject, strong contrast, no text, no letters, no numbers, no watermark, no card frame, no border.
+
+FILE: pu_trao_doi.png
+TÊN THẺ: Phản ứng trao đổi trong dung dịch (R)
+PROMPT: Two colored solutions exchanging glowing ions in a glass vessel, toxic green particles transformed into a protective blue shield. R rarity card art, 2D game illustration, bold comic lineart, deep teal and navy glow, clear silhouette, centered square composition, single readable focal subject, strong contrast, no text, no letters, no numbers, no watermark, no card frame, no border.
+
+FILE: nong_do_dd.png
+TÊN THẺ: Nồng độ dung dịch (R)
+PROMPT: A concentrated toxic solution swirling inside a graduated glass vessel, visibly intensifying into dense glowing green droplets. R rarity card art, 2D game illustration, bold comic lineart, deep teal and navy glow, clear silhouette, centered square composition, single readable focal subject, strong contrast, no text, no letters, no numbers, no watermark, no card frame, no border.
+
+FILE: chung_cat.png
+TÊN THẺ: Tách chất và Chưng cất (R)
+PROMPT: An elegant distillation apparatus separating a cloudy mixture into three clear streams of colorful purified liquid. R rarity card art, 2D game illustration, bold comic lineart, deep teal and navy glow, clear silhouette, centered square composition, single readable focal subject, strong contrast, no text, no letters, no numbers, no watermark, no card frame, no border.
+
+FILE: lk_cong_hoa_tri.png
+TÊN THẺ: Liên kết cộng hóa trị (R)
+PROMPT: Two luminous atoms joined by a strong shared electron bond, forming a compact protective energy shield. R rarity card art, 2D game illustration, bold comic lineart, deep teal and navy glow, clear silhouette, centered square composition, single readable focal subject, strong contrast, no text, no letters, no numbers, no watermark, no card frame, no border.
+
+FILE: bt_khoi_luong.png
+TÊN THẺ: Định luật bảo toàn khối lượng (R)
+PROMPT: A perfectly balanced alchemical scale holding equal masses of glowing mineral and liquid, a stable shield aura surrounding it. R rarity card art, 2D game illustration, bold comic lineart, deep teal and navy glow, clear silhouette, centered square composition, single readable focal subject, strong contrast, no text, no letters, no numbers, no watermark, no card frame, no border.
+
+FILE: bd_hoa_hoc.png
+TÊN THẺ: Sự biến đổi hóa học (R)
+PROMPT: A volatile chemical transformation in a small flask, a crack of red energy converting into two bright blue sparks of intellect. R rarity card art, 2D game illustration, bold comic lineart, deep teal and navy glow, clear silhouette, centered square composition, single readable focal subject, strong contrast, no text, no letters, no numbers, no watermark, no card frame, no border.
+
+FILE: xuc_tac.png
+TÊN THẺ: Tốc độ phản ứng và Chất xúc tác (UR)
+PROMPT: A catalyst triggering a violent chemical detonation, toxic purple shockwaves erupting from a sealed reaction vessel, explosive energy radiating outward. UR card art, 2D game illustration, bold comic lineart, mystical aura, luminous golden highlights, dramatic radiant energy, centered square composition, single readable focal subject, strong contrast, no text, no letters, no numbers, no watermark, no card frame, no border.
+
+FILE: day_chuyen.png
+TÊN THẺ: Phản ứng dây chuyền (UR)
+PROMPT: A chain of linked alchemical reactions multiplying toxic green energy through a sequence of glass vessels, escalating luminous bursts. UR card art, 2D game illustration, bold comic lineart, mystical aura, luminous golden highlights, dramatic radiant energy, centered square composition, single readable focal subject, strong contrast, no text, no letters, no numbers, no watermark, no card frame, no border.
+
+FILE: bang_tuan_hoan.png
+TÊN THẺ: Bảng tuần hoàn các nguyên tố hóa học (UR)
+PROMPT: A magical periodic table of glowing elemental symbols represented only by abstract shapes, two toxic green cards rising from its radiant grid, no readable text. UR card art, 2D game illustration, bold comic lineart, mystical aura, luminous golden highlights, dramatic radiant energy, centered square composition, single readable focal subject, strong contrast, no text, no letters, no numbers, no watermark, no card frame, no border.
+
+FILE: hno3_an_mon.png
+TÊN THẺ: Axit Nitric và Ăn mòn kim loại (UR)
+PROMPT: Powerful nitric acid corroding an iron shield into glowing fragments, toxic vapor and a sharp flash of corrosive energy. UR card art, 2D game illustration, bold comic lineart, mystical aura, luminous golden highlights, dramatic radiant energy, centered square composition, single readable focal subject, strong contrast, no text, no letters, no numbers, no watermark, no card frame, no border.
+
+FILE: doc_kim_loai_nang.png
+TÊN THẺ: Nhiễm độc kim loại nặng (UR)
+PROMPT: A heavy toxic metal relic dissolving an enemy shield and radiant beneficial aura beneath a thick emerald poisonous cloud. UR card art, 2D game illustration, bold comic lineart, mystical aura, luminous golden highlights, dramatic radiant energy, centered square composition, single readable focal subject, strong contrast, no text, no letters, no numbers, no watermark, no card frame, no border.

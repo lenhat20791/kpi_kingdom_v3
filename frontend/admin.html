@@ -406,8 +406,13 @@
             </button>
 
             <button onclick="switchTab('companion')" id="nav-companion" data-tab="companion" 
-                    class="nav-item w-full text-left px-6 py-3 transition border-l-4 border-transparent text-gray-300 hover:bg-gray-700 hover:text-white hover:border-emerald-500">
+                class="nav-item w-full text-left px-6 py-3 transition border-l-4 border-transparent text-gray-300 hover:bg-gray-700 hover:text-white hover:border-emerald-500">
                 <i class="fa-solid fa-paw w-6 text-center"></i> Hệ Thống Đồng Hành
+            </button>
+
+            <button onclick="switchTab('space-station')" id="nav-space-station" data-tab="space-station" 
+                class="nav-item w-full text-left px-6 py-3 transition border-l-4 border-transparent text-gray-400 hover:bg-gray-700 hover:text-white hover:border-cyan-500">
+                <i class="fa-solid fa-satellite w-6 text-center"></i> Trạm Lạc Việt-Y26
             </button>
 
             <button onclick="switchTab('skills')" data-tab="skills" 
@@ -1487,6 +1492,114 @@
             </div>
         </div>
 
+        <!-- ========================================== -->
+        <!-- TAB: TRẠM KHÔNG GIAN LẠC VIỆT-Y26           -->
+        <!-- ========================================== -->
+        <div id="tab-space-station" class="tab-content max-w-6xl mx-auto hidden">
+            <!-- TIÊU ĐỀ TAB -->
+            <h2 class="text-2xl font-bold text-cyan-400 mb-6 flex items-center">
+                <i class="fa-solid fa-satellite mr-3"></i> Quản Lý Trạm Không Gian Lạc Việt-Y26
+            </h2>
+
+            <!-- KHU VỰC ĐIỀU HÀNH & THỐNG KÊ (GRID 3 CỘT) -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                
+                <!-- CỘT 1: ĐIỀU KHIỂN VÁN ĐẤU -->
+                <div class="bg-gray-800 p-6 rounded-xl border border-gray-700 shadow-xl md:col-span-1 flex flex-col justify-between">
+                    <div>
+                        <h3 class="text-lg font-bold mb-2 text-white flex items-center">
+                            <i class="fa-solid fa-sliders mr-2 text-cyan-400"></i> Điều Hành Ván Đấu
+                        </h3>
+                        <p class="text-xs text-gray-400 mb-4 text-justify">
+                            Khởi tạo mùa giải mới, mở cổng cho học sinh báo danh hoặc kích hoạt giải quyết sự kiện đêm lúc 22h00.
+                        </p>
+                        <div class="bg-black/30 p-3 rounded mb-4 border border-gray-600 space-y-1.5 text-xs">
+                            <div class="flex justify-between">
+                                <span class="text-gray-400">Tiến trình:</span>
+                                <span class="text-cyan-400 font-bold" id="admin-st-status-text">Đang tải...</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-400">Trạng thái:</span>
+                                <span class="text-emerald-400 font-bold" id="admin-st-match-state">Chưa bắt đầu</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="space-y-2">
+                        <button onclick="adminCreateSTMatch()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 rounded transition flex items-center justify-center text-xs">
+                            <i class="fa-solid fa-folder-plus mr-2"></i> Tạo Mùa Mới / Mở Báo Danh
+                        </button>
+                        <button onclick="adminStartSTMatch()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 rounded transition flex items-center justify-center text-xs">
+                            <i class="fa-solid fa-play mr-2"></i> Bắt Đầu Ván Đấu
+                        </button>
+                        <button onclick="adminForceResolveNight()" class="w-full bg-amber-600 hover:bg-amber-700 text-white font-bold py-2 rounded transition flex items-center justify-center text-xs">
+                            <i class="fa-solid fa-bolt mr-2"></i> Giải Quyết Đêm Tức Thì (Debug)
+                        </button>
+                    </div>
+                </div>
+
+                <!-- CỘT 2 & 3: BẢNG THỐNG KÊ QUÂN SỐ CÁC PHE -->
+                <div class="bg-gray-800 p-6 rounded-xl border border-gray-700 shadow-xl md:col-span-2">
+                    <h3 class="text-lg font-bold mb-4 text-white flex items-center">
+                        <i class="fa-solid fa-chart-pie mr-2 text-yellow-400"></i> Tình Trạng Sinh Tồn Phi Hành Đoàn
+                    </h3>
+                    
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-4">
+                        <div class="bg-black/30 p-4 rounded-xl border border-gray-600 text-center">
+                            <div class="text-gray-400 text-xs font-semibold uppercase">Tổng Phi Hành Đoàn</div>
+                            <div id="admin-st-total-crew" class="text-2xl font-black text-cyan-400 mt-1">0</div>
+                        </div>
+                        <div class="bg-black/30 p-4 rounded-xl border border-gray-600 text-center">
+                            <div class="text-gray-400 text-xs font-semibold uppercase">Còn Hoạt Động</div>
+                            <div id="admin-st-alive-crew" class="text-2xl font-black text-emerald-400 mt-1">0</div>
+                        </div>
+                        <div class="bg-black/30 p-4 rounded-xl border border-gray-600 text-center">
+                            <div class="text-gray-400 text-xs font-semibold uppercase">Alien Sống</div>
+                            <div id="admin-st-alive-aliens" class="text-2xl font-black text-rose-400 mt-1">0</div>
+                        </div>
+                        <div class="bg-black/30 p-4 rounded-xl border border-gray-600 text-center">
+                            <div class="text-gray-400 text-xs font-semibold uppercase">Gián Điệp Sống</div>
+                            <div id="admin-st-alive-spies" class="text-2xl font-black text-amber-400 mt-1">0</div>
+                        </div>
+                    </div>
+
+                    <p class="text-xs text-gray-400 italic">
+                        * Dữ liệu tự động cập nhật sau mỗi chu kỳ 22h00 hoặc khi Quản trị viên kích hoạt xử lý thủ công.
+                    </p>
+                </div>
+            </div>
+
+            <!-- BẢNG GIÁM SÁT TOÀN DIỆN (GOD VIEW TABLE) -->
+            <div class="bg-gray-800 p-6 rounded-xl border border-gray-700 shadow-xl">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-bold text-white flex items-center">
+                        <i class="fa-solid fa-eye mr-2 text-emerald-400"></i> Bảng Giám Sát Thân Phận (God View)
+                    </h3>
+                    <button onclick="loadAdminSTManifest()" class="bg-gray-700 hover:bg-gray-600 text-gray-300 px-3 py-1.5 rounded text-xs font-bold transition flex items-center">
+                        <i class="fa-solid fa-rotate-right mr-1.5"></i> Làm mới
+                    </button>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-xs text-gray-300">
+                        <thead class="bg-black/40 text-gray-400 uppercase text-[11px] border-b border-gray-700">
+                            <tr>
+                                <th class="p-3">Học Sinh</th>
+                                <th class="p-3">Role Thực Tế</th>
+                                <th class="p-3">Trạng Thái</th>
+                                <th class="p-3">Lý Do Loại</th>
+                                <th class="p-3">Đặc Điểm Unique</th>
+                                <th class="p-3">Hành Trang / Kỹ Năng</th>
+                            </tr>
+                        </thead>
+                        <tbody id="admin-st-manifest-body" class="divide-y divide-gray-700/60">
+                            <!-- Render động bằng Javascript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
         <div id="tab-skills" class="tab-content hidden h-full overflow-hidden">
             <div class="flex h-full gap-4 p-4">
                 
@@ -2006,12 +2119,13 @@
     </main>
 
     <script>
-        
+        //tập hợp biến toàn cục
         var vfxTimer = null; 
         let adminAllSkills = []; // Lưu toàn bộ skill tải từ server
         let currentFilter = 'WARRIOR'; // Mặc định hiển thị Warrior trước
         let currentBossDrops = [];
         let chatSocket = null;
+        let currentSTMatchId = null
 
         // --- HÀM CHUYỂN TAB ĐÃ SỬA LỖI (ĐỒNG BỘ CSS & TAILWIND) ---
         function switchTab(tabName) {
@@ -2058,6 +2172,8 @@
                     // Highlight màu viền riêng cho từng loại tab
                     if (tabName === 'companion') {
                         btn.classList.add('border-emerald-500'); // Màu xanh ngọc cho Đồng hành
+                    } else if (tabName === 'space-station') {
+                        btn.classList.add('border-cyan-500');
                     } else {
                         btn.classList.add('border-yellow-500'); // Màu vàng mặc định
                     }
@@ -2109,7 +2225,10 @@
                     if (typeof loadTemplates === 'function') loadTemplates();
                     if (typeof loadCompanionConfig === 'function') loadCompanionConfig();
                     break;
-                    
+                // 🔥 [MỚI] TAB TRẠM KHÔNG GIAN LẠC VIỆT-Y26
+                case 'space-station':
+                    if (typeof loadAdminSTManifest === 'function') loadAdminSTManifest();
+                    break;   
                 default:
                     console.log("Tab này chưa có hàm load dữ liệu riêng.");
             }
@@ -6288,6 +6407,116 @@
                 alert("❌ Lỗi kết nối đến Server!");
                 console.error(error);
             }
+        }
+
+        //trạm không gian
+        // 1. Tải danh sách Master Manifest
+        async function loadAdminSTManifest() {
+        try {
+            const res = await fetch('/api/spacestation/crew-manifest');
+            const data = await res.json();
+            const manifest = data.manifest || [];
+
+            const tbody = document.getElementById("admin-st-manifest-body");
+            tbody.innerHTML = "";
+
+            let aliveCount = 0;
+            let alienCount = 0;
+            let spyCount = 0;
+
+            manifest.forEach(p => {
+            if (p.is_alive) aliveCount++;
+            if (p.actual_role === "ALIEN" && p.is_alive) alienCount++;
+            if (p.actual_role === "MARS_SPY" && p.is_alive) spyCount++;
+
+            const b = p.biometrics || {};
+            const uniqueKey = b._unique_slot_key || "";
+            const uniqueTraitVal = uniqueKey && b[uniqueKey] ? b[uniqueKey].value : "Chưa tạo";
+
+            const tr = document.createElement("tr");
+            tr.className = `hover:bg-slate-800/40 transition ${p.is_alive ? "" : "opacity-50 bg-rose-950/10"}`;
+            
+            tr.innerHTML = `
+                <td class="p-3 font-semibold text-slate-200">${p.full_name}</td>
+                <td class="p-3">
+                <span class="px-2 py-0.5 rounded text-[10px] font-bold ${getRoleBadgeClass(p.actual_role)}">
+                    ${p.actual_role || "Chưa phân vai"}
+                </span>
+                </td>
+                <td class="p-3">
+                <span class="px-2 py-0.5 rounded text-[10px] font-semibold ${p.is_alive ? "bg-emerald-950 text-emerald-400 border border-emerald-800" : "bg-rose-950 text-rose-400 border border-rose-800"}">
+                    ${p.is_alive ? "Hoạt Động" : "Ngủ Đông"}
+                </span>
+                </td>
+                <td class="p-3 text-slate-400">${p.death_reason || "—"}</td>
+                <td class="p-3 text-amber-300 font-mono text-[11px]">${uniqueTraitVal}</td>
+                <td class="p-3 text-slate-400 font-mono text-[11px]">${p.items_state ? JSON.stringify(p.items_state) : "—"}</td>
+            `;
+            tbody.appendChild(tr);
+            });
+
+            document.getElementById("admin-st-status-text").innerText = `Chu kỳ: Ngày thứ ${data.day || 1} • Tổng quân số: ${manifest.length}`;
+            document.getElementById("admin-st-total-crew").innerText = manifest.length;
+            document.getElementById("admin-st-alive-crew").innerText = aliveCount;
+            document.getElementById("admin-st-alive-aliens").innerText = alienCount;
+            document.getElementById("admin-st-alive-spies").innerText = spyCount;
+        } catch (err) {
+            console.error("Lỗi tải Master Manifest:", err);
+        }
+        }
+
+        function getRoleBadgeClass(role) {
+        switch (role) {
+            case "ALIEN": return "bg-rose-950 text-rose-400 border border-rose-700";
+            case "MARS_SPY": return "bg-amber-950 text-amber-400 border border-amber-700";
+            case "INVESTIGATOR": return "bg-cyan-950 text-cyan-400 border border-cyan-700";
+            case "BODYGUARD": return "bg-blue-950 text-blue-400 border border-blue-700";
+            case "SCIENTIST": return "bg-emerald-950 text-emerald-400 border border-emerald-700";
+            case "UNDERCOVER_COP": return "bg-red-950 text-red-400 border border-red-700";
+            case "CAPTAIN": return "bg-purple-950 text-purple-400 border border-purple-700";
+            default: return "bg-slate-800 text-slate-300";
+        }
+        }
+
+        // 2. Các hành động Admin
+        async function adminCreateSTMatch() {
+        const name = prompt("Nhập tên mùa giải:", "Trạm Không Gian Lạc Việt-Y26");
+        if (!name) return;
+        const res = await fetch(`/api/spacestation/admin/create-match?season_name=${encodeURIComponent(name)}`, { method: 'POST' });
+        const data = await res.json();
+        if (res.ok) {
+            currentSTMatchId = data.match_id;
+            alert("✅ Đã mở phòng báo danh thành công!");
+            loadAdminSTManifest();
+        } else {
+            alert("❌ Lỗi: " + data.detail);
+        }
+        }
+
+        async function adminStartSTMatch() {
+        if (!confirm("Bắt đầu ván đấu? Hệ thống sẽ gán vai trò bí mật và sinh trắc học cho tất cả học sinh.")) return;
+        const matchId = currentSTMatchId || 1;
+        const res = await fetch(`/api/spacestation/admin/start-match?match_id=${matchId}`, { method: 'POST' });
+        const data = await res.json();
+        if (res.ok) {
+            alert("✅ Ván đấu đã chính thức bắt đầu!");
+            loadAdminSTManifest();
+        } else {
+            alert("❌ Lỗi: " + data.detail);
+        }
+        }
+
+        async function adminForceResolveNight() {
+        if (!confirm("Kích hoạt chạy pipeline 22h00 ngay lập tức?")) return;
+        const matchId = currentSTMatchId || 1;
+        const res = await fetch(`/api/spacestation/admin/force-resolve?match_id=${matchId}`, { method: 'POST' });
+        const data = await res.json();
+        if (res.ok) {
+            alert("✅ Đã giải quyết xong các sự kiện đêm!");
+            loadAdminSTManifest();
+        } else {
+            alert("❌ Lỗi: " + data.detail);
+        }
         }
 
 

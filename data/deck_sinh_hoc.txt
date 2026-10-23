@@ -1,0 +1,176 @@
+# Biology deck source: art_prompt is separate from descriptions and hover-effect explanations.
+# Repeated tooltip fields represent separate entries in the card's hover subtab.
+
+filename: quang_hop.png
+name: Quang hợp
+rarity: R
+card_type: Phòng thủ
+cost: 1
+description: Hồi phục 5 máu ngay lập tức và nhận 4 Khiên.
+mechanics: Hồi 5 HP ngay, không vượt máu tối đa; nhận 4 Khiên.
+tooltip: Hồi máu tức thì: Hồi phục một lượng máu nhất định cho người chơi ngay khi lá bài được đánh ra, không vượt quá lượng máu tối đa.
+art_prompt: A vibrant green plant leaf absorbing bright radiant sunlight rays, tiny glowing dew drops of chlorophyll energy, soft emerald illumination.
+---
+filename: re_cay_hut_nuoc.png
+name: Rễ cây hút nước
+rarity: R
+card_type: Tấn công
+cost: 1
+description: Gây 6 sát thương. Hồi máu bằng 50% lượng sát thương thực tế gây vào máu của đối thủ.
+mechanics: Gây 6 sát thương; hồi bằng 50% HP thực tế mất sau khi Khiên chặn sát thương.
+tooltip: Hút máu: Hồi phục dựa trên sát thương thực tế trừ vào HP đối thủ; sát thương bị Khiên chặn không được tính.
+art_prompt: Ancient twisted tree roots driving deep into moist soil, absorbing glowing blue underground water essence and vital minerals.
+---
+filename: te_bao_phan_chia.png
+name: Tế bào phân chia
+rarity: R
+card_type: Phòng thủ
+cost: 2
+description: Nhận 6 Khiên. Bắt đầu Tái tạo, hồi 3 máu cuối lượt trong 3 lượt. Gọi Mô phân sinh từ tệp bài lên tay.
+mechanics: Nhận 6 Khiên; thêm Regen 3 HP cuối lượt trong 3 lượt; tutor biology_04_meristem.
+tooltip: Tái tạo (Regen): Trạng thái hồi máu dần ở cuối mỗi lượt trong một số lượt nhất định.
+tooltip: Triệu hồi: Rút chính xác lá bài chỉ định từ tệp bài đưa lên tay người chơi.
+art_prompt: A glowing biological cell undergoing mitotic division, cellular nucleus splitting with strands of luminous green genetic matter.
+---
+filename: mo_phan_sinh.png
+name: Mô phân sinh
+rarity: R
+card_type: Tấn công
+cost: 1
+description: Gây 5 sát thương. Nếu bản thân đang có Tái tạo, tăng thời gian duy trì thêm 2 lượt.
+mechanics: Gây 5 sát thương; cộng 2 lượt vào Regen hiện có.
+tooltip: Tái tạo (Regen): Hiệu ứng hồi phục máu dần ở cuối mỗi lượt.
+tooltip: Khai thác trạng thái: Cường hóa hoặc gia tăng thời gian hiệu lực của trạng thái đang có trên người chơi.
+art_prompt: A cluster of fresh active plant shoots rapidly growing with dense emerald cell energy buds at the stem tip.
+---
+filename: dinh_duong_huu_co.png
+name: Dinh dưỡng hữu cơ
+rarity: R
+card_type: Phòng thủ
+cost: 2
+description: Nhận 8 Khiên. Tăng 2 lượng máu hồi phục mỗi lần Tái tạo kích hoạt trong trận. Gọi Thoát hơi nước lên tay.
+mechanics: Nhận 8 Khiên; tăng Regen power thêm 2; tutor biology_06_transpiration.
+tooltip: Cường hóa Tái tạo: Tăng lượng máu nhận được mỗi khi hiệu ứng Tái tạo kích hoạt trong trận chiến này.
+tooltip: Triệu hồi: Rút chính xác lá bài chỉ định từ tệp bài đưa lên tay người chơi.
+art_prompt: A fertile bowl of rich organic compost and humus glowing with concentrated amber and leaf-green nutrient motes.
+---
+filename: thoat_hoi_nuoc.png
+name: Thoát hơi nước
+rarity: R
+card_type: Phòng thủ
+cost: 1
+description: Nhận 8 Khiên. Giảm 1 Trí Tuệ tiêu thụ của 1 lá mang nhãn Hồi Máu ngẫu nhiên trên tay trong lượt này.
+mechanics: Nhận 8 Khiên; giảm cost 1 cho một lá tag heal trên tay, tối thiểu 0.
+tooltip: Giảm Tiêu Thụ: Giảm điểm Trí Tuệ cần dùng cho 1 lá mang nhãn Hồi Máu trên tay trong lượt hiện tại, tối thiểu 0.
+art_prompt: Translucent micro water vapor droplets releasing from plant leaf stomata into the cool mist, shimmering morning light.
+---
+filename: hut_bam_bieu_sinh.png
+name: Hút bám biểu sinh
+rarity: R
+card_type: Tấn công
+cost: 2
+description: Gây 7 sát thương. Nếu người chơi đang có Khiên, hồi phục 4 máu ngay lập tức.
+mechanics: Gây 7 sát thương; nếu đang có Khiên, hồi 4 HP.
+tooltip: Hồi máu tức thì: Hồi phục một lượng máu nhất định cho người chơi ngay khi lá bài được đánh ra.
+art_prompt: An epiphytic climbing ivy vine wrapping securely around ancient bark, anchoring clinging root tendrils with vitality energy.
+---
+filename: ss_sinh_duong.png
+name: Sinh sản sinh dưỡng
+rarity: R
+card_type: Phép
+cost: 1
+description: Bỏ 2 lá bài ngẫu nhiên trên tay vào mộ bài, rút 3 lá bài mới từ tệp bài.
+mechanics: Bỏ ngẫu nhiên tối đa 2 lá khác trên tay; rút 3 lá.
+tooltip: Lọc bài (Cycle): Đưa các lá bài thừa trên tay vào mộ để tái tạo và rút bài mới từ tệp bài.
+art_prompt: A single vigorous plant leaf cutting sprouting tiny white roots and young green shoots in fertile moist loam.
+---
+filename: tuan_hoan_mau.png
+name: Tuần hoàn máu
+rarity: R
+card_type: Phòng thủ
+cost: 1
+description: Nhận 6 Khiên. Nếu máu hiện tại đang đầy, nhận thêm 6 Khiên.
+mechanics: Nhận 6 Khiên; nếu HP hiện tại đạt tối đa thì nhận thêm 6 Khiên.
+tooltip: Đầy máu (Full HP): Kích hoạt hiệu ứng thưởng nếu người chơi không bị tổn thất máu tại thời điểm đánh lá bài.
+art_prompt: A stylized glowing anatomical heart pumping pulsating crimson life-stream rivers through interconnected vascular loops.
+---
+filename: he_sinh_thai.png
+name: Hệ sinh thái tự nhiên
+rarity: R
+card_type: Phòng thủ
+cost: 1
+description: Nhận 5 Khiên. Giảm 1 Trí Tuệ tiêu thụ cho các lá Sinh Học được rút trong lượt này.
+mechanics: Nhận 5 Khiên; các lá có tag sinh_hoc khi rút được giảm cost 1, tối thiểu 0.
+tooltip: Hào quang hệ (Aura): Giảm chi phí sử dụng của mọi lá Sinh Học được rút lên trong cùng lượt, tối thiểu 0.
+art_prompt: A miniature balanced biosphere globe enclosing lush canopy trees, mossy stones, and glowing natural equilibrium motes.
+---
+filename: ngu_nghi_hat.png
+name: Trạng thái ngủ nghỉ của hạt
+rarity: R
+card_type: Phòng thủ
+cost: 2
+description: Nhận 4 Khiên. Nếu đã hồi máu trong lượt này, giữ toàn bộ Khiên sang lượt sau.
+mechanics: Nhận 4 Khiên; nếu healed_this_turn > 0 thì giữ Khiên cuối lượt.
+tooltip: Bảo Toàn Khiên (Retain Shield): Điểm Khiên không bị đặt về 0 khi bắt đầu lượt mới nếu điều kiện kích hoạt được thỏa mãn.
+art_prompt: A tough hardened ancient seed resting inside crystalline earthen layers, preserving an unyielding spark of latent life.
+---
+filename: dot_bien_gen.png
+name: Đột biến gen
+rarity: R
+card_type: Phép
+cost: 0
+description: Mất 4 máu của bản thân. Nhận thêm 2 điểm Trí Tuệ tạm thời trong lượt này.
+mechanics: Mất 4 HP trực tiếp; nhận 2 mana và tăng mana_max tạm thời trong lượt.
+tooltip: Hy sinh máu: Trừ máu trực tiếp của bản thân, bỏ qua Khiên, để đổi lấy điểm Trí Tuệ tức thời vượt giới hạn.
+art_prompt: A glowing DNA double helix strand mutating with shimmering radioactive fractures and crackling bio-electric energy.
+---
+filename: chuoi_thuc_an.png
+name: Chuỗi thức ăn
+rarity: UR
+card_type: Tấn công
+cost: 2
+description: Gây 8 sát thương. Hồi máu bằng toàn bộ sát thương thực tế đòn này gây vào máu đối thủ.
+mechanics: Gây 8 sát thương; hồi HP bằng lượng HP thực tế đối thủ mất, không tính sát thương bị Khiên chặn.
+tooltip: Hút máu: Hồi phục bằng sát thương thực tế trừ vào HP đối thủ; sát thương bị Khiên chặn sẽ không tính.
+art_prompt: A ferocious apex predator spirit silhouette consuming luminous spectral prey energy, a circular flowing chain of wild primal vitality.
+---
+filename: tai_sinh_mo.png
+name: Tái sinh mô sống
+rarity: UR
+card_type: Phép
+cost: 3
+description: Trong 2 lượt kế tiếp, toàn bộ lượng máu hồi phục từ mọi nguồn được nhân đôi.
+mechanics: Đặt healing multiplier x2 trong 2 lượt kế tiếp.
+tooltip: Nhân đôi Hồi Phục: Tăng 100% hiệu quả của mọi nguồn hồi máu trong thời gian hiệu lực.
+art_prompt: A mystical hand shrouded in brilliant emerald and golden regeneration weave, woven living tissue regenerating instantaneously.
+---
+filename: da_dang_sh.png
+name: Đa dạng sinh học
+rarity: UR
+card_type: Phép
+cost: 2
+description: Đưa 2 lá mang hiệu ứng Hồi Máu từ tệp bài lên tay. Giảm chi phí của chúng về 0 trong lượt này.
+mechanics: Tutor tối đa 2 lá tag heal; đặt cost về 0 trong lượt.
+tooltip: Tìm Kiếm Có Điều Kiện: Rút 2 lá mang nhãn Hồi Máu từ tệp bài và giảm chi phí thi triển về 0 trong lượt hiện tại.
+art_prompt: An ancient World Tree radiating life orbs of all forest creatures and flora, crowned with blinding golden aurora branches.
+---
+filename: can_bang_noi_moi.png
+name: Cân bằng nội môi
+rarity: UR
+card_type: Phép
+cost: 2
+description: Tiêu thụ 50% Khiên để hồi máu tương đương. Hóa giải toàn bộ hiệu ứng bất lợi trên người.
+mechanics: Đổi floor(Khiên * 0.5) thành hồi máu; thanh tẩy debuff.
+tooltip: Chuyển hóa Khiên thành Máu: Đổi nửa lượng Khiên đang có thành máu hồi phục tức thời.
+tooltip: Thanh lọc: Xóa sạch toàn bộ các hiệu ứng bất lợi đang mắc phải.
+art_prompt: A serene luminous balance scale hovering in a golden aura, weighing a crystal water heart against a radiant shield in absolute harmony.
+---
+filename: ho_hap_te_bao.png
+name: Hô hấp tế bào
+rarity: UR
+card_type: Tấn công
+cost: 3
+description: Gây 10 sát thương. Nếu máu hiện tại dưới 50%, đòn này gây thêm 8 sát thương và hồi 6 máu.
+mechanics: Gây 10; nếu HP < 50% tối đa thì thêm 8 sát thương và hồi 6 HP.
+tooltip: Ngưỡng máu nguy hiểm: Tăng sát thương và hồi máu khẩn cấp khi người chơi còn dưới nửa lượng máu tối đa.
+art_prompt: An explosive bio-energetic surge radiating from a golden mitochondrion, releasing raw surging ATP energy flares in battle.

@@ -111,26 +111,25 @@ def get_all_players_overview(db: Session = Depends(get_db)): # Dùng Dependency 
     """
     # 1. Lấy tất cả người chơi
     players = db.exec(select(Player)).all()
-    
-    result = []
-    for p in players:
-        
-        statement = (
+    inventory_by_player = {player.id: [] for player in players}
+
+    if inventory_by_player:
+        inventory_rows = db.exec(
             select(Inventory, Item)
-            .join(Item, Inventory.item_id == Item.id) # Chỉ định rõ điều kiện join
-            .where(Inventory.player_id == p.id)
-        )
-        items_data = db.exec(statement).all()
-        
-        bag = []
-        for inv, item_obj in items_data: # item_obj là dữ liệu từ bảng Item
-            bag.append({
+            .join(Item, Inventory.item_id == Item.id)
+            .where(Inventory.player_id.in_(inventory_by_player))
+        ).all()
+
+        for inv, item_obj in inventory_rows:
+            inventory_by_player[inv.player_id].append({
                 "item_name": item_obj.name,
                 "amount": inv.amount,
-                "category": getattr(item_obj, "category", "Vật phẩm"), # Phòng hờ nếu cột category chưa có
+                "category": getattr(item_obj, "category", "Vật phẩm"),
                 "rarity": getattr(item_obj, "rarity", "Thường")
-            })  
-        
+            })
+
+    result = []
+    for p in players:
         # 3. Trả về cấu trúc phẳng (Đã khớp với Database mới 4 loại tiền tệ)
         result.append({
             "id": p.id,
@@ -144,7 +143,7 @@ def get_all_players_overview(db: Session = Depends(get_db)): # Dùng Dependency 
             "hp_max": p.hp_max,
             "role": p.role,       
             "team_id": p.team_id,                
-            "inventory": bag
+            "inventory": inventory_by_player[p.id]
         })
         
     return result

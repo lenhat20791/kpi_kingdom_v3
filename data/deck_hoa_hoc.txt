@@ -1,0 +1,164 @@
+# art_prompt chỉ chứa ý tưởng hình ảnh; tooltip là nội dung giải thích effect cho subtab hover.
+# Mỗi tooltip là một effect riêng; có thể lặp trường tooltip trong cùng một thẻ.
+
+filename: tchh_axit.png
+name: Tính chất hóa học của Axit
+rarity: R
+card_type: Tấn công
+cost: 1
+description: Gây 6 sát thương và áp dụng 3 tầng Độc lên đối thủ.
+mechanics: Gây 6 sát thương thông thường; áp dụng 3 Độc, trừ thẳng HP cuối lượt.
+tooltip: Độc: Cuối mỗi lượt, mục tiêu nhận sát thương bằng số stack Độc hiện tại (trừ thẳng vào HP, Khiên không chặn được), sau đó giảm 1 tầng.
+art_prompt: A dark green corrosive acid flask bursting over dungeon stones, toxic liquid splashing in a dramatic arc.
+---
+filename: pu_toa_nhiet.png
+name: Phản ứng tỏa nhiệt
+rarity: R
+card_type: Phòng thủ
+cost: 1
+description: Nhận 6 Khiên. Nếu đối thủ đang dính Độc, gây sát thương bằng số tầng Độc hiện có lên đối thủ.
+mechanics: Nhận 6 Khiên; nếu đối thủ có Độc, gây thêm sát thương bằng số tầng Độc, bị Khiên chặn.
+art_prompt: An alchemical reaction releasing waves of glowing heat and explosive vapor from a glass vessel, dramatic thermal shimmer.
+---
+filename: bazo_chi_thi.png
+name: Dung dịch Bazơ và Chất chỉ thị
+rarity: R
+card_type: Phòng thủ
+cost: 2
+description: Nhận 8 Khiên. Tăng thêm 2 tầng Độc nếu đối thủ đang dính Độc. Gọi lá Phản ứng trung hòa từ tệp bài lên tay.
+mechanics: Nhận 8 Khiên; nếu đối thủ có Độc thì cộng 2 Độc; tutor pu_trung_hoa.
+tooltip: Độc: Gây sát thương thẳng vào HP cuối lượt.
+tooltip: Triệu hồi: Rút chính xác lá bài chỉ định từ tệp bài đưa lên tay người chơi.
+art_prompt: A vivid acid-base indicator solution changing color inside two alchemical glass vials, a precise neutralization swirl.
+---
+filename: pu_trung_hoa.png
+name: Phản ứng trung hòa
+rarity: R
+card_type: Tấn công
+cost: 1
+description: Gây 5 sát thương. Nếu đã sử dụng lá Dung dịch Bazơ và Chất chỉ thị trước đó trong lượt, áp dụng thêm 4 tầng Độc lên đối thủ.
+mechanics: Gây 5 sát thương; nếu card 3 đã dùng trong lượt, áp dụng 4 Độc.
+art_prompt: A brilliant acid and base collision creating a forceful neutralization burst, balanced streams of opposing colored liquid meeting at the center.
+---
+filename: khi_clo.png
+name: Phi kim: Khí Clo
+rarity: R
+card_type: Phép
+cost: 2
+description: Áp dụng 5 tầng Độc lên đối thủ. Gọi lá Muối NaCl và Hợp chất từ tệp bài lên tay.
+mechanics: Áp dụng 5 Độc xuyên Khiên; tutor muoi_nacl.
+tooltip: Độc: Trừ thẳng vào HP cuối mỗi lượt.
+tooltip: Triệu hồi: Rút chính xác lá bài chỉ định từ tệp bài đưa lên tay.
+art_prompt: A dense yellow-green chlorine gas cloud leaking from a cracked ancient sealed vessel, curling through a ruined laboratory.
+---
+filename: muoi_nacl.png
+name: Muối NaCl và Hợp chất
+rarity: R
+card_type: Phòng thủ
+cost: 1
+description: Nhận 10 Khiên. Giảm 1 Trí Tuệ tiêu thụ của 1 lá bài mang nhãn Độc ngẫu nhiên trên tay trong lượt này.
+mechanics: Nhận 10 Khiên; giảm cost của một lá có tag poison trên tay đi 1 trong lượt này.
+art_prompt: A crystalline cube of salt forming from sparkling droplets beside a small alchemical compound vial, sturdy protective energy.
+---
+filename: pu_trao_doi.png
+name: Phản ứng trao đổi trong dung dịch
+rarity: R
+card_type: Phòng thủ
+cost: 2
+description: Nhận 7 Khiên. Chuyển hóa toàn bộ số tầng Độc của đối thủ thành Khiên bổ sung cho bản thân, sau đó Độc trở về 0.
+mechanics: Nhận 7 Khiên cộng số tầng Độc hiện tại; sau đó xóa Độc.
+art_prompt: Two colored solutions exchanging glowing ions in a glass vessel, toxic green particles transformed into a protective blue shield.
+---
+filename: nong_do_dd.png
+name: Nồng độ dung dịch
+rarity: R
+card_type: Phép
+cost: 1
+description: Tăng số tầng Độc hiện có của đối thủ thêm 50%, làm tròn xuống. Nếu đối thủ chưa dính Độc, áp dụng 3 tầng Độc.
+mechanics: Nếu đang có Độc, cộng floor(Độc * 0.5); nếu không thì áp dụng 3 Độc.
+art_prompt: A concentrated toxic solution swirling inside a graduated glass vessel, visibly intensifying into dense glowing green droplets.
+---
+filename: chung_cat.png
+name: Tách chất và Chưng cất
+rarity: R
+card_type: Phép
+cost: 1
+description: Bỏ 2 lá bài ngẫu nhiên trên tay vào mộ bài, rút 3 lá bài mới từ tệp bài.
+mechanics: Bỏ 2 lá ngẫu nhiên trên tay; rút 3 lá mới từ tệp bài.
+art_prompt: An elegant distillation apparatus separating a cloudy mixture into three clear streams of colorful purified liquid.
+---
+filename: lk_cong_hoa_tri.png
+name: Liên kết cộng hóa trị
+rarity: R
+card_type: Phòng thủ
+cost: 1
+description: Nhận 5 Khiên. Giảm 1 Trí Tuệ tiêu thụ cho tất cả các lá bài thuộc hệ Hóa Học rút ra trong lượt này.
+mechanics: Nhận 5 Khiên; bật aura giảm 1 cost cho bài hoa_hoc được rút trong lượt.
+art_prompt: Two luminous atoms joined by a strong shared electron bond, forming a compact protective energy shield.
+---
+filename: bt_khoi_luong.png
+name: Định luật bảo toàn khối lượng
+rarity: R
+card_type: Phòng thủ
+cost: 2
+description: Nhận 4 Khiên. Nếu đối thủ đang bị nhiễm Độc, giữ lại toàn bộ số Khiên hiện có sang lượt sau.
+mechanics: Nhận 4 Khiên; nếu đối thủ có Độc thì giữ Khiên qua bước reset cuối lượt.
+art_prompt: A perfectly balanced alchemical scale holding equal masses of glowing mineral and liquid, a stable shield aura surrounding it.
+---
+filename: bd_hoa_hoc.png
+name: Sự biến đổi hóa học
+rarity: R
+card_type: Phép
+cost: 0
+description: Mất 4 HP của bản thân. Nhận thêm 2 điểm Trí Tuệ tạm thời trong lượt này.
+mechanics: Trừ 4 HP của người chơi; cộng 2 mana tạm thời trong lượt.
+art_prompt: A volatile chemical transformation in a small flask, a crack of red energy converting into two bright blue sparks of intellect.
+---
+filename: xuc_tac.png
+name: Tốc độ phản ứng và Chất xúc tác
+rarity: UR
+card_type: Tấn công
+cost: 2
+description: Tiêu thụ toàn bộ số tầng Độc của đối thủ và gây sát thương nổ thẳng vào HP bằng 150% số tầng Độc vừa tiêu thụ.
+mechanics: Xóa toàn bộ Độc rồi gây sát thương trực tiếp bằng floor(Độc đã tiêu thụ * 1.5), bỏ qua Khiên.
+tooltip: Kích Nổ Độc: Xóa toàn bộ Độc để giải phóng sát thương tức thì trực tiếp vào HP, bỏ qua Khiên.
+art_prompt: A catalyst triggering a violent chemical detonation, toxic purple shockwaves erupting from a sealed reaction vessel, explosive energy radiating outward.
+---
+filename: day_chuyen.png
+name: Phản ứng dây chuyền
+rarity: UR
+card_type: Phép
+cost: 3
+description: Trong 2 lượt kế tiếp, Độc không giảm ở cuối mỗi lượt mà tự động nhân đôi.
+mechanics: Trong 2 lượt, sau khi Độc gây sát thương cuối lượt, nhân đôi số stack thay vì giảm 1.
+tooltip: Chuỗi nhân đôi: Độc gây sát thương xuyên Khiên xong sẽ tự nhân đôi số stack thay vì giảm 1 trong thời gian hiệu lực.
+art_prompt: A chain of linked alchemical reactions multiplying toxic green energy through a sequence of glass vessels, escalating luminous bursts.
+---
+filename: bang_tuan_hoan.png
+name: Bảng tuần hoàn các nguyên tố hóa học
+rarity: UR
+card_type: Phép
+cost: 2
+description: Chọn 2 lá bài mang hiệu ứng Độc trong tệp bài đưa lên tay. Giảm lượng Trí Tuệ cần dùng của 2 lá đó về 0 trong lượt này.
+mechanics: Tutor 2 lá tag poison từ deck; đặt cost hai lá về 0 trong lượt.
+art_prompt: A magical periodic table of glowing elemental symbols represented only by abstract shapes, two toxic green cards rising from its radiant grid, no readable text.
+---
+filename: hno3_an_mon.png
+name: Axit Nitric và Ăn mòn kim loại
+rarity: UR
+card_type: Tấn công
+cost: 3
+description: Gây 10 sát thương trực tiếp vào HP, bỏ qua Khiên. Nếu đối thủ có từ 10 tầng Độc trở lên, làm Choáng đối thủ trong 1 lượt.
+mechanics: Trừ thẳng 10 HP; nếu Độc >= 10 thì choáng đối thủ trong lượt kế.
+tooltip: Choáng: Đối thủ mất hoàn toàn lượt hành động kế tiếp.
+art_prompt: Powerful nitric acid corroding an iron shield into glowing fragments, toxic vapor and a sharp flash of corrosive energy.
+---
+filename: doc_kim_loai_nang.png
+name: Nhiễm độc kim loại nặng
+rarity: UR
+card_type: Phép
+cost: 2
+description: Áp dụng ngay 12 tầng Độc lên đối thủ. Xóa bỏ toàn bộ Khiên và các trạng thái có lợi trên người đối thủ.
+mechanics: Áp dụng 12 Độc; đặt Khiên về 0 và xóa buff trên đối thủ.
+tooltip: Thanh Tẩy: Phá hủy toàn bộ Khiên và các hiệu ứng tăng sức mạnh của đối thủ.
+art_prompt: A heavy toxic metal relic dissolving an enemy shield and radiant beneficial aura beneath a thick emerald poisonous cloud.

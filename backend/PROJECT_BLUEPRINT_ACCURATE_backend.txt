@@ -1,0 +1,348 @@
+==================================================
+===      BẢN ĐỒ KIẾN TRÚC TOÀN CẢNH HỆ THỐNG    ===
+=== (Context chuẩn dành riêng cho AI Coding)     ===
+==================================================
+
+📄 database.py
+  📦 Class: Player [id, username, password_hash, plain_password, full_name, role, parent_of_id, level, exp, next_level_exp, hp, hp_max, atk, class_type, skill_points, equipped_skill, skills_data, kpi, diem_vi_pham, diem_phat_bieu, diem_tx, diem_hk, diem_san_pham, toan_hk1, van_hk1, anh_hk1, gdcd_hk1, cong_nghe_hk1, tin_hk1, khtn_hk1, lsdl_hk1, toan_hk2, van_hk2, anh_hk2, gdcd_hk2, cong_nghe_hk2, tin_hk2, khtn_hk2, lsdl_hk2, tri_thuc, chien_tich, vinh_du, team_id, stats_json, titles_json, tower_floor, revive_at, item_atk_bonus, item_hp_bonus, equip_slot_1, equip_slot_2, equip_slot_3, equip_slot_4, companion_slot_1, companion_slot_2, companion_slot_3]
+  📦 Class: Inventory [id, player_id, item_id, amount, is_equipped, metadata_json]
+  📦 Class: ActiveEffect [id, player_id, effect_json, expire_time]
+  📦 Class: Question [id, grade, subject, content, options_json, correct_answer, difficulty, question_type]
+  📦 Class: Boss [__tablename__, id, name, grade, subject, max_hp, current_hp, atk, time_limit, image_url, animation, vfx, reward_kpi, reward_tri_thuc, reward_chien_tich, reward_vinh_du, drop_pool, rare_item_id, rare_item_rate, status]
+  📦 Class: BossLog [__tablename__, id, boss_id, player_name, action, dmg_dealt, hp_left, created_at]
+  📦 Class: Item [id, name, image_url, description, type, can_equip, config, currency_type, price, is_hidden, limit_type]
+  📦 Class: ShopHistory [id, player_id, item_id, purchase_date, amount]
+  📦 Class: TowerQuestion [id, subject, difficulty, content, option_a, option_b, option_c, option_d, correct_ans, explanation]
+  📦 Class: TowerProgress [id, player_id, current_floor, max_floor, last_played]
+  📦 Class: TowerSetting [id, config_data]
+  📦 Class: SystemStatus [id, is_maintenance, message, updated_at]
+  📦 Class: PlayerPet [id, player_id, item_id, star_level, level, exp, is_active, active_start_time]
+  📦 Class: MarketListing [id, seller_id, item_id, amount, price, currency, created_at, description, item_data_json]
+  📦 Class: SkillTemplate [id, skill_id, name, description, class_type, skill_type, min_level, prerequisite_id, config_data]
+  📦 Class: PlayerSkill [id, player_id, skill_id, level, is_equipped]
+  📦 Class: QuestionBank [id, subject, difficulty, content, options_json, correct_answer, explanation, grade]
+  📦 Class: ArenaMatch [id, mode, difficulty, bet_amount, status, created_by, created_at, expires_at, winner_team, logs]
+  📦 Class: ArenaParticipant [id, match_id, username, team, status, score, quiz_data_json, submitted_at]
+  📦 Class: Title [id, name, min_kpi, color]
+  📦 Class: ScoreLog [id, sender_name, target_name, category, description, value_change, created_at, sender_id, target_id]
+  📦 Class: PlayerItem [id, player_id, name, image_url, rarity, stats_data, enhance_level, is_equipped, slot_index, created_at]
+  📦 Class: SystemConfig [key, value]
+  📦 Class: Notification [id, type, content, is_active, created_at]
+  📦 Class: ChatLog [id, player_id, player_name, role, content, created_at]
+  📦 Class: ChatWarningLog [id, player_id, player_name, content, created_at]
+  📦 Class: ChatBan [player_id, player_name, banned_until, reason]
+  📦 Class: ChatKeyword [id, word]
+  📦 Class: CompanionConfig [id, fodder_required, stats_config]
+  📦 Class: CompanionTemplate [template_id, name, rarity, image_path, companions]
+  📦 Class: Companion [id, player_id, template_id, star, hp, atk, temp_name, is_locked, template, is_equipped, slot_index]
+  📦 Class: Campaign [id, name, status, tl_troops_vault, bh_troops_vault, tl_victory_points, bh_victory_points, start_time, end_time, first_blood_claimed]
+  📦 Class: CampaignPlayer [id, campaign_id, player_id, faction, companion_id, legion_level, legion_exp, k_kills, t_deaths, h_hau_phuong, total_troops_farmed, respawn_at, current_kill_streak, last_kill_time]
+  📦 Class: MapNode [id, campaign_id, node_code, name, owner_faction, is_contested, contesting_faction, capture_start_time, vp_per_hour]
+  📦 Class: TroopMovement [id, campaign_id, player_id, target_node_id, source_node_code, base_troops, bonus_percent, real_power, start_time, arrival_time, status]
+  📦 Class: BattleReport [id, campaign_id, player_id, faction, type, title, content, timestamp]
+  📦 Class: CampaignChat [id, campaign_id, sender_name, faction, message, channel, timestamp]
+  ⚙️  Hàm: create_db_and_tables()
+  ⚙️  Hàm: get_db()
+  ⚙️  Hàm: generate_username(full_name)
+
+📄 db.py
+  ⚙️  Hàm: upgrade_database()
+
+📄 index.html
+  🏷️  Title: Cổng Nhập Học - KPI Kingdom
+  🌐 API Endpoints gọi từ client:
+     ➔ [GET] /api/data/maintenance-status
+     ➔ [GET] /api/noti/public
+     ➔ [GET] /api/public/boss-leaderboard
+     ➔ [GET] /api/public/hall-of-fame
+     ➔ [GET] /api/public/tower-ranking
+     ➔ [POST] /api/login
+  ⚡ JS Logic (8 hàm):
+     • loadHallOfFame(), loadTowerRanking(), loadBossLeaderboard(), checkMaintenanceLogin(), loadSystemNotifications(), checkAndShowPopup(popupData)
+     • closeSysNoti(), createCard(p, rank, sizeClass)
+  💾 Key States: [notisData]
+
+📄 main.py
+  📦 Class: LoginRequest [username, password]
+  📦 Class: BaseRequest [username]
+  📦 Class: BuyRequest [item_id, username]
+  📦 Class: AttackRequest [boss_id, player_id, player_name, damage, question_id, selected_option]
+  📦 Class: MarchByCodeRequest [username, target_node_code]
+  📦 Class: JoinFactionRequest [username, faction]
+  📦 Class: SetCommanderRequest [username, companion_id]
+  📦 Class: ChatRequest [username, message, channel]
+  📦 Class: MinigameRewardRequest [username, campaign_id]
+  ⚙️  Hàm: create_default_admin()
+  ⚙️  Hàm: lifespan(app)
+  ⚙️  Hàm: check_and_revive_player(player, db)
+  ⚙️  Hàm: login(data, db)
+  ⚙️  Hàm: read_root()
+  ⚙️  Hàm: view_player_dashboard()
+  ⚙️  Hàm: view_admin_dashboard()
+  ⚙️  Hàm: view_parent_page()
+  ⚙️  Hàm: read_index()
+  ⚙️  Hàm: get_shop_items(db)
+  ⚙️  Hàm: buy_item(data, db)
+  ⚙️  Hàm: get_hall_of_fame(db)
+  ⚙️  Hàm: get_tower_ranking(db)
+  ⚙️  Hàm: get_boss_leaderboard(db)
+  ⚙️  Hàm: get_active_boss_for_player(db)
+  ⚙️  Hàm: attack_boss(req, db)
+  ⚙️  Hàm: get_boss_question(boss_id, db)
+  ⚙️  Hàm: get_all_items_system(db)
+  ⚙️  Hàm: get_boss_logs(limit, db)
+  ⚙️  Hàm: grant_exp_to_user(username, amount, db)
+  ⚙️  Hàm: cleanup_chat_task()
+  ⚙️  Hàm: is_campaign_frozen()
+  ⚙️  Hàm: minigame_chieu_binh(req, db)
+  ⚙️  Hàm: minigame_luyen_binh(req, db)
+  ⚙️  Hàm: get_minigame_folder(game_type)
+  ⚙️  Hàm: get_minigame_files(game_type)
+  ⚙️  Hàm: get_minigame_questions(game_type, file_name)
+  ⚙️  Hàm: get_path_distance(start_code, target_code)
+  ⚙️  Hàm: march_troops_by_code(campaign_id, req, db)
+  ⚙️  Hàm: recall_troops(campaign_id, req, db)
+  ⚙️  Hàm: resolve_node_combat(campaign_id, node_id, db)
+  ⚙️  Hàm: get_campaign_state(username, db)
+  ⚙️  Hàm: admin_create_campaign(db)
+  ⚙️  Hàm: get_campaign_lobby(db)
+  ⚙️  Hàm: admin_close_campaign(db)
+  ⚙️  Hàm: join_campaign(req, db)
+  ⚙️  Hàm: admin_start_campaign(db)
+  ⚙️  Hàm: process_campaign_battles(db)
+  ⚙️  Hàm: replenish_troops(campaign_id, req, db)
+  ⚙️  Hàm: campaign_engine_worker()
+  ⚙️  Hàm: set_campaign_commander(req, db)
+  ⚙️  Hàm: get_my_companions(username, db)
+  ⚙️  Hàm: check_engine_status()
+  ⚙️  Hàm: campaign_game_loop()
+  ⚙️  Hàm: get_battle_reports(username, db)
+  ⚙️  Hàm: get_campaign_last_result(db)
+  ⚙️  Hàm: force_reset_campaign(db)
+  ⚙️  Hàm: send_chat_message(req, db)
+  ⚙️  Hàm: get_chat_messages(username, db)
+  ⚙️  Hàm: process_kill_streak(db, campaign, killer_player, victim_player, killer_name, victim_name)
+
+📄 game_logic\arena_manager.py
+  📦 Class: ArenaManager
+
+📄 game_logic\item_processor.py
+  ⚙️  Hàm: calculate_max_hp_limit(player)
+  ⚙️  Hàm: apply_item_effects(player, item, db)
+  ⚙️  Hàm: get_charm_config(db)
+  ⚙️  Hàm: get_forge_config(db)
+  ⚙️  Hàm: generate_charm(db, player_id, rarity)
+  ⚙️  Hàm: forge_item(db, item_id, player_id, stone_item_id)
+  ⚙️  Hàm: generate_companion_card(db, player_id, rarity)
+
+📄 game_logic\level.py
+  ⚙️  Hàm: safe_increase(current_val, multiplier)
+  ⚙️  Hàm: add_exp_to_player(player, amount)
+
+📄 game_logic\stats.py
+  ⚙️  Hàm: recalculate_player_stats(db, player, heal_mode)
+
+📄 routes\admin.py
+  📦 Class: RewardItem [type, name, amount, rate]
+  📦 Class: SkillSchema [skill_id, name, description, class_type, skill_type, min_level, prerequisite_id, base_mult, vfx_class, currency, base_cost, scaling, config_type, value, vfx_target, condition, threshold, config_data]
+  📦 Class: TowerGlobalConfig [monster_pool, bg_pool, rewards]
+  📦 Class: TowerCompleteRequest [player_id, floor, is_win]
+  📦 Class: RarityConfig [lines, atk_range, hp_range]
+  📦 Class: CharmSetupPayload [MAGIC, EPIC, LEGEND]
+  📦 Class: ForgeGroupConfig [min, max, rate, stone, bonus_pct]
+  📦 Class: ForgeSetupPayload [group_1, group_2, group_3]
+  📦 Class: UpdateTeamRequest [team_id]
+  📦 Class: UpdateRoleRequest [role]
+  📦 Class: ResetPasswordRequest [username]
+  📦 Class: ChangePassSchema [old_password, new_password]
+  📦 Class: GachaSetupRequest [chest_id, drops]
+  📦 Class: TitleRequest [name, min_kpi, color]
+  ⚙️  Hàm: get_all_players_overview(db)
+  ⚙️  Hàm: update_player_stats(player_identifier, kpi_change, tri_thuc_change, chien_tich_change, vinh_du_change, hp_change, db)
+  ⚙️  Hàm: create_item_template(item_data, db)
+  ⚙️  Hàm: delete_item_template(item_id, db)
+  ⚙️  Hàm: list_item_templates(db)
+  ⚙️  Hàm: give_item_to_player(player_id, item_id, amount, db)
+  ⚙️  Hàm: update_player_team(player_id, req, db)
+  ⚙️  Hàm: update_player_role(player_id, req, db)
+  ⚙️  Hàm: reset_password(req, db)
+  ⚙️  Hàm: reset_all_passwords_api(db)
+  ⚙️  Hàm: import_excel(file, db)
+  ⚙️  Hàm: create_parent_accounts(file, db)
+  ⚙️  Hàm: get_parents_list(db)
+  ⚙️  Hàm: change_admin_password(req, db)
+  ⚙️  Hàm: get_all_players_security(db)
+  ⚙️  Hàm: reset_season(db)
+  ⚙️  Hàm: save_boss(boss_data, db)
+  ⚙️  Hàm: get_current_boss(db)
+  ⚙️  Hàm: delete_boss(db)
+  ⚙️  Hàm: clear_boss_logs(db)
+  ⚙️  Hàm: get_tower_questions(db)
+  ⚙️  Hàm: import_tower_questions(file, mode, db)
+  ⚙️  Hàm: get_tower_stats(db)
+  ⚙️  Hàm: delete_tower_subject(subject, db)
+  ⚙️  Hàm: save_tower_config(data, db)
+  ⚙️  Hàm: get_tower_config(db)
+  ⚙️  Hàm: get_dashboard_stats(db)
+  ⚙️  Hàm: get_system_logs(limit, type_filter, db)
+  ⚙️  Hàm: backup_database()
+  ⚙️  Hàm: restore_database(file)
+  ⚙️  Hàm: get_maintenance_status(db)
+  ⚙️  Hàm: update_maintenance_status(is_maintenance, message, db)
+  ⚙️  Hàm: create_pet(name, image_url, rarity, effect_type, effect_value, db)
+  ⚙️  Hàm: setup_gacha(data, db)
+  ⚙️  Hàm: get_all_skills(db)
+  ⚙️  Hàm: save_skill(req, db)
+  ⚙️  Hàm: get_titles(db)
+  ⚙️  Hàm: create_title(req, db)
+  ⚙️  Hàm: delete_title(title_id, db)
+  ⚙️  Hàm: get_arena_history(limit, db)
+  ⚙️  Hàm: admin_cancel_match(match_id, db)
+  ⚙️  Hàm: get_admin_arena_data(db)
+  ⚙️  Hàm: get_system_config(db)
+  ⚙️  Hàm: save_system_config(charm_data, forge_data, db)
+  ⚙️  Hàm: import_scores(file, semester, db)
+
+📄 routes\arena_api.py
+  📦 Class: ChallengeRequest [mode, difficulty, bet_amount, opponent_name]
+  📦 Class: AcceptMatchRequest [match_id, username]
+  📦 Class: AnswerItem [id, answer]
+  📦 Class: SubmitAnswer [match_id, username, answers]
+  📦 Class: SubmitAnswer [match_id, username, answers]
+  ⚙️  Hàm: create_challenge(req, username, db)
+  ⚙️  Hàm: list_my_matches(username, db)
+  ⚙️  Hàm: accept_match(payload, db)
+  ⚙️  Hàm: cancel_match(match_id, username, db)
+  ⚙️  Hàm: get_lobby(db)
+  ⚙️  Hàm: join_lobby(match_id, username, team, db)
+  ⚙️  Hàm: get_arena_quiz(match_id, username, db)
+  ⚙️  Hàm: submit_arena_quiz(payload, db)
+  ⚙️  Hàm: get_arena_opponents(current_user, db)
+  ⚙️  Hàm: get_match_detail(match_id, db)
+
+📄 routes\auth.py
+  📦 Class: LoginRequest [username, password]
+  📦 Class: ChangePasswordRequest [old_password, new_password]
+  ⚙️  Hàm: verify_password(plain_password, hashed_password)
+  ⚙️  Hàm: get_password_hash(password)
+  ⚙️  Hàm: create_access_token(data, expires_delta)
+  ⚙️  Hàm: get_current_user(token, db)
+  ⚙️  Hàm: login(data, db)
+  ⚙️  Hàm: change_password(req, db, current_user)
+
+📄 routes\chat_api.py
+  📦 Class: ConnectionManager
+  ⚙️  Hàm: get_vn_time()
+  ⚙️  Hàm: check_ban_and_spam(player_id, db)
+  ⚙️  Hàm: websocket_endpoint(websocket, token, db)
+  ⚙️  Hàm: get_warnings(db)
+  ⚙️  Hàm: add_keyword(word, db)
+  ⚙️  Hàm: ban_player(target_id, hours, reason, db)
+  ⚙️  Hàm: get_chat_history(db)
+  ⚙️  Hàm: get_all_players_for_admin(db)
+  ⚙️  Hàm: get_keywords_list(db)
+
+📄 routes\companion.py
+  📦 Class: ConfigUpdate [fodder_required, stats_config]
+  ⚙️  Hàm: scan_companion_templates(db)
+  ⚙️  Hàm: get_templates(rarity, db)
+  ⚙️  Hàm: get_companion_config(db)
+  ⚙️  Hàm: update_companion_config(data, db)
+  ⚙️  Hàm: get_player_companions(username, db)
+
+📄 routes\inventory_api.py
+  📦 Class: EquipRequest [username, item_id, slot_index]
+  📦 Class: UnequipRequest [username, slot_index]
+  📦 Class: UseItemRequest [username, item_id]
+  📦 Class: SellRequest [username, item_id, amount, price, currency]
+  📦 Class: BuyRequest [buyer_username, listing_id]
+  📦 Class: ForgeRequest [username, charm_id]
+  📦 Class: EquipCompanionRequest [username, companion_id, slot_index]
+  📦 Class: UnequipCompanionRequest [username, slot_index]
+  📦 Class: DiscardCompanionRequest [username, companion_id]
+  📦 Class: BreakthroughRequest [username, main_card_id, fodder_ids]
+  ⚙️  Hàm: get_inventory(username, db)
+  ⚙️  Hàm: use_item(req, db)
+  ⚙️  Hàm: equip_item(req, db)
+  ⚙️  Hàm: unequip_item(req, db)
+  ⚙️  Hàm: enhance_item_api(req, db)
+  ⚙️  Hàm: get_system_config(db)
+  ⚙️  Hàm: equip_companion(req, db)
+  ⚙️  Hàm: unequip_companion(req, db)
+  ⚙️  Hàm: discard_companion(req, db)
+  ⚙️  Hàm: breakthrough_companion(req, db)
+
+📄 routes\market_api.py
+  📦 Class: SellRequest [username, item_id, amount, price, currency]
+  📦 Class: SellCharmRequest [item_id, price, currency]
+  📦 Class: BuyRequest [buyer_username, listing_id]
+  📦 Class: CancelRequest [buyer_username, listing_id]
+  📦 Class: SellCompanionRequest [companion_id, price, currency]
+  📦 Class: CharmActionRequest [username, charm_id, price, currency]
+  ⚙️  Hàm: get_market_list(db)
+  ⚙️  Hàm: sell_to_market(req, db)
+  ⚙️  Hàm: buy_market_item(req, db)
+  ⚙️  Hàm: cancel_market(req, db)
+  ⚙️  Hàm: discard_charm_api(req, db)
+  ⚙️  Hàm: sell_charm(req, current_user, db)
+  ⚙️  Hàm: sell_companion(req, current_user, db)
+
+📄 routes\notifications.py
+  📦 Class: NotiCreate [type, content, is_active]
+  ⚙️  Hàm: create_notification(req, db)
+  ⚙️  Hàm: get_all_notifications(db)
+  ⚙️  Hàm: delete_notification(noti_id, db)
+  ⚙️  Hàm: toggle_notification(noti_id, db)
+  ⚙️  Hàm: get_public_notifications(db)
+
+📄 routes\pets.py
+  📦 Class: FusionRequest [player_id, fragment_item_id]
+  📦 Class: UpgradeStarRequest [player_id, pet_item_id, current_star]
+  📦 Class: ActivateRequest [player_id, pet_instance_id]
+  ⚙️  Hàm: fuse_pet_fragments(req, db)
+  ⚙️  Hàm: upgrade_pet_star(req, db)
+  ⚙️  Hàm: activate_pet_aura(req, db)
+
+📄 routes\shop.py
+  ⚙️  Hàm: get_all_items(db)
+  ⚙️  Hàm: add_item(item_data, db)
+  ⚙️  Hàm: delete_item(item_id, db)
+
+📄 routes\skills.py
+  ⚙️  Hàm: learn_skill(skill_id, db, current_user)
+  ⚙️  Hàm: equip_skill(skill_id, db, current_user)
+  ⚙️  Hàm: unequip_skill(db, current_user)
+  ⚙️  Hàm: get_status(current_user)
+  ⚙️  Hàm: get_all_skills(db, current_user)
+
+📄 routes\tower.py
+  📦 Class: TowerCompleteRequest [floor, is_win]
+  📦 Class: StartCombatRequest [floor]
+  ⚙️  Hàm: get_difficulty_by_floor(floor)
+  ⚙️  Hàm: get_monster_stats_by_floor(floor)
+  ⚙️  Hàm: start_floor_combat(req, current_user, db)
+  ⚙️  Hàm: complete_floor(req, current_user, db)
+
+📄 routes\users.py
+  📦 Class: AddMembersRequest [player_ids]
+  📦 Class: ScoreRequest [target_player_id, score_type, value]
+  📦 Class: ViolationRequest [target_player_id, reason, penalty]
+  📦 Class: PromoteRequest [target_id]
+  ⚙️  Hàm: get_child_info(current_user, db)
+  ⚙️  Hàm: get_free_agents(db)
+  ⚙️  Hàm: add_members_to_team(req, current_user, db)
+  ⚙️  Hàm: get_current_user(token, db)
+  ⚙️  Hàm: read_users_me(current_user)
+  ⚙️  Hàm: read_my_inventory(current_user, db)
+  ⚙️  Hàm: get_public_player_info(username, db)
+  ⚙️  Hàm: handle_choose_class(username, class_name, db)
+  ⚙️  Hàm: handle_get_dashboard(username, db)
+  ⚙️  Hàm: get_team_members(current_user, db)
+  ⚙️  Hàm: submit_academic_score(req, current_user, db)
+  ⚙️  Hàm: submit_violation(req, current_user, db)
+  ⚙️  Hàm: get_activity_logs(current_user, db)
+  ⚙️  Hàm: get_vn_time()
+  ⚙️  Hàm: promote_member(req, current_user, db)
+
+📄 services\excel_helper.py
+  ⚙️  Hàm: import_players_from_excel(file_path, default_password)

@@ -1,0 +1,21 @@
+=== TÓM TẮT FILE PYTHON: space_station_api.py ===
+
+[Biến Toàn Cục (1)]:
+  router
+
+[Classes / Data Models (3)]:
+  - Class SubmitActionRequest | Fields: [username, action_type, target_id_1, target_id_2, target_ids, typed_lesson_text]
+  - Class SpyResponseRequest | Fields: [username, accept]
+  - Class FactionRegisterRequest | Fields: [username, faction_choice]
+
+[Hàm & API Endpoints (10)]:
+  - def create_match(season_name, db) [@post]
+  - def start_match(match_id, db) [@post]
+  - def force_resolve_night(match_id, db) [@post]
+  - def register_faction(req, session) [@post]
+  - def get_my_state(username, db) [@get]
+  - def get_crew_manifest(db) [@get]
+  - def get_reports_and_logs(username, db) [@get]
+  - def get_lesson_prompt(db) [@get]
+  - def submit_action(req, db) [@post]
+  - def get_lobby_stats(session) [@get]

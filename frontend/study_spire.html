@@ -1,0 +1,428 @@
+<!doctype html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#101a19">
+    <title>Học Giả Đại Chiến</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=Cinzel:wght@500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/study_spire.css?v=19">
+    <script defer src="/frontend/js/study_spire_animations.js?v=2"></script>
+    <script defer src="/frontend/js/study_spire_cards.js?v=5"></script>
+    <script defer src="/frontend/js/study_spire_pvp.js?v=5"></script>
+    <script defer src="/frontend/js/study_spire.js?v=24"></script>
+</head>
+<body class="entry-screen-active">
+    <div class="page-grain" aria-hidden="true"></div>
+    <header class="site-header">
+        <a class="brand" href="/player_dashboard.html" aria-label="Trở về KPI Kingdom">
+            <span class="brand-mark">✦</span>
+            <span><small>KPI KINGDOM</small><strong>HỌC GIẢ ĐẠI CHIẾN</strong></span>
+        </a>
+        <div class="header-actions">
+            <span id="header-player" class="player-name"></span>
+            <button class="icon-button" id="back-to-dashboard" type="button" title="Về bảng người chơi" aria-label="Về bảng người chơi">↗</button>
+        </div>
+    </header>
+
+    <main id="app-main">
+        <section id="screen-entry" class="screen screen-entry">
+            <video id="entry-video" class="entry-video" autoplay muted loop playsinline poster="/assets/background/hg.png">
+                <source src="/assets/ui/ui1.mp4" type="video/mp4">
+            </video>
+            <div class="entry-menu">
+                <nav class="start-menu" aria-label="Menu game">
+                    <button id="start-run" class="start-menu-item selected" type="button"><span>01</span> Vượt ải</button>
+                    <button class="start-menu-item" type="button" data-entry-action="deck"><span>02</span> Xây dựng bộ bài</button>
+                    <button id="resume-run" class="start-menu-item hidden" type="button"><span>03</span> Tiếp tục hành trình</button>
+                    <button class="start-menu-item" type="button" data-entry-action="pvp"><span>⚔</span> Đấu bài PvP</button>
+                    <button class="start-menu-item" type="button" data-entry-action="ranked"><span>🏆</span> Thách đấu xếp hạng</button>
+                    <button class="start-menu-item" type="button" data-entry-action="guide"><span>?</span> Hướng dẫn</button>
+                </nav>
+                <p id="entry-status" class="inline-status" aria-live="polite"></p>
+            </div>
+        </section>
+
+        <div id="start-run-modal" class="result-modal hidden" role="dialog" aria-modal="true" aria-labelledby="start-run-title">
+            <div class="result-panel start-run-panel">
+                <p class="eyebrow">CHỌN KHỐI HỌC</p>
+                <h2 id="start-run-title">Bắt đầu vượt ải</h2>
+                <label class="grade-control" for="grade-select"><span>Khối học</span>
+                    <select id="grade-select"></select>
+                </label>
+                <div class="start-run-actions">
+                    <button id="cancel-start-run" class="secondary-button" type="button">QUAY LẠI</button>
+                    <button id="confirm-start-run" class="primary-button" type="button">BẮT ĐẦU</button>
+                </div>
+            </div>
+        </div>
+
+        <section id="screen-run" class="screen hidden">
+            <div class="run-topline">
+                <div>
+                    <p class="eyebrow">HÀNH TRÌNH PVE</p>
+                    <h1 id="run-heading">Tầng 1</h1>
+                </div>
+                <div class="run-stats">
+                    <span id="run-hp" class="stat-pill">HP 80 / 80</span>
+                    <button id="open-deck-from-run" class="secondary-button compact" type="button">BỘ BÀI</button>
+                </div>
+            </div>
+            <div id="run-content" class="run-content"></div>
+            <p id="run-status" class="inline-status" aria-live="polite"></p>
+        </section>
+
+        <section id="screen-deck" class="screen hidden">
+            <div class="deck-topline">
+                <div>
+                    <p class="eyebrow">KHO THẺ HÀNH TRÌNH</p>
+                    <h1>Xây dựng bộ bài</h1>
+                </div>
+                <div class="deck-topline-actions">
+                    <div class="deck-player-profile">
+                        <div class="deck-avatar-frame">
+                            <img id="deck-player-avatar" class="hidden" alt="Ảnh đại diện người chơi">
+                            <span id="deck-avatar-fallback" aria-hidden="true">?</span>
+                        </div>
+                        <div class="deck-player-identity">
+                            <strong id="deck-player-name"></strong>
+                            <input id="deck-avatar-file" class="hidden" type="file" accept="image/png,image/jpeg,image/webp">
+                            <button id="deck-avatar-change" class="deck-avatar-change" type="button" title="Đổi ảnh đại diện">Đổi ảnh</button>
+                        </div>
+                    </div>
+                    <button id="back-from-deck" class="secondary-button" type="button">← QUAY LẠI</button>
+                </div>
+            </div>
+            <div id="deck-tabs" class="deck-tabs" role="tablist" aria-label="Kho thẻ">
+                <button class="deck-tab active" role="tab" aria-selected="true" data-deck-tab="deck">Bộ bài <span id="deck-count">0 / 20</span></button>
+                <button class="deck-tab" role="tab" aria-selected="false" data-deck-tab="cards">Kho bài</button>
+                <button class="deck-tab" role="tab" aria-selected="false" data-deck-tab="packs">Kho đồ <span id="pack-count">0</span></button>
+            </div>
+            <div id="deck-content" class="deck-content"></div>
+            <p id="deck-status" class="inline-status" aria-live="polite"></p>
+        </section>
+        <section id="screen-pvp" class="screen hidden">
+            <div class="pvp-topline">
+                <div>
+                    <p class="eyebrow">HỌC GIẢ ĐẠI CHIẾN · PvP</p>
+                    <h1>Thách đấu xếp hạng</h1>
+                </div>
+                <button id="pvp-back" class="secondary-button" type="button">← MENU GAME</button>
+            </div>
+            <div id="pvp-content" class="pvp-content"></div>
+            <p id="pvp-status" class="inline-status" aria-live="polite"></p>
+        </section>
+
+        <section id="screen-guide" class="screen hidden">
+            <div class="guide-topline">
+                <div>
+                    <p class="eyebrow">HỌC GIẢ ĐẠI CHIẾN</p>
+                    <h1>Hướng dẫn chơi</h1>
+                </div>
+                <button id="guide-back" class="secondary-button" type="button">← MENU GAME</button>
+            </div>
+            <div class="guide-layout">
+                <nav class="guide-tabs" role="tablist" aria-label="Chủ đề hướng dẫn">
+                    <button class="guide-tab active" role="tab" aria-selected="true" data-guide-tab="overview"><span>01</span> Tổng quan</button>
+                    <button class="guide-tab" role="tab" aria-selected="false" data-guide-tab="pve"><span>02</span> Vượt ải (PvE)</button>
+                    <button class="guide-tab" role="tab" aria-selected="false" data-guide-tab="rooms"><span>03</span> Các loại phòng</button>
+                    <button class="guide-tab" role="tab" aria-selected="false" data-guide-tab="battle"><span>04</span> Cách đánh bài</button>
+                    <button class="guide-tab" role="tab" aria-selected="false" data-guide-tab="keywords"><span>05</span> Hiệu ứng</button>
+                    <button class="guide-tab" role="tab" aria-selected="false" data-guide-tab="deck"><span>06</span> Xây bộ bài</button>
+                    <button class="guide-tab" role="tab" aria-selected="false" data-guide-tab="cards"><span>07</span> Kiếm bài mới</button>
+                    <button class="guide-tab" role="tab" aria-selected="false" data-guide-tab="relics"><span>08</span> Relic</button>
+                    <button class="guide-tab" role="tab" aria-selected="false" data-guide-tab="pvp"><span>09</span> PvP phòng</button>
+                    <button class="guide-tab" role="tab" aria-selected="false" data-guide-tab="ranked"><span>10</span> Xếp hạng</button>
+                    <button class="guide-tab" role="tab" aria-selected="false" data-guide-tab="faq"><span>11</span> Mẹo &amp; hỏi đáp</button>
+                </nav>
+                <div class="guide-body">
+                    <article class="guide-panel" data-guide-panel="overview">
+                        <h2>Tổng quan</h2>
+                        <p>Học giả đại chiến là game đấu bài theo lượt, kết hợp <b>học kiến thức</b> và <b>chiến thuật xây bộ bài</b>. Bạn vượt ải để kiếm bài và relic, rồi dùng chúng để đấu với người chơi khác.</p>
+                        <div class="guide-flow">
+                            <div class="guide-step"><b>1</b><strong>Vượt ải</strong><small>Đánh quái, trả lời câu hỏi, kiếm bài và relic</small></div>
+                            <div class="guide-step"><b>2</b><strong>Xây bộ bài</strong><small>Chọn các lá mạnh nhất, lưu bộ bài</small></div>
+                            <div class="guide-step"><b>3</b><strong>Đấu PvP</strong><small>Dùng bộ bài và relic để thắng người chơi khác</small></div>
+                            <div class="guide-step"><b>4</b><strong>Leo hạng</strong><small>Thách đấu người trên bạn để đổi thứ hạng</small></div>
+                        </div>
+                        <div class="guide-callout"><strong>Không có tiền tệ hay mua bán.</strong> Sức mạnh của bạn đến từ việc chăm chỉ vượt ải: càng đánh nhiều, bạn càng có nhiều bài và relic.</div>
+                        <h3>Các mục trong menu</h3>
+                        <ul>
+                            <li><b>Vượt ải</b>: chế độ PvE, chọn khối học rồi bắt đầu hành trình.</li>
+                            <li><b>Xây dựng bộ bài</b>: quản lý bộ bài, kho bài và mở pack.</li>
+                            <li><b>Tiếp tục hành trình</b>: chỉ hiện khi bạn đang có hành trình dở dang.</li>
+                            <li><b>Đấu bài PvP</b>: tạo hoặc vào phòng đấu với người chơi khác.</li>
+                            <li><b>Thách đấu xếp hạng</b>: leo bảng xếp hạng và chọn relic mang theo.</li>
+                        </ul>
+                    </article>
+
+                    <article class="guide-panel hidden" data-guide-panel="pve">
+                        <h2>Vượt ải (PvE)</h2>
+                        <p>Mỗi hành trình gồm nhiều <b>ải</b>, mỗi ải gồm nhiều <b>tầng</b>. Ở cuối ải luôn có một <b>Boss</b>.</p>
+                        <h3>Cấu trúc một ải</h3>
+                        <ul>
+                            <li><b>Ải 1 có 10 tầng.</b> Mỗi ải sau thêm 1 tầng, tối đa 15 tầng.</li>
+                            <li><b>Tầng 1</b> luôn là một Hang quái vật.</li>
+                            <li>Từ tầng 2 trở đi, sau mỗi phòng bạn chọn <b>1 trong 3 hướng</b> (trái / thẳng / phải) để sang phòng kế tiếp. Bạn thấy trước loại phòng của từng hướng để cân nhắc.</li>
+                            <li><b>Tầng cuối</b>: mọi đường đều dẫn tới Phòng Boss duy nhất.</li>
+                            <li>Bản đồ được tạo một lần và được lưu lại, nên tải lại trang không làm đổi đường đi.</li>
+                        </ul>
+                        <h3>Qua ải và thua cuộc</h3>
+                        <div class="guide-compare">
+                            <div class="guide-card good"><strong>Hạ Boss</strong><p>Bạn nhận một relic mới (nếu còn relic chưa có) và sang ải tiếp theo với bản đồ mới. Máu, bộ bài và relic được giữ nguyên.</p></div>
+                            <div class="guide-card bad"><strong>HP về 0</strong><p>Hành trình kết thúc và bạn phải bắt đầu lại từ ải 1. Bài và relic đã kiếm được vẫn thuộc về bạn.</p></div>
+                        </div>
+                        <h3>Quái mạnh dần</h3>
+                        <p>Mỗi ải sau, quái và Boss có <b>HP và sát thương cao hơn 25%</b> so với ải 1 (cộng dồn theo ải). Không có giới hạn số ải: bạn cứ đi tiếp cho đến khi thua.</p>
+                        <h3>Phần thưởng sau trận</h3>
+                        <ul>
+                            <li>Thắng một trận quái: nhận ngẫu nhiên một pack bài (Vật Lý, Hóa Học hoặc Sinh Học).</li>
+                            <li>Thua một trận: kết thúc hành trình.</li>
+                        </ul>
+                    </article>
+
+                    <article class="guide-panel hidden" data-guide-panel="rooms">
+                        <h2>Các loại phòng</h2>
+                        <p>Mỗi tầng có các loại phòng khác nhau. Tầng 1 luôn là Hang quái vật, các tầng giữa chọn ngẫu nhiên theo tỷ lệ.</p>
+                        <div class="guide-grid">
+                            <div class="guide-card"><span class="guide-icon">⚔</span><strong>Hang quái vật</strong><p>Trận đấu bài với một quái vật. Thắng để nhận ngẫu nhiên một pack bài. Tỷ lệ xuất hiện cao nhất.</p></div>
+                            <div class="guide-card"><span class="guide-icon">☠</span><strong>Quái vật tinh anh</strong><p>Quái mạnh hơn quái thường. Rủi ro cao hơn quái thường nhưng cũng là một cách nhận phần thưởng.</p></div>
+                            <div class="guide-card"><span class="guide-icon">▣</span><strong>Rương báu</strong><p>Gõ lại chính xác một đoạn học liệu để mở rương. Cần độ chính xác từ <b>80%</b> trở lên. Mở được sẽ nhận một lá bài.</p></div>
+                            <div class="guide-card"><span class="guide-icon">⌂</span><strong>Nhà trọ</strong><p>Trả lời đúng <b>5 câu hỏi</b> để hồi <b>30% HP</b>.</p></div>
+                            <div class="guide-card"><span class="guide-icon">✦</span><strong>Sự kiện</strong><p>Trả lời đúng <b>3 câu hỏi</b> để mở kết quả ngẫu nhiên, mỗi loại 1/3 cơ hội: <b>nhận 1 pack bài</b> (Vật Lý / Hóa Học / Sinh Học), <b>hồi 5–10% HP</b>, hoặc <b>mất 5–10% HP</b> (không bao giờ xuống dưới 1 HP).</p></div>
+                            <div class="guide-card"><span class="guide-icon">♜</span><strong>Phòng Boss</strong><p>Trận khó nhất của ải. Hạ Boss để qua ải và nhận relic mới.</p></div>
+                        </div>
+                        <div class="guide-callout warn"><strong>Lưu ý khi trả lời câu hỏi.</strong> Nếu bạn trả lời sai ở Nhà trọ hoặc Sự kiện, bạn vẫn được thử lại nhưng sẽ <b>mất phần thưởng</b> của phòng đó. Hãy đọc kỹ trước khi chọn đáp án.</div>
+                    </article>
+
+                    <article class="guide-panel hidden" data-guide-panel="battle">
+                        <h2>Cách đánh bài</h2>
+                        <p>Trận đấu diễn ra theo lượt. Mục tiêu: đưa HP đối thủ về 0 trước khi HP của bạn về 0.</p>
+                        <h3>Mỗi lượt của bạn</h3>
+                        <div class="guide-flow">
+                            <div class="guide-step"><b>✦</b><strong>3 Trí tuệ</strong><small>Mỗi lượt bạn có 3 Trí tuệ (mana) để đánh bài</small></div>
+                            <div class="guide-step"><b>▧</b><strong>Rút 4 lá</strong><small>Đầu mỗi lượt bạn rút bài lên tay</small></div>
+                            <div class="guide-step"><b>↯</b><strong>Đánh bài</strong><small>Bấm lá bài để dùng, mỗi lá tốn Trí tuệ</small></div>
+                            <div class="guide-step"><b>⏎</b><strong>Kết thúc lượt</strong><small>Bài còn lại bị bỏ, quái ra đòn</small></div>
+                        </div>
+                        <h3>Các loại bài</h3>
+                        <div class="guide-grid">
+                            <div class="guide-card"><strong>Tấn công</strong><p>Gây sát thương lên đối thủ. Khiên của đối thủ đỡ sát thương trước, phần còn lại mới trừ vào HP.</p></div>
+                            <div class="guide-card"><strong>Phòng thủ</strong><p>Cho bạn Khiên để đỡ đòn. Khiên bị mất khi kết thúc lượt, trừ khi có hiệu ứng giữ lại.</p></div>
+                            <div class="guide-card"><strong>Phép</strong><p>Hiệu ứng đặc biệt: gây Độc, hồi máu, rút thêm bài...</p></div>
+                        </div>
+                        <h3>Quái vật ra đòn thế nào?</h3>
+                        <p>Quái luôn <b>báo trước</b> lượng sát thương sẽ đánh vào lượt sau của nó. Hãy tính xem bạn cần bao nhiêu Khiên để đỡ trọn đòn đó.</p>
+                        <div class="guide-callout"><strong>Mẹo.</strong> Đừng để dư Trí tuệ nếu có lá rẻ để đánh. Những lá cùng loại có thể phối hợp rất mạnh, xem thêm ở mục Hiệu ứng.</div>
+                    </article>
+
+                    <article class="guide-panel hidden" data-guide-panel="keywords">
+                        <h2>Hiệu ứng và thuật ngữ</h2>
+                        <p>Di chuột (hoặc chạm) vào biểu tượng hiệu ứng trong trận để xem chi tiết. Dưới đây là các hiệu ứng thường gặp.</p>
+                        <div class="guide-grid">
+                            <div class="guide-card"><strong>Khiên</strong><p>Đỡ sát thương trước khi trừ HP. Mất khi kết thúc lượt, trừ khi một lá bài hoặc relic cho phép giữ lại.</p></div>
+                            <div class="guide-card"><strong>Độc</strong><p>Gây sát thương bằng số tầng Độc vào cuối lượt, rồi giảm 1 tầng. Khiên có thể đỡ sát thương Độc, trừ khi nguồn Độc ghi rõ xuyên Khiên.</p></div>
+                            <div class="guide-card"><strong>Sức mạnh</strong><p>Mỗi điểm Sức mạnh cộng thêm sát thương cho các đòn đánh của bạn.</p></div>
+                            <div class="guide-card"><strong>Dễ tổn thương</strong><p>Mục tiêu nhận thêm sát thương từ đòn đánh kế tiếp.</p></div>
+                            <div class="guide-card"><strong>Hồi phục</strong><p>Hồi một lượng HP vào cuối mỗi lượt trong số lượt nhất định.</p></div>
+                            <div class="guide-card"><strong>Choáng</strong><p>Đối thủ bị choáng sẽ bỏ lỡ đòn đánh của lượt đó.</p></div>
+                            <div class="guide-card"><strong>Trí tuệ (Mana)</strong><p>Tài nguyên để đánh bài. Mỗi lượt được hồi đầy về 3 (relic có thể cộng thêm).</p></div>
+                        </div>
+                        <h3>Hệ bài theo môn học</h3>
+                        <p>Bài thuộc các môn <b>Vật lý, Hóa học, Sinh học</b> và bộ <b>khởi đầu</b>. Mỗi môn có lối chơi riêng, hãy thử nhiều môn để tìm bộ bài hợp với bạn. Các lá cùng hệ thường có hiệu ứng liên kết với nhau.</p>
+                    </article>
+
+                    <article class="guide-panel hidden" data-guide-panel="deck">
+                        <h2>Xây dựng bộ bài</h2>
+                        <p>Vào <b>Xây dựng bộ bài</b> trong menu. Màn hình có ba tab: <b>Bộ bài</b>, <b>Kho bài</b> và <b>Kho đồ</b>.</p>
+                        <h3>Quy tắc bộ bài</h3>
+                        <ul>
+                            <li>Bộ bài cần <b>ít nhất 10 lá</b>, tối đa <b>20 lá</b>.</li>
+                            <li>Mỗi lá chỉ được có <b>tối đa 2 bản sao</b> trong bộ bài.</li>
+                            <li>Khi bộ bài đã đủ 20 lá, bạn không thể giảm xuống dưới 20, chỉ có thể thay lá khác.</li>
+                            <li>Bạn phải bấm <b>LƯU BỘ BÀI</b> để áp dụng. Bộ bài đã lưu vừa dùng cho PvE, vừa là bộ bài mà bot dùng khi người khác thách đấu bạn.</li>
+                        </ul>
+                        <h3>Các bước thực hiện</h3>
+                        <div class="guide-flow">
+                            <div class="guide-step"><b>1</b><strong>Mở kho bài</strong><small>Xem tất cả lá bài bạn đang sở hữu</small></div>
+                            <div class="guide-step"><b>2</b><strong>Thêm / bỏ</strong><small>Bấm THÊM hoặc BỎ ở từng lá</small></div>
+                            <div class="guide-step"><b>3</b><strong>Lưu</strong><small>Bấm LƯU BỘ BÀI để chốt</small></div>
+                        </div>
+                        <h3>Gợi ý xây bộ bài</h3>
+                        <ul>
+                            <li>Cân bằng giữa lá <b>tấn công</b> và lá <b>phòng thủ</b>.</li>
+                            <li>Ưu tiên các lá rẻ Trí tuệ để đánh được nhiều lá mỗi lượt.</li>
+                            <li>Chọn các lá có hiệu ứng ăn khớp với nhau thay vì chỉ lấy lá hiếm.</li>
+                            <li>Bộ bài gọn (khoảng 10 lá) giúp bạn rút được lá chủ lực thường xuyên hơn.</li>
+                        </ul>
+                    </article>
+
+                    <article class="guide-panel hidden" data-guide-panel="cards">
+                        <h2>Kiếm bài mới</h2>
+                        <p>Có ba nguồn bài chính khi vượt ải:</p>
+                        <div class="guide-grid">
+                            <div class="guide-card"><span class="guide-icon">▤</span><strong>Pack sau trận thắng</strong><p>Thắng một trận quái, bạn nhận ngẫu nhiên một trong ba pack: Vật Lý, Hóa Học hoặc Sinh Học. Pack được cất vào <b>Kho đồ</b>.</p></div>
+                            <div class="guide-card"><span class="guide-icon">▣</span><strong>Rương báu</strong><p>Gõ lại đúng đoạn học liệu để nhận một lá bài.</p></div>
+                            <div class="guide-card"><span class="guide-icon">✦</span><strong>Phòng Sự kiện</strong><p>Trả lời đúng 3 câu hỏi, có thể nhận một pack bài ngẫu nhiên (1 trong 3 môn) nếu may mắn.</p></div>
+                        </div>
+                        <h3>Mở pack</h3>
+                        <ol>
+                            <li>Vào <b>Xây dựng bộ bài</b> rồi mở tab <b>Kho đồ</b>.</li>
+                            <li>Bấm <b>MỞ PACK</b> ở pack muốn mở.</li>
+                            <li>Xem lá bài nhận được, đóng cửa sổ để lá đó được thêm vào bộ bài.</li>
+                        </ol>
+                        <p>Nếu bộ bài đã có đủ 2 bản sao của lá đó (hoặc bộ bài đã đầy), lá mới sẽ được <b>giữ trong kho bài</b>, bạn không bị mất.</p>
+                        <h3>Độ hiếm</h3>
+                        <div class="guide-rarity">
+                            <span class="rare">Hiếm · 94%</span>
+                            <span class="ultra">Siêu hiếm · 5%</span>
+                            <span class="legend">Huyền thoại · 1%</span>
+                        </div>
+                        <p>Đây là xác suất khi mở một pack. Lá Huyền thoại rất khó gặp nên bạn hãy tích cực vượt ải để mở nhiều pack.</p>
+                    </article>
+
+                    <article class="guide-panel hidden" data-guide-panel="relics">
+                        <h2>Relic</h2>
+                        <p>Relic là các vật phẩm cố định, cho bạn lợi thế ngay trong trận (thêm Khiên, thêm Trí tuệ, rút thêm bài, hồi máu...).</p>
+                        <h3>Cách kiếm relic</h3>
+                        <ul>
+                            <li><b>Hạ Boss</b> ở cuối mỗi ải để nhận một relic ngẫu nhiên mà bạn chưa có.</li>
+                            <li>Relic mở khóa là của bạn <b>vĩnh viễn</b>, không mất khi qua ải hay khi thua.</li>
+                            <li>Có tổng cộng <b>19 relic</b>. Khi đã đủ cả 19 thì Boss không còn thưởng relic.</li>
+                            <li>Không có độ hiếm, không có relic trùng và không đổi relic thành tài nguyên.</li>
+                        </ul>
+                        <h3>Cách dùng relic</h3>
+                        <ul>
+                            <li><b>Trong PvE:</b> relic bạn đang sở hữu tự động có hiệu lực.</li>
+                            <li><b>Trong PvP và xếp hạng:</b> bạn tự chọn các relic mang theo ở màn hình <b>Thách đấu xếp hạng → Chọn relic mang vào PvP</b>, rồi bấm <b>LƯU LOADOUT</b>. Không giới hạn số relic được mang.</li>
+                        </ul>
+                        <div class="guide-callout"><strong>Công bằng.</strong> Ai bỏ nhiều công sức vượt ải thì có nhiều relic hơn. Đó là phần thưởng cho sự chăm chỉ của bạn.</div>
+                        <h3>Danh sách 19 relic</h3>
+                        <div id="guide-relic-list" class="guide-relic-list"><p class="inline-status">Đang tải danh sách relic…</p></div>
+                    </article>
+
+                    <article class="guide-panel hidden" data-guide-panel="pvp">
+                        <h2>PvP phòng</h2>
+                        <p>Chế độ <b>Đấu bài PvP</b> cho phép bạn đấu trực tiếp với người chơi khác bằng bộ bài đã lưu.</p>
+                        <h3>Vào trận</h3>
+                        <ul>
+                            <li><b>Tạo phòng:</b> đặt tên phòng, có thể đặt mật khẩu và cho phép người khác quan chiến.</li>
+                            <li><b>Vào phòng:</b> chọn một phòng công khai trong danh sách, hoặc nhập mã phòng 6 ký tự do bạn bè chia sẻ.</li>
+                            <li>Trận bắt đầu khi đủ hai người chơi.</li>
+                        </ul>
+                        <h3>Luật chơi</h3>
+                        <ul>
+                            <li>Hai người đánh luân phiên. Mỗi lượt bạn có 3 Trí tuệ và rút 4 lá, giống PvE.</li>
+                            <li>Mỗi người dùng bộ bài và các relic đã lưu của mình.</li>
+                            <li>HP của ai về 0 trước sẽ thua. Màn hình kết quả báo <b>THẮNG</b> hoặc <b>THUA</b> cho từng bên.</li>
+                        </ul>
+                        <h3>Cái chết bất ngờ</h3>
+                        <div class="guide-callout warn"><strong>Sau 20 lượt</strong> mà chưa phân thắng bại, cả hai người chơi sẽ nhận thông báo và trận bước vào <b>Cái chết bất ngờ</b>: sát thương từ đòn đánh và hiệu ứng bài của hai bên được <b>nhân đôi</b>. Trận sẽ kết thúc rất nhanh sau đó, nên hãy giữ HP và Khiên hợp lý.</div>
+                        <h3>Rời trận</h3>
+                        <p>Rời một trận xếp hạng đang diễn ra sẽ bị tính là <b>thua</b>. Hãy cân nhắc trước khi thoát.</p>
+                    </article>
+
+                    <article class="guide-panel hidden" data-guide-panel="ranked">
+                        <h2>Thách đấu xếp hạng</h2>
+                        <p>Đây là chế độ leo bảng xếp hạng. Bạn đấu với một <b>bot dùng bộ bài đã lưu của đối thủ</b>, nên đối thủ không cần trực tuyến cùng lúc với bạn.</p>
+                        <h3>Bước 1: Trận phân hạng</h3>
+                        <ul>
+                            <li>Người mới phải hoàn thành <b>3 trận phân hạng</b> với bot dùng bộ bài của người chơi khác để vào bảng.</li>
+                            <li>Giai đoạn đầu tiên: số trận thắng quyết định thứ tự xuất phát.</li>
+                            <li>Sau khi bảng đã bắt đầu, người mới vào bảng ở cuối danh sách.</li>
+                        </ul>
+                        <h3>Bước 2: Leo hạng</h3>
+                        <ul>
+                            <li>Khi đã có hạng, bạn chọn một trong <b>ba người đứng ngay phía trên</b> để thách đấu.</li>
+                            <li><b>Thắng</b> thì hai bạn <b>đổi hạng</b> cho nhau.</li>
+                            <li><b>Thua</b> thì thứ hạng không thay đổi.</li>
+                            <li>Nếu muốn đổi người thách đấu, bấm <b>ĐỔI NGƯỜI</b>.</li>
+                            <li>Bảng hiển thị Top 20.</li>
+                        </ul>
+                        <h3>Vì sao bộ bài đã lưu quan trọng?</h3>
+                        <div class="guide-callout"><strong>Khi bạn lưu bộ bài, đó cũng là bộ bài để bảo vệ hạng của bạn.</strong> Người khác thách đấu bạn sẽ đối đầu với một bot dùng bộ bài đó. Hãy xây một bộ bài đủ mạnh cả khi tấn công lẫn khi phòng thủ.</div>
+                        <h3>Relic trong xếp hạng</h3>
+                        <p>Loadout relic bạn lưu được dùng cho cả xếp hạng và phòng PvP. Bạn có thể chọn bao nhiêu relic tùy thích, miễn là đã mở khóa.</p>
+                    </article>
+
+                    <article class="guide-panel hidden" data-guide-panel="faq">
+                        <h2>Mẹo và hỏi đáp</h2>
+                        <h3>Mẹo cho người mới</h3>
+                        <ul>
+                            <li>Bắt đầu bằng khối học bạn quen thuộc để trả lời câu hỏi dễ hơn.</li>
+                            <li>Đi vào Nhà trọ khi HP thấp, và tránh Quái tinh anh khi đang yếu.</li>
+                            <li>Xem kỹ lượng sát thương quái báo trước rồi mới quyết định đánh hay thủ.</li>
+                            <li>Mở hết pack trong Kho đồ và cập nhật bộ bài thường xuyên.</li>
+                            <li>Thua cũng không mất bài hay relic đã có. Thử lại và đi xa hơn.</li>
+                        </ul>
+                        <h3>Hỏi đáp nhanh</h3>
+                        <details><summary>Tôi tải lại trang thì hành trình có mất không?</summary><p>Không. Hành trình và bản đồ được lưu lại, bạn dùng nút <b>Tiếp tục hành trình</b> ở menu để vào lại.</p></details>
+                        <details><summary>Relic có bị mất khi thua không?</summary><p>Không. Relic mở khóa là vĩnh viễn.</p></details>
+                        <details><summary>Có thể mua bài hoặc relic không?</summary><p>Không. Game không có tiền tệ hay mua bán, mọi thứ đều kiếm được từ việc vượt ải.</p></details>
+                        <details><summary>Vì sao trận PvP của tôi đột nhiên đổi sang sát thương x2?</summary><p>Đó là chế độ Cái chết bất ngờ, bắt đầu sau 20 lượt để tránh trận kéo dài mãi.</p></details>
+                    </article>
+                </div>
+            </div>
+        </section>
+
+        <div id="stage-clear-modal" class="result-modal hidden" role="dialog" aria-modal="true" aria-labelledby="stage-clear-title">
+            <div class="result-panel">
+                <p class="eyebrow">HẠ ĐƯỢC BOSS</p>
+                <h2 id="stage-clear-title">Qua ải</h2>
+                <div id="stage-clear-details"></div>
+                <button id="stage-clear-continue" class="primary-button" type="button">SANG ẢI TIẾP THEO <span>→</span></button>
+            </div>
+        </div>
+        <div id="result-modal" class="result-modal hidden" role="dialog" aria-modal="true" aria-labelledby="result-title">
+            <div class="result-panel">
+                <p class="eyebrow">HÀNH TRÌNH ĐÃ KHÉP LẠI</p>
+                <h2 id="result-title">Kết quả</h2>
+                <div id="result-details"></div>
+                <button id="return-home" class="primary-button" type="button">VỀ SẢNH CHÍNH <span>→</span></button>
+            </div>
+        </div>
+
+        <div id="quiz-feedback-modal" class="result-modal hidden" role="dialog" aria-modal="true" aria-labelledby="quiz-feedback-title" aria-describedby="quiz-feedback-reward-warning">
+            <div class="result-panel quiz-feedback-panel">
+                <p class="eyebrow">PHẢN HỒI BÀI LÀM</p>
+                <h2 id="quiz-feedback-title">Kiểm tra đáp án</h2>
+                <div id="quiz-feedback-list" class="quiz-feedback-list"></div>
+                <p id="quiz-feedback-reward-warning" class="quiz-reward-warning">Bạn đã trả lời sai ít nhất một câu; lần hoàn thành này sẽ không có phần thưởng.</p>
+                <button id="quiz-feedback-retry" class="primary-button" type="button">LÀM LẠI CÂU SAI <span>→</span></button>
+            </div>
+        </div>
+
+        <div id="deck-lock-modal" class="result-modal hidden" role="alertdialog" aria-modal="true" aria-labelledby="deck-lock-title" aria-describedby="deck-lock-message">
+            <div class="result-panel">
+                <p class="eyebrow">BỘ BÀI CHƯA HOÀN TẤT</p>
+                <h2 id="deck-lock-title">Cần tối thiểu 20 lá</h2>
+                <p id="deck-lock-message">Bộ bài phải có ít nhất 20 lá để tiếp tục. Hãy bổ sung lá còn thiếu rồi lưu lại.</p>
+                <button id="deck-lock-return" class="primary-button" type="button">QUAY LẠI BỘ BÀI <span>→</span></button>
+            </div>
+        </div>
+
+        <div id="card-preview-modal" class="result-modal hidden" role="dialog" aria-modal="true" aria-labelledby="card-preview-title">
+            <div class="card-preview-panel">
+                <button id="card-preview-close" class="card-preview-close" type="button" aria-label="Đóng xem trước" title="Đóng">×</button>
+                <div id="card-preview-content"></div>
+            </div>
+        </div>
+
+        <div id="battle-menu-modal" class="result-modal hidden" role="dialog" aria-modal="true" aria-labelledby="battle-menu-title">
+            <div class="result-panel battle-menu-panel">
+                <p class="eyebrow">HÀNH TRÌNH ĐANG ĐƯỢC LƯU TỰ ĐỘNG</p>
+                <h2 id="battle-menu-title">Menu trận đấu</h2>
+                <div class="battle-menu-options">
+                    <button id="battle-save-exit" class="secondary-button" type="button">LƯU VÀ THOÁT</button>
+                    <button id="battle-continue" class="secondary-button" type="button">TIẾP TỤC</button>
+                    <button id="battle-view-deck" class="primary-button" type="button">XEM BỘ BÀI HIỆN TẠI <span>→</span></button>
+                </div>
+                <p id="battle-menu-status" class="inline-status" aria-live="polite"></p>
+            </div>
+        </div>
+    </main>
+    <footer class="site-footer"><span>HỌC GIẢ ĐẠI CHIẾN · PVE</span><span id="footer-run-id"></span></footer>
+</body>
+</html>

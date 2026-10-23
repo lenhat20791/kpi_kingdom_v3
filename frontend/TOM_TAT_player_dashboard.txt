@@ -1,0 +1,278 @@
+=== TÓM TẮT FILE HTML: player_dashboard.html ===
+
+[Danh Sách DOM IDs (383)]:
+  ${targetId}, activity-log, alert-BH-BOT-1, alert-BH-BOT-2, alert-BH-MID-1, alert-BH-MID-2, alert-BH-TOP-1, alert-BH-TOP-2, alert-TL-BOT-1, alert-TL-BOT-2, alert-TL-MID-1, alert-TL-MID-2, alert-TL-TOP-1, alert-TL-TOP-2, arena-bet-range, arena-difficulty, arena-history-list, arena-incoming-list, arena-lobby-list, arena-mode, arena-opponent, arena-outgoing-list, arena-wallet-display, atk-bar, atk-text, badge-incoming, bag-grid, bar-bh, bar-tl, base-my-troops, base-name, base-vault-amount, baseModal, battle-boss-hp-bar, battle-boss-hp-text, battle-boss-image, battle-boss-name, battle-boss-vfx, battle-options-container, battle-player-atk, battle-player-hp, battle-question-text, battle-timer, battle-timer-container, bet-value, biometricsModal, boss-battle-arena, boss-combat-ui, boss-feedback-correct-box, boss-feedback-correct-text, boss-feedback-explain, boss-feedback-icon, boss-feedback-overlay, boss-feedback-title, boss-lobby-ui, boss-waiting-screen, breakthrough-modal, bt-confirm-btn, bt-main-atk, bt-main-hp, bt-main-img, bt-main-stars, bt-slot-1, bt-slot-2, bt-success-atk, bt-success-hp, bt-success-img, bt-success-overlay, bt-success-stars, btn-campaign-send-chat, btn-confirm-sell, btn-confirm-submit, btn-forge-action, btn-march-troops, btn-next-question, btn-recall-troops, btn-retreat, btn-revive-confirm, btn-tab-bag, btn-tab-equip, btn-tab-market, btn-train-troops, btnCloseBiometrics, btnOpenBiometrics, campaign-chat-input, campaign-chat-messages, campaign-chat-type, campaign-guide-modal, campaign-map-container, campaign-timer, card-detail-modal, cb-btn-next, cb-content, cb-loading, cb-options, cb-question, cb-result, changePassModal, chat-input, chat-messages, chat-panel, chat-status, check-${st.id}, class-modal, combat-feedback-overlay, combat-monster-hp-bar, combat-monster-hp-text, combat-monster-img, combat-monster-img-damage, combat-monster-name, combat-options, combat-player-hp-bar, combat-player-hp-text, combat-player-img, combat-player-img-damage, combat-q-content, combat-q-index, combat-timer-bar, combat-timer-text, companion-collection-grid, companion-empty-state, companion-filter-bar, companion-final-price-fixed, companion-guide-container, companion-list-container, companion-slots-container, companionSelectModal, confirm-score-modal, confirm-student-name, confirm-type, confirm-value, content-chat, content-report, count-bh, count-tl, countdown-${formattedCode}, cp-new, cp-old, current-exp, damage-overlay, equip-slots-container, exp-bar-width, exp-message, exp-message-mobile, feedback-btn, feedback-explain, feedback-explanation, feedback-icon, feedback-title, final-sell-currency, forge-cost, forge-current-lv, forge-item-preview, forge-message, forge-modal, forge-rate, free-agent-list, frozen-overlay, grading-student-select, hero-card-container, hero-class, hero-image, hero-level, hero-name, hp-bar, hp-text, kill-announcement-banner, kill-announcement-text, lb-accuracy, lb-btn-next, lb-content, lb-input, lb-loading, lb-result, lb-sample-text, list-bh-players, list-tl-players, lobby-current-floor, lobby-season-name, main-content, main-view-arena, main-view-boss, main-view-campaign, main-view-campaign-lobby, main-view-campaign-waiting, main-view-companions, main-view-dashboard, main-view-grading, main-view-inventory, main-view-shop, main-view-skills, main-view-space-station, main-view-team-manager, main-view-tower, march-amount, marching-icons-layer, marching-layer, market-my-items, market-public-items, menu-group-admin, mini-level, mini-name, modal-card-atk, modal-card-container, modal-card-hp, modal-card-id, modal-card-img, modal-card-rarity, modal-card-stars, modal-chieu-binh, modal-effect-layer, modal-luyen-binh, nav-arena, nav-arena-badge, nav-campaign, nav-chat, nav-dashboard, nav-grading, nav-inventory, nav-skills, nav-space-station, nav-tower, next-level-exp, node-BH-BASE, node-BH-BOT-1, node-BH-BOT-2, node-BH-MID-1, node-BH-MID-2, node-BH-TOP-1, node-BH-TOP-2, node-TL-BASE, node-TL-BOT-1, node-TL-BOT-2, node-TL-MID-1, node-TL-MID-2, node-TL-TOP-1, node-TL-TOP-2, phongThanModal, progress-level-number, pt-bach-ho-list, pt-campaign-name, pt-thanh-long-list, quiz-current-index, quiz-feedback-area, quiz-modal, quiz-options-container, quiz-progress-bar, quiz-question-content, quiz-timer, respawn-overlay, respawn-timer, score-bh, score-hk, score-product, score-speech, score-tl, score-tx, score-type, score-value, section-chat, selected-count, sell-amount, sell-card-modal, sell-charm-img, sell-charm-level, sell-charm-name, sell-currency, sell-currency-select, sell-item-img, sell-item-name, sell-modal, sell-modal-img, sell-modal-name, sell-price, sell-price-input, sellModal, shop-items-container, shop-wallet-chientich, shop-wallet-trithuc, shop-wallet-vinhdu, sidebar, skill-detail-panel, skill-points-display, skill-tree-container, snow-container, st-action-controls, st-confirm-action-btn, st-crew-list, st-day-display, st-lesson-modal, st-lobby-box, st-lobby-count-alien, st-lobby-count-astro, st-lobby-count-spy, st-lobby-status, st-lobby-total, st-main-grid, st-my-items, st-my-items-box, st-my-role, st-my-status, st-private-logs, st-prompt-text, st-public-logs, st-tab-priv-btn, st-tab-pub-btn, st-target-modal, st-target-modal-desc, st-target-modal-title, st-target-options-container, st-team-box, st-team-members, st-typing-feedback, st-typing-input, stat-chientich, stat-kpi, stat-trithuc, stat-vinhdu, stat-violation, tab-army, tab-chat, tab-commander, tab-guide, tab-kth, tab-market-all, tab-market-charm, tab-market-companion, tab-market-item, tab-minigame, tab-report, tab-reward, tab-strategy, tab-time, tab-tower, tab-victory, team-id-display, team-members-list, team-total-kpi, th-action, toggle-btn, tower-combat, tower-combat-bg, tower-exp-bar, tower-exp-text, tower-leaderboard, tower-lobby, tower-player-avatar, tower-player-level, tower-player-name, ui-faction-label, ui-h-points, ui-k-kills, ui-level-color, ui-my-level, ui-my-troops, ui-t-deaths, vfx-container, vfx-layer-global, view-bag, view-equip, view-market, view-stat-atk, view-stat-hp, violation-reason, waiting-bh-list, waiting-campaign-name, waiting-tl-list, waiting-winner-banner, wallet-exp, wallet-gold, warRoomModal, wr-commander-bonus, wr-commander-img, wr-commander-name, wr-commander-placeholder, wr-commander-rarity, wr-commander-slot, wr-max-capacity, wr-node-name, wr-owner-text, wr-troop-bar, wr-troop-count, wr-troops-text
+
+[Screens / Modals / Tabs (74)]:
+  baseModal, biometricsModal, boss-waiting-screen, breakthrough-modal, btn-tab-bag, btn-tab-equip, btn-tab-market, campaign-guide-modal, card-detail-modal, changePassModal, class-modal, companionSelectModal, confirm-score-modal, forge-item-preview, forge-modal, main-view-arena, main-view-boss, main-view-campaign, main-view-campaign-lobby, main-view-campaign-waiting, main-view-companions, main-view-dashboard, main-view-grading, main-view-inventory, main-view-shop, main-view-skills, main-view-space-station, main-view-team-manager, main-view-tower, modal-card-atk, modal-card-container, modal-card-hp, modal-card-id, modal-card-img, modal-card-rarity, modal-card-stars, modal-chieu-binh, modal-effect-layer, modal-luyen-binh, phongThanModal, quiz-modal, sell-card-modal, sell-modal, sell-modal-img, sell-modal-name, sellModal, st-lesson-modal, st-tab-priv-btn, st-tab-pub-btn, st-target-modal, st-target-modal-desc, st-target-modal-title, tab-army, tab-chat, tab-commander, tab-guide, tab-kth, tab-market-all, tab-market-charm, tab-market-companion, tab-market-item, tab-minigame, tab-report, tab-reward, tab-strategy, tab-time, tab-tower, tab-victory, view-bag, view-equip, view-market, view-stat-atk, view-stat-hp, warRoomModal
+
+[Các API Endpoints Đang Gọi (69)]:
+  - /api/arena/accept
+  - /api/arena/cancel
+  - /api/arena/create
+  - /api/arena/join-lobby
+  - /api/arena/list-my-matches
+  - /api/arena/lobby
+  - /api/arena/match/${matchId}
+  - /api/arena/quiz
+  - /api/arena/submit
+  - /api/boss/active-info
+  - /api/boss/attack
+  - /api/boss/get-question
+  - /api/campaign/${campaign_id}/march_by_code
+  - /api/campaign/${campaign_id}/recall
+  - /api/campaign/${campaign_id}/replenish
+  - /api/campaign/chat
+  - /api/campaign/join
+  - /api/campaign/last-result
+  - /api/campaign/lobby
+  - /api/campaign/minigame/chieu-binh
+  - /api/campaign/minigame/files
+  - /api/campaign/minigame/luyen-binh
+  - /api/campaign/minigame/questions
+  - /api/campaign/reports
+  - /api/campaign/set-commander
+  - /api/campaign/state
+  - /api/change-password
+  - /api/chat/history
+  - /api/companions/my-list
+  - /api/data/maintenance-status
+  - /api/inventory/breakthrough-companion
+  - /api/inventory/discard-companion
+  - /api/inventory/equip
+  - /api/inventory/equip-companion
+  - /api/inventory/forge
+  - /api/inventory/get
+  - /api/inventory/system-config
+  - /api/inventory/unequip
+  - /api/inventory/unequip-companion
+  - /api/inventory/use
+  - /api/market/buy
+  - /api/market/cancel
+  - /api/market/discard-charm
+  - /api/market/list
+  - /api/market/sell
+  - /api/market/sell-charm
+  - /api/market/sell-companion
+  - /api/my-cards
+  - /api/player/dashboard
+  - /api/players/${username}
+  - /api/shop/buy
+  - /api/shop/items
+  - /api/skills/get-all
+  - /api/skills/my-status
+  - /api/spacestation/crew-manifest
+  - /api/spacestation/lesson-prompt
+  - /api/spacestation/lobby/register
+  - /api/spacestation/lobby/stats
+  - /api/spacestation/my-state
+  - /api/spacestation/reports-and-logs
+  - /api/spacestation/submit-action
+  - /api/tower/complete-floor
+  - /api/tower/start
+  - /api/user/logs
+  - /api/user/players/free-agents
+  - /api/user/team/add-members
+  - /api/user/team/members
+  - /api/user/team/promote
+  - /users/me
+
+[Biến JS Toàn Cục (700)]:
+  MONSTER_ID, MONSTER_TARGET_ID, PLAYER_ID, SKILL_ICONS, STEP_DELAY, accuracy, actionBtn, actionBtnHtml, actionCellClass, actionHeader, actionHtml, activeBtn, activeContent, activeState, actualLocation, adminMenu, alertEl, alienEl, aliveCount, aliveCrewOthers, allAliveCrew, allBagItems, allMyCompanions, amount, animType, anyActive, arena, arenaLobbyInterval, astroEl, atk, atkEl, atkPercent, atkPlayerEl, authHeaders, authToken, availableBackgrounds, availableFodders, avatarUrl, b, badge, badgeText, banner, barBH, barEl, barTL, baseDmg, baseModal, bet, bg, bgClass, bgColor, bgEl, bgGradient, bh, bhBase, biteBtn, body, bonhiemBtn, bonusEl, bonusPercent, border, borderClass, borderColor, bossCurrentCorrectAns, bossCurrentExplanation, bossCurrentHP, bossData, bossMaxHP, bossPollInterval, bossState, bossTab, bossTimerInterval, box, btn, btnA, btnB, btnClass, btnEl, btnHtml, btnMarch, btnNext, btnRecall, btnTrain, btns, buttons, campaignCountdownInterval, campaign_id, canAfford, capBtn, card, cardData, cardHtml, channelEl, chatContainer, chatContent, chatSocket, chatTab, checkIcon, checkbox, classConfig, className, classSkills, classType, cleanFloor, cleanID, clickArea, color, colorClass, combat, combatUI, combatView, commander, comp, compContainer, companionData, condition, conf, config, confirmBtn, container, content, contentEl, contents, copBtn, correctAns, correctBox, correctBtn, correctContent, correctCount, correctKey, correctText, correctTextEl, cost, countBH, countEl, countTL, creatorHasPlayed, curExp, curExpEl, currency, currencyIcon, currencyLabel, currencySelect, currencyType, currentBagData, currentBossId, currentBreakthroughMainId, currentCardToSell, currentCbAnswer, currentExp, currentFloor, currentForgeItem, currentHP, currentHp, currentHpPercent, currentLbText, currentList, currentMarketTab, currentMoney, currentPlayerHP, currentQ, currentQuizData, currentQuizIndex, currentReviveAt, currentRole, currentSTPrompt, currentSTState, currentSTTargetSelectionConfig, currentSelectedNodeCode, currentSellItem, currentSellItemId, currentTroops, currentUser, currentVault, currentViewingCardId, currentVotes, damage, damageId, damageTaken, dashboardData, data, date, days, dbId, deathOverlay, deathScreen, deathTimerInterval, deathsEl, desc, detailPanel, diff, difficulty, discardData, discardRes, displayColor, displayName, displayText, displayType, displayValue, distance, div, dmg, dummyDiv, duration, effectLayer, el, elAvatar, elExpBar, elExpText, elLevel, elName, emptyHTML, emptyState, endT, endTime, endX, endY, equippedID, equippedId, equippedSkill, err, errData, errText, errorMsg, errorText, expBarEl, expMsgEl, expPercent, explainEl, explainText, factionColor, factionLabelEl, feedback, feedbackArea, feedbackExpl, feedbackIcon, feedbackOverlay, feedbackTitle, filterBar, filtered, filteredList, finalAnswers, finalDisplayName, finalDmg, finalSrc, finalTargetID, flagEl, flake, flip, floorDisplay, formattedCode, fullCorrectText, future, globalForgeConfig, globalMarketList, globalSkillsList, glow, grid, gridContainer, groupKey, guardBtn, guideBtn, guideContainer, hPointsEl, hStr, hasPrereq, headerVault, healAmount, healText, heroImg, historyList, hours, hp, hpEl, hpPercent, hpPlayerEl, hpText, html, i, iHavePlayed, icon, iconEl, iconPath, iconWrapper, iconsLayer, img, imgEl, imgElement, imgUrl, inTeamA, inTeamB, info, infoStats, input, inputEl, inputType, inputVal, invBtn, isAlive, isAnnouncingKill, isBossTabVisible, isCampaignTabActive, isChatConnected, isCompanion, isCorrect, isDead, isEquipped, isFullA, isFullB, isHpBelow, isInsideCampaignTab, isLearned, isLevelOk, isProjectile, isScrolledToBottom, isTL, item, itemHtml, itemStrs, items, itemsBox, itemsEl, keys, killAnnouncementQueue, killsEl, label, labeledCharms, labeledItems, labels, lastCampaignChatId, latestMsg, learnedKeys, legionBadgeEl, levelColorEl, levelDisplayEl, levelEl, li, line, list, listBH, listCharms, listContainer, listEquip, listItems, listTL, lobby, lobbyBox, lobbyContent, lobbyData, lobbyEl, lobbyFloorSpan, lobbyRes, lobbyUI, logContainer, logs, logsData, logsObj, lv, m, mBar, mDamage, mHP, mHPText, mImg, mMax, mName, mPercent, mStr, mText, mainCard, mainCardImg, mainContainer, mainGrid, mainStatHtml, mainView, manifestData, mapContainer, mapEl, mapRect, mapScreen, mapUI, markerEl, maskHeight, maskWidth, match, matchId, maxAtk, maxCapacity, maxExp, maxHP, maxHp, maxSellAmount, maxVault, members, minutes, missingExp, modal, modalCardContainer, modalEl, modalIdsToClose, mode, monImg, monsterDmg, moveDown, moveRight, msg, msgs, myBase, myBaseCode, myContainer, myFaction, myLevel, myName, myRole, myStatus, myUsername, myVault, name, nameColor, nameEl, navs, newPass, nextExpEl, nextLevelExp, node, nodeEl, nodeInfo, now, numLegions, observer, oldBtnHtml, oldHtml, oldPass, oldScreen, opponent, option, optionsContainer, optionsDiv, originalBtnText, originalContainer, originalSwitchMainScreen, originalText, overlay, ownerTextEl, p1Name, pATK, pBar, pDamage, pHP, pHPText, pImg, pMax, pMaxHP, pPercent, pStats, pText, parentContainer, passiveBonusMult, payload, pct, pctTL, penalty, pendingSTActionPayload, pendingScoreData, percent, placeholder, playedList, playerClass, playerEl, playerHP, playerListHtml, playerMaxHP, playerPct, playerRect, playerStats, players, popupList, prefix, previewEl, price, priceEl, priceField, priceInput, priceVal, privBtn, privContainer, privLogs, progress, progressBar, projectileSkills, protocol, pubBtn, pubContainer, pubLogs, q, qData, qIndex, qIndexEl, qty, question, questionTextEl, quizTimerInterval, radarInterval, randomIndex, rankIcon, rarity, rarityBadge, rarityColor, rarityEl, rate, rawCondition, rawConf, rawImg, rawKey, realDamage, realPlayerId, realStatus, reasonText, rect, renderList, renderMembers, reportContent, reportTab, res, resStats, respawnTime, response, result, resultBadge, resultEl, retreatBtn, reviveTime, reviveTimeStr, reward, rewardMsg, role, roleBadge, roleClass, roleDisplayMap, row, rowClass, s, sName, sR, sStr, sType, safeArrivalTime, safeImg, safeImgUrl, safeName, safeStartTime, sampleContainer, sampleSpans, savedTab, scoreBH, scoreBoardText, scoreTL, scores, searchID, seasonNameEl, seasonNumber, seconds, select, selectBox, selectVio, selectedBgFilename, selectedBtn, selectedFodderIds, selectedStudentIds, sequenceDelay, setActive, setInactive, shortName, shuffledOptions, sidebar, size, skill, skillFlatDmg, skillInfo, skillMult, skillName, skillPointsEl, skillVFX, slot, slot1, slot2, slotKey, spyBtn, spyEl, stView, startBtn, startEl, startId, startT, startX, startY, state, stateData, stateRes, stats, statsHtml, statsMini, status, storageKey, studentId, studentName, studentSelect, students, styleSheet, styledName, svgLayer, tR, tableBody, targetEl, targetId, targetKey, targetModal, targetRect, targetTab, targetTime, targetView, teamBox, text, textColor, textEl, thresh, threshold, timeLeft, timeLimit, timeStr, timerBar, timerContainer, timerEl, timerElement, timerKey, timerText, titleEl, tl, tlBase, token, topId, total, totalEl, totalMultiplier, totalQ, totalQuestions, totalTime, towerState, tr, triThucEl, troopBar, troopsEl, troopsTextEl, type, typeNames, typed, typedChar, ulBH, ulTL, uname, updateFunc, url, useId, user, userAns, userAnswers, userClass, userData, userInfo, userInfoStr, userRes, userText, username, val, valDisplay, valEl, vaultEl, vfxClass, vfxContainer, vfxEl, vfxName, vfxToPlay, vfxType, view, views, voteBadgeHtml, voteBtn, waitEl, waiting, waitingScreen, wallet, walletDisplay, walletEl, walletId, warModal, winner, winnerBanner, wsUrl, x, y
+
+[Hàm JavaScript (195)]:
+  - acceptMatch()
+  - answerQuestion()
+  - apiAction()
+  - appendMessage(msg)
+  - autoSelectFodder()
+  - bossGenerateQuestion()
+  - buyItem()
+  - buyMarketItem()
+  - cancelMatch()
+  - cancelSell()
+  - cardAction()
+  - checkAnswerAndAttack()
+  - checkBossStatus()
+  - checkCombatStatus()
+  - checkMaintenanceIngame()
+  - checkRespawnPenalty(respawnAtStr)
+  - checkSavedTab()
+  - closeBossFeedback()
+  - closeBreakthroughModal()
+  - closeBreakthroughSuccess()
+  - closeCardDetail()
+  - closeClassModal()
+  - closeCombatView()
+  - closeConfirmModal()
+  - closeForgeModal()
+  - closeGuideModal()
+  - closeMinigame(type)
+  - closePhongThan()
+  - closeSTLessonModal()
+  - closeSTTargetModal()
+  - closeSellModal()
+  - confirmAndSendSTAction()
+  - confirmSelectCommander()
+  - confirmSellCharm()
+  - confirmSellCompanionToMarket()
+  - confirmSellItem()
+  - discardCharm()
+  - doForge()
+  - drawMarchingMovements(movements)
+  - endTowerCombat(isWin)
+  - equipCompanionAction()
+  - executeBreakthrough()
+  - fetchBattleReports()
+  - fetchCampaignChatMessages()
+  - filterCompanions(rarity)
+  - finishQuiz()
+  - formatTroops(num)
+  - getNextQuestionFromMemory()
+  - getRarityColor(rarity)
+  - getRarityColorClass(rarity)
+  - getRarityStyle(rarity)
+  - handleAnswerTimeout()
+  - handleCampaignChatKeyPress(event)
+  - handleChatKey(event)
+  - handleGameOver(serverMessage, reviveAtVal)
+  - handleNextTurnLogic()
+  - handlePlayerTakeDamage(amount)
+  - handleReviveConfirm()
+  - handleTowerAnswer(isCorrect)
+  - handleTyping()
+  - initCampaign()
+  - initChat()
+  - joinCampaignFaction()
+  - joinLobby()
+  - loadActivityLogs()
+  - loadArenaData()
+  - loadArenaLobby()
+  - loadChatHistory()
+  - loadChieuBinhQuestion()
+  - loadDashboardData()
+  - loadFreeAgents()
+  - loadGlobalSkills()
+  - loadGradingStudents()
+  - loadInventoryDataFull()
+  - loadLuyenBinhQuestion()
+  - loadMarketData()
+  - loadMyStatus()
+  - loadOpponentsList()
+  - loadPlayerCompanions()
+  - loadShopItems()
+  - loadSkillTab()
+  - loadSpaceStationView()
+  - loadSystemConfig()
+  - loadTeamMembers()
+  - loadWaitingRoomData()
+  - logout()
+  - marchTroops()
+  - nextQuestion()
+  - openBreakthroughModal(card)
+  - openCardDetail(cardId)
+  - openChangePassModal()
+  - openClassModal()
+  - openCompanionSelection()
+  - openForgeModal(itemId)
+  - openGuideModal()
+  - openMinigame(type)
+  - openSTTargetModal(actionType, titleText, crewList, maxSelectCount)
+  - openSellCharm(itemId)
+  - openSellPopup(id, name, img, maxQty)
+  - openShopView()
+  - openWarRoom(nodeCode, nodeName)
+  - playNextKillAnnouncement()
+  - playVFX(vfxName, targetId, isProjectile = false)
+  - preSubmitScore(category)
+  - promoteMember()
+  - quitBossBattle()
+  - recallTroops()
+  - registerSTFaction()
+  - reloadWithTab(tabName)
+  - renderBag(items)
+  - renderBattleReports(reports)
+  - renderCharmCard(charm)
+  - renderCompanionGrid(cards)
+  - renderEquip(equipped)
+  - renderFilteredMarket(itemsToRender)
+  - renderHistory(matches)
+  - renderIncomingMatches(matches)
+  - renderOutgoingMatches(matches)
+  - renderQuestion()
+  - renderSTActionControls(state, manifest)
+  - renderSTHeader(state)
+  - renderSTLogs(logsData)
+  - renderSTManifest(manifest)
+  - renderShopShelves(items)
+  - renderSkillTree(level, learned)
+  - renderTowerQuestion()
+  - renderUI(data)
+  - replenishTroops()
+  - resetBossCombat()
+  - resetFodderSlots()
+  - resetQuizTimer()
+  - resetTowerUI()
+  - scanRadar()
+  - selectAnswer(questionObj, userChoice, indexChoice)
+  - selectClass(className)
+  - selectSkill(skillId, status)
+  - sendCampaignChatMessage()
+  - sendChallenge()
+  - sendChatMessage()
+  - setupCombatUI(playerInfo, monsterInfo)
+  - showBossFeedback(isCorrect, explainText)
+  - showBreakthroughSuccess(data)
+  - showCompanionGuide()
+  - showDamagePopup(targetId, amount, colorClass = "text-yellow-400")
+  - showDeathScreen(reviveAtString)
+  - showEquipOptions()
+  - showFeedback(isCorrect, explanationText)
+  - showFloatingText(text, targetId, color = '#fbbf24')
+  - showPhongThan()
+  - showView(viewName)
+  - startBossBattle()
+  - startBossTimer(seconds)
+  - startLobbyAutoUpdate()
+  - startMatch()
+  - startNodeTimer(id, endTimeStr)
+  - startQuestionTimer()
+  - startSnowEffect()
+  - startTimer()
+  - startTowerCombat()
+  - step()
+  - stopBossTimer()
+  - stopLobbyAutoUpdate()
+  - stopNodeTimer(id)
+  - submitChangePass()
+  - submitChieuBinh()
+  - submitRecruitMembers()
+  - switchCampaignScreen(state)
+  - switchGuideTab(tabId)
+  - switchInventoryTab(tabName)
+  - switchMainScreen(screenName)
+  - switchMarketTab(type)
+  - switchSTLogTab(type)
+  - switchTab(tab)
+  - toggleSidebar()
+  - toggleStudentSelection(id, rowElement)
+  - triggerEquipFromModal()
+  - triggerKillAnnouncement(htmlContent)
+  - triggerPassiveVFX()
+  - triggerSTActionWithLesson()
+  - unequipCompanion()
+  - unequipItem()
+  - updateBossUI(boss)
+  - updateCampaignDisplay(status, data)
+  - updateCampaignTimer(endTimeIso)
+  - updateChatStatus(text, colorClass)
+  - updateDisplay()
+  - updateHealthBars()
+  - updateMapUI(nodesData, myLocationCode)
+  - updatePlayerHPUI(currentHP, maxHP)
+  - updateSTLobbyStats()
+  - updateTimer()
+  - updateWalletUI_Temp(change)
+  - useItem()
+  - validateSTTyping()
+  - viewMatchResult()

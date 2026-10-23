@@ -1,0 +1,525 @@
+=== MỤC LỤC TÓM TẮT DỰ ÁN ===
+
+[generate_project_index.py]
+  - Các chức năng/hàm: parse_python_file(file_path)
+  - Các chức năng/hàm: parse_web_file(file_path)
+  - Các chức năng/hàm: generate_project_index()
+
+[backend\database.py]
+  - Các bảng dữ liệu: Player [id, username, password_hash, plain_password, full_name, role, parent_of_id, level, exp, next_level_exp, hp, hp_max, atk, class_type, skill_points, equipped_skill, skills_data, kpi, diem_vi_pham, diem_phat_bieu, diem_tx, diem_hk, diem_san_pham, toan_hk1, van_hk1, anh_hk1, gdcd_hk1, cong_nghe_hk1, tin_hk1, khtn_hk1, lsdl_hk1, toan_hk2, van_hk2, anh_hk2, gdcd_hk2, cong_nghe_hk2, tin_hk2, khtn_hk2, lsdl_hk2, tri_thuc, chien_tich, vinh_du, team_id, stats_json, titles_json, tower_floor, revive_at, item_atk_bonus, item_hp_bonus, equip_slot_1, equip_slot_2, equip_slot_3, equip_slot_4, companion_slot_1, companion_slot_2, companion_slot_3]
+  - Các bảng dữ liệu: Inventory [id, player_id, item_id, amount, is_equipped, metadata_json]
+  - Các bảng dữ liệu: ActiveEffect [id, player_id, effect_json, expire_time]
+  - Các bảng dữ liệu: Question [id, grade, subject, content, options_json, correct_answer, difficulty, question_type]
+  - Các bảng dữ liệu: Boss [__tablename__, id, name, grade, subject, max_hp, current_hp, atk, time_limit, image_url, animation, vfx, reward_kpi, reward_tri_thuc, reward_chien_tich, reward_vinh_du, drop_pool, rare_item_id, rare_item_rate, status]
+  - Các bảng dữ liệu: BossLog [__tablename__, id, boss_id, player_name, action, dmg_dealt, hp_left, created_at]
+  - Các bảng dữ liệu: Item [id, name, image_url, description, type, can_equip, config, currency_type, price, is_hidden, limit_type]
+  - Các bảng dữ liệu: ShopHistory [id, player_id, item_id, purchase_date, amount]
+  - Các bảng dữ liệu: TowerQuestion [id, subject, difficulty, content, option_a, option_b, option_c, option_d, correct_ans, explanation]
+  - Các bảng dữ liệu: TowerProgress [id, player_id, current_floor, max_floor, last_played]
+  - Các bảng dữ liệu: TowerSetting [id, config_data]
+  - Các bảng dữ liệu: SystemStatus [id, is_maintenance, message, updated_at]
+  - Các bảng dữ liệu: PlayerPet [id, player_id, item_id, star_level, level, exp, is_active, active_start_time]
+  - Các bảng dữ liệu: MarketListing [id, seller_id, item_id, amount, price, currency, created_at, description, item_data_json]
+  - Các bảng dữ liệu: SkillTemplate [id, skill_id, name, description, class_type, skill_type, min_level, prerequisite_id, config_data]
+  - Các bảng dữ liệu: PlayerSkill [id, player_id, skill_id, level, is_equipped]
+  - Các bảng dữ liệu: QuestionBank [id, subject, difficulty, content, options_json, correct_answer, explanation, grade]
+  - Các bảng dữ liệu: ArenaMatch [id, mode, difficulty, bet_amount, status, created_by, created_at, expires_at, winner_team, logs]
+  - Các bảng dữ liệu: ArenaParticipant [id, match_id, username, team, status, score, quiz_data_json, submitted_at]
+  - Các bảng dữ liệu: Title [id, name, min_kpi, color]
+  - Các bảng dữ liệu: ScoreLog [id, sender_name, target_name, category, description, value_change, created_at, sender_id, target_id]
+  - Các bảng dữ liệu: PlayerItem [id, player_id, name, image_url, rarity, stats_data, enhance_level, is_equipped, slot_index, created_at]
+  - Các bảng dữ liệu: SystemConfig [key, value]
+  - Các bảng dữ liệu: Notification [id, type, content, is_active, created_at]
+  - Các bảng dữ liệu: ChatLog [id, player_id, player_name, role, content, created_at]
+  - Các bảng dữ liệu: ChatWarningLog [id, player_id, player_name, content, created_at]
+  - Các bảng dữ liệu: ChatBan [player_id, player_name, banned_until, reason]
+  - Các bảng dữ liệu: ChatKeyword [id, word]
+  - Các bảng dữ liệu: CompanionConfig [id, fodder_required, stats_config]
+  - Các bảng dữ liệu: CompanionTemplate [template_id, name, rarity, image_path, companions]
+  - Các bảng dữ liệu: Companion [id, player_id, template_id, star, hp, atk, temp_name, is_locked, template, is_equipped, slot_index]
+  - Các bảng dữ liệu: Campaign [id, name, status, tl_troops_vault, bh_troops_vault, tl_victory_points, bh_victory_points, start_time, end_time, first_blood_claimed]
+  - Các bảng dữ liệu: CampaignPlayer [id, campaign_id, player_id, faction, companion_id, legion_level, legion_exp, k_kills, t_deaths, h_hau_phuong, total_troops_farmed, respawn_at, current_kill_streak, last_kill_time]
+  - Các bảng dữ liệu: MapNode [id, campaign_id, node_code, name, owner_faction, is_contested, contesting_faction, capture_start_time, vp_per_hour]
+  - Các bảng dữ liệu: TroopMovement [id, campaign_id, player_id, target_node_id, source_node_code, base_troops, bonus_percent, real_power, start_time, arrival_time, status]
+  - Các bảng dữ liệu: BattleReport [id, campaign_id, player_id, faction, type, title, content, timestamp]
+  - Các bảng dữ liệu: CampaignChat [id, campaign_id, sender_name, faction, message, channel, timestamp]
+  - Các chức năng/hàm: create_db_and_tables()
+  - Các chức năng/hàm: get_db()
+  - Các chức năng/hàm: generate_username(full_name)
+
+[backend\db.py]
+  - Các chức năng/hàm: upgrade_database()
+
+[backend\index.html]
+  - Các đường dẫn kết nối mạng: [GET] /api/data/maintenance-status
+  - Các đường dẫn kết nối mạng: [GET] /api/noti/public
+  - Các đường dẫn kết nối mạng: [GET] /api/public/boss-leaderboard
+  - Các đường dẫn kết nối mạng: [GET] /api/public/hall-of-fame
+  - Các đường dẫn kết nối mạng: [GET] /api/public/tower-ranking
+  - Các đường dẫn kết nối mạng: [POST] /api/login
+  - Các chức năng/hàm: loadHallOfFame(), loadTowerRanking(), loadBossLeaderboard(), checkMaintenanceLogin(), loadSystemNotifications(), checkAndShowPopup(popupData)
+  - Các chức năng/hàm: closeSysNoti(), createCard(p, rank, sizeClass)
+
+[backend\main.py]
+  - Các bảng dữ liệu: LoginRequest [username, password]
+  - Các bảng dữ liệu: BaseRequest [username]
+  - Các bảng dữ liệu: BuyRequest [item_id, username]
+  - Các bảng dữ liệu: AttackRequest [boss_id, player_id, player_name, damage, question_id, selected_option]
+  - Các bảng dữ liệu: MarchByCodeRequest [username, target_node_code]
+  - Các bảng dữ liệu: JoinFactionRequest [username, faction]
+  - Các bảng dữ liệu: SetCommanderRequest [username, companion_id]
+  - Các bảng dữ liệu: ChatRequest [username, message, channel]
+  - Các bảng dữ liệu: MinigameRewardRequest [username, campaign_id]
+  - Các chức năng/hàm: create_default_admin()
+  - Các chức năng/hàm: lifespan(app)
+  - Các chức năng/hàm: check_and_revive_player(player, db)
+  - Các chức năng/hàm: login(data, db)
+  - Các chức năng/hàm: read_root()
+  - Các chức năng/hàm: view_player_dashboard()
+  - Các chức năng/hàm: view_admin_dashboard()
+  - Các chức năng/hàm: view_parent_page()
+  - Các chức năng/hàm: read_index()
+  - Các chức năng/hàm: get_shop_items(db)
+  - Các chức năng/hàm: buy_item(data, db)
+  - Các chức năng/hàm: get_hall_of_fame(db)
+  - Các chức năng/hàm: get_tower_ranking(db)
+  - Các chức năng/hàm: get_boss_leaderboard(db)
+  - Các chức năng/hàm: get_active_boss_for_player(db)
+  - Các chức năng/hàm: attack_boss(req, db)
+  - Các chức năng/hàm: get_boss_question(boss_id, db)
+  - Các chức năng/hàm: get_all_items_system(db)
+  - Các chức năng/hàm: get_boss_logs(limit, db)
+  - Các chức năng/hàm: grant_exp_to_user(username, amount, db)
+  - Các chức năng/hàm: cleanup_chat_task()
+  - Các chức năng/hàm: is_campaign_frozen()
+  - Các chức năng/hàm: minigame_chieu_binh(req, db)
+  - Các chức năng/hàm: minigame_luyen_binh(req, db)
+  - Các chức năng/hàm: get_minigame_folder(game_type)
+  - Các chức năng/hàm: get_minigame_files(game_type)
+  - Các chức năng/hàm: get_minigame_questions(game_type, file_name)
+  - Các chức năng/hàm: get_path_distance(start_code, target_code)
+  - Các chức năng/hàm: march_troops_by_code(campaign_id, req, db)
+  - Các chức năng/hàm: recall_troops(campaign_id, req, db)
+  - Các chức năng/hàm: resolve_node_combat(campaign_id, node_id, db)
+  - Các chức năng/hàm: get_campaign_state(username, db)
+  - Các chức năng/hàm: admin_create_campaign(db)
+  - Các chức năng/hàm: get_campaign_lobby(db)
+  - Các chức năng/hàm: admin_close_campaign(db)
+  - Các chức năng/hàm: join_campaign(req, db)
+  - Các chức năng/hàm: admin_start_campaign(db)
+  - Các chức năng/hàm: process_campaign_battles(db)
+  - Các chức năng/hàm: replenish_troops(campaign_id, req, db)
+  - Các chức năng/hàm: campaign_engine_worker()
+  - Các chức năng/hàm: set_campaign_commander(req, db)
+  - Các chức năng/hàm: get_my_companions(username, db)
+  - Các chức năng/hàm: check_engine_status()
+  - Các chức năng/hàm: campaign_game_loop()
+  - Các chức năng/hàm: get_battle_reports(username, db)
+  - Các chức năng/hàm: get_campaign_last_result(db)
+  - Các chức năng/hàm: force_reset_campaign(db)
+  - Các chức năng/hàm: send_chat_message(req, db)
+  - Các chức năng/hàm: get_chat_messages(username, db)
+  - Các chức năng/hàm: process_kill_streak(db, campaign, killer_player, victim_player, killer_name, victim_name)
+
+[backend\game_logic\arena_manager.py]
+  - Các bảng dữ liệu: ArenaManager
+
+[backend\game_logic\item_processor.py]
+  - Các chức năng/hàm: calculate_max_hp_limit(player)
+  - Các chức năng/hàm: apply_item_effects(player, item, db)
+  - Các chức năng/hàm: get_charm_config(db)
+  - Các chức năng/hàm: get_forge_config(db)
+  - Các chức năng/hàm: generate_charm(db, player_id, rarity)
+  - Các chức năng/hàm: forge_item(db, item_id, player_id, stone_item_id)
+  - Các chức năng/hàm: generate_companion_card(db, player_id, rarity)
+
+[backend\game_logic\level.py]
+  - Các chức năng/hàm: safe_increase(current_val, multiplier)
+  - Các chức năng/hàm: add_exp_to_player(player, amount)
+
+[backend\game_logic\stats.py]
+  - Các chức năng/hàm: recalculate_player_stats(db, player, heal_mode)
+
+[backend\routes\admin.py]
+  - Các bảng dữ liệu: RewardItem [type, name, amount, rate]
+  - Các bảng dữ liệu: SkillSchema [skill_id, name, description, class_type, skill_type, min_level, prerequisite_id, base_mult, vfx_class, currency, base_cost, scaling, config_type, value, vfx_target, condition, threshold, config_data]
+  - Các bảng dữ liệu: TowerGlobalConfig [monster_pool, bg_pool, rewards]
+  - Các bảng dữ liệu: TowerCompleteRequest [player_id, floor, is_win]
+  - Các bảng dữ liệu: RarityConfig [lines, atk_range, hp_range]
+  - Các bảng dữ liệu: CharmSetupPayload [MAGIC, EPIC, LEGEND]
+  - Các bảng dữ liệu: ForgeGroupConfig [min, max, rate, stone, bonus_pct]
+  - Các bảng dữ liệu: ForgeSetupPayload [group_1, group_2, group_3]
+  - Các bảng dữ liệu: UpdateTeamRequest [team_id]
+  - Các bảng dữ liệu: UpdateRoleRequest [role]
+  - Các bảng dữ liệu: ResetPasswordRequest [username]
+  - Các bảng dữ liệu: ChangePassSchema [old_password, new_password]
+  - Các bảng dữ liệu: GachaSetupRequest [chest_id, drops]
+  - Các bảng dữ liệu: TitleRequest [name, min_kpi, color]
+  - Các chức năng/hàm: get_all_players_overview(db)
+  - Các chức năng/hàm: update_player_stats(player_identifier, kpi_change, tri_thuc_change, chien_tich_change, vinh_du_change, hp_change, db)
+  - Các chức năng/hàm: create_item_template(item_data, db)
+  - Các chức năng/hàm: delete_item_template(item_id, db)
+  - Các chức năng/hàm: list_item_templates(db)
+  - Các chức năng/hàm: give_item_to_player(player_id, item_id, amount, db)
+  - Các chức năng/hàm: update_player_team(player_id, req, db)
+  - Các chức năng/hàm: update_player_role(player_id, req, db)
+  - Các chức năng/hàm: reset_password(req, db)
+  - Các chức năng/hàm: reset_all_passwords_api(db)
+  - Các chức năng/hàm: import_excel(file, db)
+  - Các chức năng/hàm: create_parent_accounts(file, db)
+  - Các chức năng/hàm: get_parents_list(db)
+  - Các chức năng/hàm: change_admin_password(req, db)
+  - Các chức năng/hàm: get_all_players_security(db)
+  - Các chức năng/hàm: reset_season(db)
+  - Các chức năng/hàm: save_boss(boss_data, db)
+  - Các chức năng/hàm: get_current_boss(db)
+  - Các chức năng/hàm: delete_boss(db)
+  - Các chức năng/hàm: clear_boss_logs(db)
+  - Các chức năng/hàm: get_tower_questions(db)
+  - Các chức năng/hàm: import_tower_questions(file, mode, db)
+  - Các chức năng/hàm: get_tower_stats(db)
+  - Các chức năng/hàm: delete_tower_subject(subject, db)
+  - Các chức năng/hàm: save_tower_config(data, db)
+  - Các chức năng/hàm: get_tower_config(db)
+  - Các chức năng/hàm: get_dashboard_stats(db)
+  - Các chức năng/hàm: get_system_logs(limit, type_filter, db)
+  - Các chức năng/hàm: backup_database()
+  - Các chức năng/hàm: restore_database(file)
+  - Các chức năng/hàm: get_maintenance_status(db)
+  - Các chức năng/hàm: update_maintenance_status(is_maintenance, message, db)
+  - Các chức năng/hàm: create_pet(name, image_url, rarity, effect_type, effect_value, db)
+  - Các chức năng/hàm: setup_gacha(data, db)
+  - Các chức năng/hàm: get_all_skills(db)
+  - Các chức năng/hàm: save_skill(req, db)
+  - Các chức năng/hàm: get_titles(db)
+  - Các chức năng/hàm: create_title(req, db)
+  - Các chức năng/hàm: delete_title(title_id, db)
+  - Các chức năng/hàm: get_arena_history(limit, db)
+  - Các chức năng/hàm: admin_cancel_match(match_id, db)
+  - Các chức năng/hàm: get_admin_arena_data(db)
+  - Các chức năng/hàm: get_system_config(db)
+  - Các chức năng/hàm: save_system_config(charm_data, forge_data, db)
+  - Các chức năng/hàm: import_scores(file, semester, db)
+
+[backend\routes\arena_api.py]
+  - Các bảng dữ liệu: ChallengeRequest [mode, difficulty, bet_amount, opponent_name]
+  - Các bảng dữ liệu: AcceptMatchRequest [match_id, username]
+  - Các bảng dữ liệu: AnswerItem [id, answer]
+  - Các bảng dữ liệu: SubmitAnswer [match_id, username, answers]
+  - Các bảng dữ liệu: SubmitAnswer [match_id, username, answers]
+  - Các chức năng/hàm: create_challenge(req, username, db)
+  - Các chức năng/hàm: list_my_matches(username, db)
+  - Các chức năng/hàm: accept_match(payload, db)
+  - Các chức năng/hàm: cancel_match(match_id, username, db)
+  - Các chức năng/hàm: get_lobby(db)
+  - Các chức năng/hàm: join_lobby(match_id, username, team, db)
+  - Các chức năng/hàm: get_arena_quiz(match_id, username, db)
+  - Các chức năng/hàm: submit_arena_quiz(payload, db)
+  - Các chức năng/hàm: get_arena_opponents(current_user, db)
+  - Các chức năng/hàm: get_match_detail(match_id, db)
+
+[backend\routes\auth.py]
+  - Các bảng dữ liệu: LoginRequest [username, password]
+  - Các bảng dữ liệu: ChangePasswordRequest [old_password, new_password]
+  - Các chức năng/hàm: verify_password(plain_password, hashed_password)
+  - Các chức năng/hàm: get_password_hash(password)
+  - Các chức năng/hàm: create_access_token(data, expires_delta)
+  - Các chức năng/hàm: get_current_user(token, db)
+  - Các chức năng/hàm: login(data, db)
+  - Các chức năng/hàm: change_password(req, db, current_user)
+
+[backend\routes\chat_api.py]
+  - Các bảng dữ liệu: ConnectionManager
+  - Các chức năng/hàm: get_vn_time()
+  - Các chức năng/hàm: check_ban_and_spam(player_id, db)
+  - Các chức năng/hàm: websocket_endpoint(websocket, token, db)
+  - Các chức năng/hàm: get_warnings(db)
+  - Các chức năng/hàm: add_keyword(word, db)
+  - Các chức năng/hàm: ban_player(target_id, hours, reason, db)
+  - Các chức năng/hàm: get_chat_history(db)
+  - Các chức năng/hàm: get_all_players_for_admin(db)
+  - Các chức năng/hàm: get_keywords_list(db)
+
+[backend\routes\companion.py]
+  - Các bảng dữ liệu: ConfigUpdate [fodder_required, stats_config]
+  - Các chức năng/hàm: scan_companion_templates(db)
+  - Các chức năng/hàm: get_templates(rarity, db)
+  - Các chức năng/hàm: get_companion_config(db)
+  - Các chức năng/hàm: update_companion_config(data, db)
+  - Các chức năng/hàm: get_player_companions(username, db)
+
+[backend\routes\inventory_api.py]
+  - Các bảng dữ liệu: EquipRequest [username, item_id, slot_index]
+  - Các bảng dữ liệu: UnequipRequest [username, slot_index]
+  - Các bảng dữ liệu: UseItemRequest [username, item_id]
+  - Các bảng dữ liệu: SellRequest [username, item_id, amount, price, currency]
+  - Các bảng dữ liệu: BuyRequest [buyer_username, listing_id]
+  - Các bảng dữ liệu: ForgeRequest [username, charm_id]
+  - Các bảng dữ liệu: EquipCompanionRequest [username, companion_id, slot_index]
+  - Các bảng dữ liệu: UnequipCompanionRequest [username, slot_index]
+  - Các bảng dữ liệu: DiscardCompanionRequest [username, companion_id]
+  - Các bảng dữ liệu: BreakthroughRequest [username, main_card_id, fodder_ids]
+  - Các chức năng/hàm: get_inventory(username, db)
+  - Các chức năng/hàm: use_item(req, db)
+  - Các chức năng/hàm: equip_item(req, db)
+  - Các chức năng/hàm: unequip_item(req, db)
+  - Các chức năng/hàm: enhance_item_api(req, db)
+  - Các chức năng/hàm: get_system_config(db)
+  - Các chức năng/hàm: equip_companion(req, db)
+  - Các chức năng/hàm: unequip_companion(req, db)
+  - Các chức năng/hàm: discard_companion(req, db)
+  - Các chức năng/hàm: breakthrough_companion(req, db)
+
+[backend\routes\market_api.py]
+  - Các bảng dữ liệu: SellRequest [username, item_id, amount, price, currency]
+  - Các bảng dữ liệu: SellCharmRequest [item_id, price, currency]
+  - Các bảng dữ liệu: BuyRequest [buyer_username, listing_id]
+  - Các bảng dữ liệu: CancelRequest [buyer_username, listing_id]
+  - Các bảng dữ liệu: SellCompanionRequest [companion_id, price, currency]
+  - Các bảng dữ liệu: CharmActionRequest [username, charm_id, price, currency]
+  - Các chức năng/hàm: get_market_list(db)
+  - Các chức năng/hàm: sell_to_market(req, db)
+  - Các chức năng/hàm: buy_market_item(req, db)
+  - Các chức năng/hàm: cancel_market(req, db)
+  - Các chức năng/hàm: discard_charm_api(req, db)
+  - Các chức năng/hàm: sell_charm(req, current_user, db)
+  - Các chức năng/hàm: sell_companion(req, current_user, db)
+
+[backend\routes\notifications.py]
+  - Các bảng dữ liệu: NotiCreate [type, content, is_active]
+  - Các chức năng/hàm: create_notification(req, db)
+  - Các chức năng/hàm: get_all_notifications(db)
+  - Các chức năng/hàm: delete_notification(noti_id, db)
+  - Các chức năng/hàm: toggle_notification(noti_id, db)
+  - Các chức năng/hàm: get_public_notifications(db)
+
+[backend\routes\pets.py]
+  - Các bảng dữ liệu: FusionRequest [player_id, fragment_item_id]
+  - Các bảng dữ liệu: UpgradeStarRequest [player_id, pet_item_id, current_star]
+  - Các bảng dữ liệu: ActivateRequest [player_id, pet_instance_id]
+  - Các chức năng/hàm: fuse_pet_fragments(req, db)
+  - Các chức năng/hàm: upgrade_pet_star(req, db)
+  - Các chức năng/hàm: activate_pet_aura(req, db)
+
+[backend\routes\shop.py]
+  - Các chức năng/hàm: get_all_items(db)
+  - Các chức năng/hàm: add_item(item_data, db)
+  - Các chức năng/hàm: delete_item(item_id, db)
+
+[backend\routes\skills.py]
+  - Các chức năng/hàm: learn_skill(skill_id, db, current_user)
+  - Các chức năng/hàm: equip_skill(skill_id, db, current_user)
+  - Các chức năng/hàm: unequip_skill(db, current_user)
+  - Các chức năng/hàm: get_status(current_user)
+  - Các chức năng/hàm: get_all_skills(db, current_user)
+
+[backend\routes\tower.py]
+  - Các bảng dữ liệu: TowerCompleteRequest [floor, is_win]
+  - Các bảng dữ liệu: StartCombatRequest [floor]
+  - Các chức năng/hàm: get_difficulty_by_floor(floor)
+  - Các chức năng/hàm: get_monster_stats_by_floor(floor)
+  - Các chức năng/hàm: start_floor_combat(req, current_user, db)
+  - Các chức năng/hàm: complete_floor(req, current_user, db)
+
+[backend\routes\users.py]
+  - Các bảng dữ liệu: AddMembersRequest [player_ids]
+  - Các bảng dữ liệu: ScoreRequest [target_player_id, score_type, value]
+  - Các bảng dữ liệu: ViolationRequest [target_player_id, reason, penalty]
+  - Các bảng dữ liệu: PromoteRequest [target_id]
+  - Các chức năng/hàm: get_child_info(current_user, db)
+  - Các chức năng/hàm: get_free_agents(db)
+  - Các chức năng/hàm: add_members_to_team(req, current_user, db)
+  - Các chức năng/hàm: get_current_user(token, db)
+  - Các chức năng/hàm: read_users_me(current_user)
+  - Các chức năng/hàm: read_my_inventory(current_user, db)
+  - Các chức năng/hàm: get_public_player_info(username, db)
+  - Các chức năng/hàm: handle_choose_class(username, class_name, db)
+  - Các chức năng/hàm: handle_get_dashboard(username, db)
+  - Các chức năng/hàm: get_team_members(current_user, db)
+  - Các chức năng/hàm: submit_academic_score(req, current_user, db)
+  - Các chức năng/hàm: submit_violation(req, current_user, db)
+  - Các chức năng/hàm: get_activity_logs(current_user, db)
+  - Các chức năng/hàm: get_vn_time()
+  - Các chức năng/hàm: promote_member(req, current_user, db)
+
+[backend\services\excel_helper.py]
+  - Các chức năng/hàm: import_players_from_excel(file_path, default_password)
+
+[frontend\admin.html]
+  - Các đường dẫn kết nối mạng: [DELETE] /admin/items/templates/${itemId}
+  - Các đường dẫn kết nối mạng: [DELETE] /admin/titles/${id}
+  - Các đường dẫn kết nối mạng: [DELETE] /admin/tower/delete-subject/${subject}
+  - Các đường dẫn kết nối mạng: [DELETE] /api/noti/delete/${id}
+  - Các đường dẫn kết nối mạng: [GET] /admin/arena/data
+  - Các đường dẫn kết nối mạng: [GET] /admin/boss/current
+  - Các đường dẫn kết nối mạng: [GET] /admin/data/dashboard-stats
+  - Các đường dẫn kết nối mạng: [GET] /admin/data/logs?type_filter=${filter}
+  - Các đường dẫn kết nối mạng: [GET] /admin/data/maintenance-status
+  - Các đường dẫn kết nối mạng: [GET] /admin/get-skills
+  - Các đường dẫn kết nối mạng: [GET] /admin/get-system-config
+  - Các đường dẫn kết nối mạng: [GET] /admin/gradebook/parents-list
+  - Các đường dẫn kết nối mạng: [GET] /admin/items/templates
+  - Các đường dẫn kết nối mạng: [GET] /admin/players/overview
+  - Các đường dẫn kết nối mạng: [GET] /admin/security/all-players
+  - Các đường dẫn kết nối mạng: [GET] /admin/shop/items
+  - Các đường dẫn kết nối mạng: [GET] /admin/titles
+  - Các đường dẫn kết nối mạng: [GET] /admin/tower/get-config
+  - Các đường dẫn kết nối mạng: [GET] /admin/tower/save-config
+  - Các đường dẫn kết nối mạng: [GET] /admin/tower/stats
+  - Các đường dẫn kết nối mạng: [GET] /api/admin/companions/config
+  - Các đường dẫn kết nối mạng: [GET] /api/admin/companions/templates?rarity=${rarityFilter}
+  - Các đường dẫn kết nối mạng: [GET] /api/all-items
+  - Các đường dẫn kết nối mạng: [GET] /api/boss/logs?limit=50
+  - Các đường dẫn kết nối mạng: [GET] /api/chat/admin/all-players
+  - Các đường dẫn kết nối mạng: [GET] /api/chat/admin/keywords_list
+  - Các đường dẫn kết nối mạng: [GET] /api/chat/admin/warnings
+  - Các đường dẫn kết nối mạng: [GET] /api/chat/history
+  - Các đường dẫn kết nối mạng: [GET] /api/noti/all
+  - Các đường dẫn kết nối mạng: [POST] /admin/arena/cancel/${matchId}
+  - Các đường dẫn kết nối mạng: [POST] /admin/boss/delete
+  - Các đường dẫn kết nối mạng: [POST] /admin/boss/logs/clear
+  - Các đường dẫn kết nối mạng: [POST] /admin/boss/save
+  - Các đường dẫn kết nối mạng: [POST] /admin/data/maintenance-update
+  - Các đường dẫn kết nối mạng: [POST] /admin/data/restore
+  - Các đường dẫn kết nối mạng: [POST] /admin/gradebook/create-parents
+  - Các đường dẫn kết nối mạng: [POST] /admin/gradebook/import-scores
+  - Các đường dẫn kết nối mạng: [POST] /admin/import-excel
+  - Các đường dẫn kết nối mạng: [POST] /admin/save-skill
+  - Các đường dẫn kết nối mạng: [POST] /admin/save-system-config
+  - Các đường dẫn kết nối mạng: [POST] /admin/security/change-admin-password
+  - Các đường dẫn kết nối mạng: [POST] /admin/security/reset-all
+  - Các đường dẫn kết nối mạng: [POST] /admin/security/reset-password
+  - Các đường dẫn kết nối mạng: [POST] /admin/security/reset-season
+  - Các đường dẫn kết nối mạng: [POST] /admin/shop/items/add
+  - Các đường dẫn kết nối mạng: [POST] /admin/titles
+  - Các đường dẫn kết nối mạng: [POST] /admin/tower/import-questions
+  - Các đường dẫn kết nối mạng: [POST] /api/admin/campaign/close
+  - Các đường dẫn kết nối mạng: [POST] /api/admin/campaign/create
+  - Các đường dẫn kết nối mạng: [POST] /api/admin/campaign/start
+  - Các đường dẫn kết nối mạng: [POST] /api/admin/companions/config
+  - Các đường dẫn kết nối mạng: [POST] /api/admin/companions/scan
+  - Các đường dẫn kết nối mạng: [POST] /api/chat/admin/ban?target_id=${targetId}&hours=${hours}&reason=${encodeURIComponent(reason)}
+  - Các đường dẫn kết nối mạng: [POST] /api/chat/admin/keyword?word=${encodeURIComponent(word)}
+  - Các đường dẫn kết nối mạng: [POST] /api/noti/create
+  - Các đường dẫn kết nối mạng: [PUT] /api/noti/toggle/${id}
+  - Các chức năng/hàm: switchTab(tabName), togglePlayerList(), loadOverview(), handleUpdate(id, mode), sendFormalReward(multiplier), loadPlayersToSelect()
+  - Các chức năng/hàm: sendGiftCurrency(multiplier), sendGiftItem(multiplier), logSystem(message, type), handleFileUpload(input), renderTeamMemberCard(player), uploadParentExcel()
+  - Các chức năng/hàm: toggleParentList(), loadParentAccounts(), importGrades(), getInitials(name), openAddMemberModal(teamId), closeAddMemberModal()
+  - Các chức năng/hàm: submitAddMember(), refreshTeamUI(players), changeRole(playerId), moveToTeam(playerId), kickMember(playerId), toggleTeam(teamId)
+  - Các chức năng/hàm: confirmResetAll(), loadResetDropdown(), handleSingleReset(), handleChangeAdminPass(), loadSecurityTable(), confirmResetSeason()
+  - Các chức năng/hàm: updateBossPreview(), saveBoss(), loadCurrentBoss(), updateBossStatusUI(boss), addBossDropItem(), renderBossDropList()
+  - Các chức năng/hàm: removeBossDrop(index), deleteBoss(), clearBattleLog(), fetchBattleLogs(), loadItemsForBossSelect(), handleFormSubmit(event)
+  - Các chức năng/hàm: loadShopItems(), deleteItem(itemId), openCreateItemModal(), closeItemModal(), toggleLogicFields(), addGachaRow()
+  - Các chức năng/hàm: collectItemConfig(), loadItemsToSelect(), openAiImportModal(), closeAiImportModal(), submitAiImport(), loadTowerQuestions()
+  - Các chức năng/hàm: handleFileSelect(input), loadTowerStats(), deleteSubjectGroup(subject), toggleRewardInputs(), addRewardToPool(), saveTowerFullConfig()
+  - Các chức năng/hàm: loadSavedTowerConfig(), renderSavedRewardCard(container, item), clearPool(difficulty), switchSubTab(tabName), loadDashboardStats(), loadSystemLogs()
+  - Các chức năng/hàm: handleRestoreDB(), loadMaintenanceStatus(), saveMaintenance(), bindRateInputs(), checkTotalRate(), saveGachaConfig()
+  - Các chức năng/hàm: loadAdminSkills(), filterSkills(classType), renderSkillList(skills), selectSkillForEdit(skill), openNewSkillForm(), saveSkill()
+  - Các chức năng/hàm: testVFX(), spawnExplosion(), loadTitles(), createTitleSubmit(), deleteTitle(id), logoutAdmin()
+  - Các chức năng/hàm: loadAdminArenaData(), adminCancelMatch(matchId), loadNotifications(), addNotification(type), deleteNoti(id), toggleNoti(id)
+  - Các chức năng/hàm: loadSystemConfig(), saveSystemConfig(), fillDefaultConfig(), initAdminChat(), loadChatHistory(), appendMessage(msg)
+  - Các chức năng/hàm: sendChatMessage(), handleChatKey(event), loadStudentListForBan(), banPlayer(), addKeyword(), loadKeywords()
+  - Các chức năng/hàm: loadWarningLogs(), startSnowEffect(), scanCompanions(), loadTemplates(), loadCompanionConfig(), saveCompanionConfig()
+  - Các chức năng/hàm: toggleGiftDropdown(), toggleAllGiftPlayers(source), updateGiftButtonText(), adminTriggerCreateCampaign(), adminTriggerStartCampaign(), closeCampaign()
+  - Các chức năng/hàm: safeSet(id, value), setSafeVal(idSuffix, value), getSafeVal(idSuffix, type = 'string'), num(id), parseRange(str)
+
+[frontend\parent.html]
+  - Các đường dẫn kết nối mạng: [GET] /api/user/parent/my-child
+  - Các chức năng/hàm: switchTab(tabName), initGradeList(), loadChildData(), updateAIConsultant(data), renderProgressFlow(containerId, data)
+
+[frontend\player_dashboard.html]
+  - Các đường dẫn kết nối mạng: [GET] /api/arena/list-my-matches?username=${username}
+  - Các đường dẫn kết nối mạng: [GET] /api/arena/lobby
+  - Các đường dẫn kết nối mạng: [GET] /api/arena/match/${matchId}
+  - Các đường dẫn kết nối mạng: [GET] /api/arena/quiz?match_id=${matchId}&username=${username}
+  - Các đường dẫn kết nối mạng: [GET] /api/boss/active-info
+  - Các đường dẫn kết nối mạng: [GET] /api/boss/get-question?boss_id=${bossData.id}
+  - Các đường dẫn kết nối mạng: [GET] /api/campaign/chat?username=${username}
+  - Các đường dẫn kết nối mạng: [GET] /api/campaign/last-result
+  - Các đường dẫn kết nối mạng: [GET] /api/campaign/lobby
+  - Các đường dẫn kết nối mạng: [GET] /api/campaign/minigame/files?game_type=${gameType}
+  - Các đường dẫn kết nối mạng: [GET] /api/campaign/minigame/questions?game_type=${gameType}&file_name=${progress.current_file}
+  - Các đường dẫn kết nối mạng: [GET] /api/campaign/reports?username=${username}
+  - Các đường dẫn kết nối mạng: [GET] /api/campaign/state?username=${username}
+  - Các đường dẫn kết nối mạng: [GET] /api/chat/history
+  - Các đường dẫn kết nối mạng: [GET] /api/companions/my-list?username=${username}
+  - Các đường dẫn kết nối mạng: [GET] /api/data/maintenance-status
+  - Các đường dẫn kết nối mạng: [GET] /api/inventory/get?username=${username}
+  - Các đường dẫn kết nối mạng: [GET] /api/inventory/system-config
+  - Các đường dẫn kết nối mạng: [GET] /api/market/list
+  - Các đường dẫn kết nối mạng: [GET] /api/my-cards?username=${currentUser}
+  - Các đường dẫn kết nối mạng: [GET] /api/player/dashboard?username=${username}
+  - Các đường dẫn kết nối mạng: [GET] /api/players/${username}
+  - Các đường dẫn kết nối mạng: [GET] /api/shop/items
+  - Các đường dẫn kết nối mạng: [GET] /api/skills/get-all
+  - Các đường dẫn kết nối mạng: [GET] /api/skills/my-status
+  - Các đường dẫn kết nối mạng: [GET] /api/user/logs
+  - Các đường dẫn kết nối mạng: [GET] /api/user/players/free-agents
+  - Các đường dẫn kết nối mạng: [GET] /api/user/team/members
+  - Các đường dẫn kết nối mạng: [GET] /users/me
+  - Các đường dẫn kết nối mạng: [POST] /api/arena/accept
+  - Các đường dẫn kết nối mạng: [POST] /api/arena/cancel
+  - Các đường dẫn kết nối mạng: [POST] /api/arena/create?username=${username}
+  - Các đường dẫn kết nối mạng: [POST] /api/arena/join-lobby
+  - Các đường dẫn kết nối mạng: [POST] /api/arena/submit
+  - Các đường dẫn kết nối mạng: [POST] /api/boss/attack
+  - Các đường dẫn kết nối mạng: [POST] /api/campaign/${campaign_id}/march_by_code
+  - Các đường dẫn kết nối mạng: [POST] /api/campaign/${campaign_id}/recall
+  - Các đường dẫn kết nối mạng: [POST] /api/campaign/${campaign_id}/replenish
+  - Các đường dẫn kết nối mạng: [POST] /api/campaign/chat
+  - Các đường dẫn kết nối mạng: [POST] /api/campaign/join
+  - Các đường dẫn kết nối mạng: [POST] /api/campaign/minigame/chieu-binh
+  - Các đường dẫn kết nối mạng: [POST] /api/campaign/minigame/luyen-binh
+  - Các đường dẫn kết nối mạng: [POST] /api/campaign/set-commander
+  - Các đường dẫn kết nối mạng: [POST] /api/change-password
+  - Các đường dẫn kết nối mạng: [POST] /api/inventory/breakthrough-companion
+  - Các đường dẫn kết nối mạng: [POST] /api/inventory/discard-companion
+  - Các đường dẫn kết nối mạng: [POST] /api/inventory/equip
+  - Các đường dẫn kết nối mạng: [POST] /api/inventory/equip-companion
+  - Các đường dẫn kết nối mạng: [POST] /api/inventory/forge
+  - Các đường dẫn kết nối mạng: [POST] /api/inventory/unequip
+  - Các đường dẫn kết nối mạng: [POST] /api/inventory/unequip-companion
+  - Các đường dẫn kết nối mạng: [POST] /api/inventory/use
+  - Các đường dẫn kết nối mạng: [POST] /api/market/buy
+  - Các đường dẫn kết nối mạng: [POST] /api/market/cancel
+  - Các đường dẫn kết nối mạng: [POST] /api/market/discard-charm
+  - Các đường dẫn kết nối mạng: [POST] /api/market/sell
+  - Các đường dẫn kết nối mạng: [POST] /api/market/sell-charm
+  - Các đường dẫn kết nối mạng: [POST] /api/market/sell-companion
+  - Các đường dẫn kết nối mạng: [POST] /api/shop/buy
+  - Các đường dẫn kết nối mạng: [POST] /api/tower/complete-floor
+  - Các đường dẫn kết nối mạng: [POST] /api/tower/start
+  - Các đường dẫn kết nối mạng: [POST] /api/user/team/add-members
+  - Các đường dẫn kết nối mạng: [POST] /api/user/team/promote
+  - Các chức năng/hàm: switchMainScreen(screenName), loadDashboardData(), renderUI(data), openClassModal(), closeClassModal(), selectClass(className)
+  - Các chức năng/hàm: logout(), switchInventoryTab(tabName), openForgeModal(itemId), closeForgeModal(), loadSystemConfig(), doForge()
+  - Các chức năng/hàm: loadInventoryDataFull(), renderBag(items), renderCharmCard(charm), showEquipOptions(itemId), unequipItem(slotIndex), discardCharm(itemId)
+  - Các chức năng/hàm: openSellCharm(itemId), closeSellModal(), confirmSellCharm(), getRarityColorClass(rarity), renderEquip(equipped), loadMarketData()
+  - Các chức năng/hàm: switchMarketTab(type), renderFilteredMarket(itemsToRender), useItem(itemId), openSellPopup(id, name, img, maxQty), confirmSellItem(), buyMarketItem(listingId, name, price)
+  - Các chức năng/hàm: cancelSell(listingId), loadArenaData(), loadArenaLobby(), renderIncomingMatches(matches), renderOutgoingMatches(matches), renderHistory(matches)
+  - Các chức năng/hàm: sendChallenge(), acceptMatch(matchId), joinLobby(matchId, team), cancelMatch(matchId), viewMatchResult(matchId), startMatch(matchId)
+  - Các chức năng/hàm: renderQuestion(), startTimer(), selectAnswer(questionObj, userChoice, indexChoice), showFeedback(isCorrect, explanationText), finishQuiz(), nextQuestion()
+  - Các chức năng/hàm: resetQuizTimer(), startLobbyAutoUpdate(), stopLobbyAutoUpdate(), loadOpponentsList(), updateWalletUI_Temp(change), resetTowerUI()
+  - Các chức năng/hàm: startTowerCombat(floorIndex), setupCombatUI(playerInfo, monsterInfo), renderTowerQuestion(), handleTowerAnswer(isCorrect), endTowerCombat(isWin), updateHealthBars()
+  - Các chức năng/hàm: answerQuestion(selectedKey), checkCombatStatus(), startQuestionTimer(), handleAnswerTimeout(), closeCombatView(), loadSkillTab()
+  - Các chức năng/hàm: renderSkillTree(level, learned), selectSkill(skillId, status), apiAction(action, skillId = ''), showDamagePopup(targetId, amount, colorClass = "text-yellow-400"), playVFX(vfxName, targetId, isProjectile = false), triggerPassiveVFX()
+  - Các chức năng/hàm: showFloatingText(text, targetId, color = '#fbbf24'), openShopView(), loadShopItems(), renderShopShelves(items), buyItem(itemId, itemName, price, currencyType), loadGlobalSkills()
+  - Các chức năng/hàm: loadMyStatus(), resetBossCombat(), checkBossStatus(), updateBossUI(boss), startBossBattle(), quitBossBattle()
+  - Các chức năng/hàm: startBossTimer(seconds), updateDisplay(), stopBossTimer(), bossGenerateQuestion(), checkAnswerAndAttack(selectedKey, btnElement), updatePlayerHPUI(currentHP, maxHP)
+  - Các chức năng/hàm: handleNextTurnLogic(), handleGameOver(serverMessage, reviveAtVal), handleReviveConfirm(), showDeathScreen(reviveAtString), updateTimer(), showBossFeedback(isCorrect, explainText)
+  - Các chức năng/hàm: closeBossFeedback(), handlePlayerTakeDamage(amount), openChangePassModal(), submitChangePass(), loadFreeAgents(), toggleStudentSelection(id, rowElement)
+  - Các chức năng/hàm: submitRecruitMembers(), loadTeamMembers(), promoteMember(targetId, targetName), loadGradingStudents(), preSubmitScore(category), closeConfirmModal()
+  - Các chức năng/hàm: loadActivityLogs(), checkMaintenanceIngame(), toggleSidebar(), initChat(), loadChatHistory(), appendMessage(msg)
+  - Các chức năng/hàm: updateChatStatus(text, colorClass), sendChatMessage(), handleChatKey(event), startSnowEffect(), loadPlayerCompanions(), renderCompanionGrid(cards)
+  - Các chức năng/hàm: openCardDetail(cardId), cardAction(type), openBreakthroughModal(card), closeBreakthroughModal(), resetFodderSlots(), autoSelectFodder()
+  - Các chức năng/hàm: showBreakthroughSuccess(data), closeBreakthroughSuccess(), showCompanionGuide(), executeBreakthrough(), confirmSellCompanionToMarket(), closeCardDetail()
+  - Các chức năng/hàm: showView(viewName), getRarityStyle(rarity), filterCompanions(rarity), equipCompanionAction(companionId), unequipCompanion(slotIndex), triggerEquipFromModal()
+  - Các chức năng/hàm: checkSavedTab(), reloadWithTab(tabName), initCampaign(), joinCampaignFaction(faction), updateCampaignDisplay(status, data), scanRadar()
+  - Các chức năng/hàm: formatTroops(num), openWarRoom(nodeCode, nodeName), getRarityColor(rarity), marchTroops(), recallTroops(), replenishTroops()
+  - Các chức năng/hàm: openCompanionSelection(), confirmSelectCommander(id, name), drawMarchingMovements(movements), step(), updateMapUI(nodesData, myLocationCode), startNodeTimer(id, endTimeStr)
+  - Các chức năng/hàm: stopNodeTimer(id), switchTab(tab), fetchBattleReports(), renderBattleReports(reports), showPhongThan(), closePhongThan()
+  - Các chức năng/hàm: switchCampaignScreen(state), loadWaitingRoomData(), handleCampaignChatKeyPress(event), sendCampaignChatMessage(), fetchCampaignChatMessages(), checkRespawnPenalty(respawnAtStr)
+  - Các chức năng/hàm: openMinigame(type), closeMinigame(type), getNextQuestionFromMemory(gameType), loadChieuBinhQuestion(), loadLuyenBinhQuestion(), submitChieuBinh(selectedOpt, btnEl, container)
+  - Các chức năng/hàm: handleTyping(e), updateCampaignTimer(endTimeIso), triggerKillAnnouncement(htmlContent), playNextKillAnnouncement(), openGuideModal(), closeGuideModal()
+  - Các chức năng/hàm: switchGuideTab(tabId), setInactive(el), setActive(el), renderMembers(members), cleanID(str), updateFunc()
+  - Các chức năng/hàm: renderList(players, isThanhLong)
