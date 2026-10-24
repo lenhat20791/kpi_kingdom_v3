@@ -9,7 +9,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from database import Player, engine, generate_username
 
-def import_players_from_excel(file_path: str, default_password: str = "123456"):
+def import_players_from_excel(file_path: str, default_password: str = "123456", grade: int = 6):
     """
     Đọc file Excel và nạp học sinh vào Database.
     File Excel cần có ít nhất một cột mang tên 'Họ và tên'.
@@ -55,6 +55,7 @@ def import_players_from_excel(file_path: str, default_password: str = "123456"):
                     full_name=full_name,
                     password_hash=get_password_hash(default_password),
                     role="player",
+                    grade=grade,
                     kpi=0,    
                     tri_thuc=0,
                     chien_tich=0,

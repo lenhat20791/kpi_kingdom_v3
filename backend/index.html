@@ -221,16 +221,12 @@
                         localStorage.setItem('kpi_role', data.user_info.role);         // Dashboard cần cái này!
                     }
 
-                    // 3. Logic phân luồng (Cập nhật thêm nhánh cho Phụ huynh)
+                    // 3. Logic phân luồng
                     const role = data.user_info?.role;
 
                     if (role === 'admin') {
                         alert("🫡 Chào sếp! Đang vào trang quản trị...");
                         window.location.href = 'admin.html';
-                    } 
-                    else if (role === 'parent') {
-                        // 👇 NHÁNH MỚI CHO PHỤ HUYNH 👇
-                        window.location.href = 'parent.html'; 
                     } 
                     else {
                         // Học sinh vào thẳng Hành trình tri thức

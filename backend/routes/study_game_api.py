@@ -852,6 +852,10 @@ def start_run(
             detail={"message": "Khối này chưa có đủ câu hỏi hợp lệ.", "available_grades": available_grades},
         )
 
+    # Người chơi chỉ được vào kho câu hỏi đúng khối của mình (admin được chọn tự do)
+    if current_user.role != "admin" and request.grade != current_user.grade:
+        raise HTTPException(status_code=403, detail=f"Tài khoản của bạn thuộc khối {current_user.grade}.")
+
     ensure_catalog(db)
     deck, deck_card_ids = _ensure_starter_deck(db, current_user.id)
     if not deck_card_ids:

@@ -23,6 +23,7 @@ def create_db_and_tables():
 def migrate_study_spire_schema(database_engine=None):
     target_engine = database_engine or engine
     additions = {
+        "player": {"grade": "INTEGER NOT NULL DEFAULT 6"},
         "studydeck": {
             "state_version": "INTEGER NOT NULL DEFAULT 1",
             "must_remain_full": "BOOLEAN NOT NULL DEFAULT 0",
@@ -77,7 +78,7 @@ class Player(SQLModel, table=True):
     plain_password: Optional[str] = Field(default=None)
     full_name: str
     role: str = Field(default="student") # admin / student
-    parent_of_id: Optional[int] = Field(default=None, foreign_key="player.id")
+    grade: int = Field(default=6, index=True)  # Khối lớp (6,7,8,9) -> quyết định bộ câu hỏi
 
     # --- 2. CHỈ SỐ SỨC MẠNH (LEVEL UP SYSTEM) ---
     level: int = Field(default=1)

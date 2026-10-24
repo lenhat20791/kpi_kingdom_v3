@@ -24,6 +24,13 @@ from database import (
     QuestionBank, ArenaMatch, ArenaParticipant,
     SkillTemplate, Title, SystemConfig,
     ScoreLog, ShopHistory, ActiveEffect, PlayerSkill, MarketListing,
+    PlayerItem, Companion, Notification, ChatLog, ChatWarningLog, ChatBan,
+    CampaignPlayer, TroopMovement, BattleReport, CampaignChat,
+    SpaceStationMatch, SpaceStationPlayer, SpaceStationAction, SpaceStationLog,
+    StudyDeckCard, StudyDeck, StudyCardInstance, StudyPlayerPack,
+    StudyPvpRoom, StudyPvpActionLedger, StudyRankedPlayer, StudyRankedMatch,
+    StudyBattle, StudyActiveRun, StudyBattleResolution, StudyActionLedger,
+    StudyRunHistory, StudyPlayerRelic, StudyPvpRelicLoadout,
 )
 
 from io import BytesIO
@@ -458,7 +465,13 @@ async def reset_all_passwords_api(db: Session = Depends(get_db)):
         )
 
 @router.post("/import-excel")
-async def import_excel(file: UploadFile = File(...), db: Session = Depends(get_db)):
+async def import_excel(
+    file: UploadFile = File(...),
+    grade: int = Form(6),
+    db: Session = Depends(get_db),
+):
+    if grade not in (6, 7, 8, 9):
+        raise HTTPException(status_code=400, detail="Khối lớp phải là 6, 7, 8 hoặc 9")
     try:
         # =================================================================================
         # 🛡️ BƯỚC 0: ĐẢM BẢO ADMIN LUÔN TỒN TẠI (CHỐT CHẶN AN TOÀN)
@@ -511,6 +524,13 @@ async def import_excel(file: UploadFile = File(...), db: Session = Depends(get_d
         col_name_origin = find_column(keywords_name)
         col_user_origin = find_column(keywords_user)
         col_team_origin = find_column(keywords_team)
+        # Cột khối/lớp trong Excel (nếu có) sẽ ghi đè khối chọn trên giao diện
+        col_grade_origin = next((col_map_raw[c] for c in normalized_cols if c.startswith('khoi') or c in ('lop', 'grade')), None)
+
+        import re
+        def parse_grade(val):
+            m = re.search(r'[6-9]', str(val)) if pd.notna(val) else None
+            return int(m.group()) if m else None
 
         print(f"✅ MAP CỘT: Tên=[{col_name_origin}] | User=[{col_user_origin}] | Tổ=[{col_team_origin}]")
 
@@ -521,6 +541,10 @@ async def import_excel(file: UploadFile = File(...), db: Session = Depends(get_d
         for index, row in df.iterrows():
             # --- LẤY HỌ TÊN ---
             full_name = row[col_name_origin] if col_name_origin else (row.iloc[0] if len(row) > 0 else f"Học sinh {index + 1}")
+            if pd.isna(full_name) or not str(full_name).strip():
+                continue
+            full_name = str(full_name).strip()
+            row_grade = (parse_grade(row[col_grade_origin]) if col_grade_origin else None) or grade
             # --- LẤY/TẠO USERNAME ---
             if col_user_origin:
                 username = str(row[col_user_origin]).strip()
@@ -571,6 +595,7 @@ async def import_excel(file: UploadFile = File(...), db: Session = Depends(get_d
                     team_id=0,       
                     
                     role="U3", # Mặc định là dân thường
+                    grade=row_grade,
                     kpi=0, 
                     hp=0,
                     level=1,
@@ -582,12 +607,18 @@ async def import_excel(file: UploadFile = File(...), db: Session = Depends(get_d
                 # Nếu user đã tồn tại, chỉ cập nhật tên, KHÔNG cập nhật tổ
                 # (Tránh việc import lại làm lính đang ở tổ này nhảy sang tổ khác)
                 existing_user.full_name = str(full_name)
+                existing_user.grade = row_grade
                 # existing_user.team_id = team_id # 👈 Bỏ dòng này đi, không cho update tổ từ Excel nữa
                 db.add(existing_user)
                 count_updated += 1
                 
         db.commit()
-        return {"success": True, "message": f"Đã xử lý! Cột tên nhận diện là: '{col_name_origin}'"}
+        return {
+            "success": True,
+            "added": count_added,
+            "updated": count_updated,
+            "message": f"Đã tạo {count_added} tài khoản mới, cập nhật {count_updated} (khối mặc định {grade}). Cột tên: '{col_name_origin}'",
+        }
         
     except Exception as e:
         print(f"Lỗi: {e}")
@@ -599,100 +630,6 @@ class ChangePassSchema(BaseModel):
     old_password: str
     new_password: str
 
-@router.post("/gradebook/create-parents")
-async def create_parent_accounts(file: UploadFile = File(...), db: Session = Depends(get_db)):
-    try:
-        contents = await file.read()
-        df = pd.read_excel(BytesIO(contents))
-        if df.empty: return {"status": "error", "message": "File Excel trống!"}
-
-        from unidecode import unidecode
-        def normalize_str(s): return unidecode(str(s)).lower().strip().replace(" ", "").replace("_", "")
-        
-        col_map_raw = {normalize_str(c): c for c in df.columns}
-        normalized_cols = list(col_map_raw.keys())
-        keywords_name = ['hovaten', 'hoten', 'ten', 'fullname', 'name', 'hocsinh']
-        
-        col_name_origin = None
-        for kw in keywords_name:
-            for col_norm in normalized_cols:
-                if kw in col_norm:
-                    col_name_origin = col_map_raw[col_norm]
-                    break
-            if col_name_origin: break
-        
-        if not col_name_origin:
-            return {"status": "error", "message": "Không tìm thấy cột Họ tên!"}
-
-        created_count = 0
-        skipped_count = 0
-        not_found_student = 0
-        
-        for index, row in df.iterrows():
-            full_name = str(row[col_name_origin]).strip()
-            if not full_name or full_name == "nan": continue
-            
-            student_user_slug = generate_username(full_name) 
-
-            # Tìm học sinh để lấy ID liên kết
-            student = db.exec(select(Player).where(
-                (Player.full_name == full_name) | 
-                (Player.username == student_user_slug)
-            )).first()
-            
-            if not student:
-                not_found_student += 1
-                continue
-
-            parent_user = f"ph{student.username}"
-            existing_parent = db.exec(select(Player).where(Player.username == parent_user)).first()
-            
-            if not existing_parent:
-                # --- TẠO MỚI: Gán liên kết ngay lập tức ---
-                new_parent = Player(
-                    username=parent_user,
-                    full_name=f"Phụ huynh {student.full_name}",
-                    password_hash=get_password_hash("123456"),
-                    plain_password="123456",
-                    role="parent",
-                    parent_of_id=student.id # Liên kết khi tạo mới
-                )
-                db.add(new_parent)
-                created_count += 1
-            else:
-                # --- CẬP NHẬT (Quan trọng): Nếu đã có acc nhưng chưa liên kết hoặc sai liên kết ---
-                if existing_parent.parent_of_id != student.id:
-                    existing_parent.parent_of_id = student.id
-                    db.add(existing_parent)
-                    created_count += 1 # Tính vào số lượng đã xử lý/cập nhật
-                else:
-                    skipped_count += 1
-        
-        db.commit()
-        return {
-            "status": "success", 
-            "message": f"✅ Hệ thống đã đồng bộ: {created_count} tài khoản được tạo mới hoặc sửa liên kết. (Bỏ qua {skipped_count} đã chuẩn xác)."
-        }
-        
-    except Exception as e:
-        return {"status": "error", "message": f"Lỗi hệ thống: {str(e)}"}
-
-@router.get("/gradebook/parents-list")
-async def get_parents_list(db: Session = Depends(get_db)):
-    try:
-        # Lấy tất cả Player có role là 'parent'
-        parents = db.exec(select(Player).where(Player.role == "parent")).all()
-        
-        # Trả về danh sách rút gọn để hiển thị
-        return [{
-            "username": p.username,
-            "full_name": p.full_name,
-            "plain_password": p.plain_password or "Chưa đặt",
-            "student_id": p.parent_of_id
-        } for p in parents]
-    except Exception as e:
-        return {"status": "error", "message": str(e)}
-    
 @router.post("/security/change-admin-password")
 async def change_admin_password(req: ChangePassSchema, db: Session = Depends(get_db)):
     print(f"🔄 Đang xử lý đổi mật khẩu cho Admin...")
@@ -756,15 +693,60 @@ async def reset_season(db: Session = Depends(get_db)):
         db.exec(delete(ArenaParticipant)) # [cite: 165]
         db.exec(delete(ArenaMatch))       # [cite: 162]
 
+        # --- NHÓM 2B: ĐỒ CÁ NHÂN, ĐỒNG HÀNH, CHAT, CHIẾN DỊCH, TRẠM VŨ TRỤ ---
+        db.exec(delete(PlayerItem))
+        db.exec(delete(Companion))
+        db.exec(delete(ChatLog))
+        db.exec(delete(ChatWarningLog))
+        db.exec(delete(ChatBan))
+        db.exec(delete(BattleReport))
+        db.exec(delete(CampaignChat))
+        db.exec(delete(TroopMovement))
+        db.exec(delete(CampaignPlayer))
+        db.exec(delete(SpaceStationLog))
+        db.exec(delete(SpaceStationAction))
+        db.exec(delete(SpaceStationPlayer))
+        db.exec(delete(SpaceStationMatch))
+
+        # --- NHÓM 2C: STUDY SPIRE (thẻ bài, deck, run, PvP, xếp hạng) ---
+        db.exec(delete(StudyBattle))
+        db.exec(delete(StudyActiveRun))
+        db.exec(delete(StudyBattleResolution))
+        db.exec(delete(StudyActionLedger))
+        db.exec(delete(StudyRunHistory))
+        db.exec(delete(StudyPlayerRelic))
+        db.exec(delete(StudyPvpRelicLoadout))
+        db.exec(delete(StudyPvpActionLedger))
+        db.exec(delete(StudyPvpRoom))
+        db.exec(delete(StudyRankedMatch))
+        db.exec(delete(StudyRankedPlayer))
+        db.exec(delete(StudyDeckCard))
+        db.exec(delete(StudyDeck))
+        db.exec(delete(StudyCardInstance))
+        db.exec(delete(StudyPlayerPack))
+
         # --- NHÓM 3: XÓA NGƯỜI CHƠI (GIỮ ADMIN) ---
-        # Việc xóa Player sẽ tự động xóa sạch Level, Tiền tệ, KPI vì chúng nằm trong bảng này
         statement = delete(Player).where(Player.role != "admin") # 
         db.exec(statement)
-        
+
+        # Admin giữ lại nhưng xóa sạch trang bị / tiến trình gắn với mùa cũ
+        for admin in db.exec(select(Player).where(Player.role == "admin")).all():
+            admin.equip_slot_1 = admin.equip_slot_2 = admin.equip_slot_3 = admin.equip_slot_4 = None
+            admin.companion_slot_1 = admin.companion_slot_2 = admin.companion_slot_3 = None
+            admin.skills_data = "{}"
+            admin.equipped_skill = None
+            admin.tower_floor = 1
+            admin.revive_at = None
+            db.add(admin)
+
         db.commit()
+
+        remaining = db.exec(select(func.count()).select_from(Player).where(Player.role != "admin")).one()
+        if remaining:
+            raise RuntimeError(f"Reset chưa sạch: còn {remaining} người chơi")
         return {
             "success": True, 
-            "message": "Mùa giải đã kết thúc! Toàn bộ học sinh và lịch sử đã được dọn dẹp."
+            "message": "Mùa giải đã kết thúc! Toàn bộ học sinh và lịch sử đã được dọn dẹp. Hệ thống sẵn sàng nạp danh sách lớp mới."
         }
         
     except Exception as e:
