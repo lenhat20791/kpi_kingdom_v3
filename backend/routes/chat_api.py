@@ -1,7 +1,7 @@
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from sqlalchemy import desc, delete, text
-from database import get_db, ChatLog, Player, ChatBan, ChatKeyword, ChatWarningLog
+from database import get_db, ChatLog, Player, ChatBan, ChatKeyword, ChatWarningLog, player_display_name
 from datetime import datetime, timedelta
 import json
 import jwt 
@@ -118,7 +118,7 @@ async def websocket_endpoint(websocket: WebSocket, token: str = Query(...), db: 
             msg_data = {
                 "type": "chat",
                 "player_id": player.id,
-                "player_name": player.full_name,
+                "player_name": player_display_name(player),
                 "role": player.role,
                 "content": content,
                 "time": datetime.now().strftime("%H:%M %d/%m")
@@ -128,7 +128,7 @@ async def websocket_endpoint(websocket: WebSocket, token: str = Query(...), db: 
             await manager.broadcast(msg_data)
             
             # Lưu tin nhắn chính
-            db.add(ChatLog(player_id=player.id, player_name=player.full_name, role=player.role, content=content, created_at=get_vn_time()))
+            db.add(ChatLog(player_id=player.id, player_name=player_display_name(player), role=player.role, content=content, created_at=get_vn_time()))
             
             # 3. XỬ LÝ NẾU VI PHẠM
             if violation_detected:
@@ -138,7 +138,7 @@ async def websocket_endpoint(websocket: WebSocket, token: str = Query(...), db: 
                     "player_id": 0, # ID 0 là System
                     "player_name": "⚠️ HỆ THỐNG",
                     "role": "SYSTEM",
-                    "content": f"[{player.full_name}] đã có ngôn từ không chuẩn mực, xin chú ý! Nếu tái phạm sẽ bị cấm chat 12h.",
+                    "content": f"[{player_display_name(player)}] đã có ngôn từ không chuẩn mực, xin chú ý! Nếu tái phạm sẽ bị cấm chat 12h.",
                     "time": datetime.now().strftime("%H:%M")
                 }
                 await manager.broadcast(warning_msg)
@@ -197,11 +197,13 @@ def ban_player(target_id: int, hours: int, reason: str, db: Session = Depends(ge
 def get_chat_history(db: Session = Depends(get_db)):
     msgs = db.query(ChatLog).order_by(desc(ChatLog.id)).limit(50).all()
     results = []
+    players = {p.id: p for p in db.query(Player).filter(Player.id.in_({m.player_id for m in msgs})).all()}
     for msg in reversed(msgs):
+        author = players.get(msg.player_id)
         results.append({
             "type": "chat",
             "player_id": msg.player_id,
-            "player_name": msg.player_name,
+            "player_name": player_display_name(author) if author else msg.player_name,
             "role": msg.role,
             "content": msg.content,
             "time": datetime.strptime(msg.created_at, "%Y-%m-%d %H:%M:%S").strftime("%H:%M %d/%m") if msg.created_at else ""

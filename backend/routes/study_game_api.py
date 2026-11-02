@@ -57,6 +57,7 @@ from game_logic.physics_cards import PHYSICS_CARDS, legacy_effects
 from game_logic.chemistry_cards import CHEMISTRY_CARDS
 from game_logic.biology_cards import BIOLOGY_CARDS
 from routes.auth import get_current_user
+from services.classroom_content import SUPPORTED_GRADES, sync_grade_classroom_content
 
 
 router = APIRouter(prefix="/api/study-spire", tags=["Study Spire"])
@@ -197,6 +198,8 @@ def _study_player_profile(player: Player) -> dict[str, Any]:
         "player_id": player.id,
         "name": player_display_name(player),
         "username": player.username,
+        "grade": player.grade,
+        "role": player.role,
         "avatar_url": avatar_url,
     }
 
@@ -602,7 +605,7 @@ def _correct_option_key(question: QuestionBank, options: list[dict[str, str]]) -
 
 def _available_grades(db: Session) -> list[int]:
     valid_counts: dict[int, int] = {}
-    questions = db.exec(select(QuestionBank)).all()
+    questions = db.exec(select(QuestionBank).where(QuestionBank.source_key.is_not(None))).all()
     for question in questions:
         options = _question_options(question)
         if options and _correct_option_key(question, options):
@@ -732,7 +735,15 @@ def _prepare_room_state(db: Session, run: StudyActiveRun, node_id: str) -> dict[
 
     if room_type in {"inn", "event"}:
         question_count = 5 if room_type == "inn" else 3
-        candidates = db.exec(select(QuestionBank).where(QuestionBank.grade == run.grade)).all()
+        try:
+            sync_grade_classroom_content(db, run.grade)
+        except (FileNotFoundError, ValueError) as error:
+            raise HTTPException(status_code=503, detail=str(error)) from error
+        source_prefix = f"json:g{run.grade}:"
+        candidates = db.exec(select(QuestionBank).where(
+            QuestionBank.grade == run.grade,
+            QuestionBank.source_key.startswith(source_prefix),
+        )).all()
         valid_questions = [
             question for question in candidates
             if (options := _question_options(question)) and _correct_option_key(question, options)
@@ -754,9 +765,17 @@ def _prepare_room_state(db: Session, run: StudyActiveRun, node_id: str) -> dict[
         return state
 
     if room_type == "chest":
+        try:
+            sync_grade_classroom_content(db, run.grade)
+        except (FileNotFoundError, ValueError) as error:
+            raise HTTPException(status_code=503, detail=str(error)) from error
         passage = db.exec(
             select(StudyPassage)
-            .where(StudyPassage.grade == run.grade, StudyPassage.is_active == True)
+            .where(
+                StudyPassage.grade == run.grade,
+                StudyPassage.is_active == True,
+                StudyPassage.passage_id.startswith(f"json:g{run.grade}:"),
+            )
             .order_by(func.random())
         ).first()
         if passage is None:
@@ -805,6 +824,11 @@ def get_catalog(
     current_user: Player = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
+    try:
+        for grade in SUPPORTED_GRADES:
+            sync_grade_classroom_content(db, grade)
+    except (FileNotFoundError, ValueError) as error:
+        raise HTTPException(status_code=503, detail=str(error)) from error
     ensure_catalog(db)
     db.commit()
     cards = db.exec(select(StudyCardTemplate).where(StudyCardTemplate.is_active == True).order_by(StudyCardTemplate.subject, StudyCardTemplate.card_id)).all()
@@ -846,6 +870,11 @@ def start_run(
     if existing_run:
         raise HTTPException(status_code=409, detail="Bạn đã có một hành trình đang diễn ra.")
 
+    if request.grade in SUPPORTED_GRADES:
+        try:
+            sync_grade_classroom_content(db, request.grade)
+        except (FileNotFoundError, ValueError) as error:
+            raise HTTPException(status_code=503, detail=str(error)) from error
     available_grades = _available_grades(db)
     if request.grade not in available_grades:
         raise HTTPException(

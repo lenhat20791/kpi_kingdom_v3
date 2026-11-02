@@ -197,23 +197,24 @@ h1, h2, h3, p { margin-top: 0; }
 @keyframes monster-hurt { from { background-position: 0 0; } to { background-position: var(--monster-final-position) 0; } }
 @keyframes monster-death { from { background-position: 0 0; } to { background-position: var(--monster-final-position) 0; } }
 .combatant h3 { margin: 6px 0 9px; font: 600 14px 'Times New Roman', Times, serif; }
-.health-line { height: 8px; overflow: hidden; border: 1px solid rgba(255, 255, 255, .16); background: rgba(0, 0, 0, .76); }
-.health-line span { display: block; height: 100%; background: linear-gradient(90deg, #c2504f, #ef8c6e); transition: width .25s; }
+.health-line { height: 10px; overflow: hidden; border: 1px solid rgba(255, 255, 255, .28); border-radius: 6px; background: rgba(0, 0, 0, .76); box-shadow: 0 2px 5px rgba(0, 0, 0, .55); }
+.health-line span { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #c2504f, #ef8c6e); transition: width .35s; }
 .player .health-line span { background: linear-gradient(90deg, #388d6e, #94d4a9); }
-.health-label { display: flex; justify-content: space-between; margin-top: 5px; color: #dce2dc; font-size: 10px; }
+.health-label { display: flex; justify-content: space-between; gap: 12px; margin-top: 5px; color: #dce2dc; font-size: 10px; }
+.health-label span:last-child { margin-left: auto; padding-left: 8px; white-space: nowrap; font-variant-numeric: tabular-nums; }
 .effect-stack-row { display: flex; min-height: 0; flex-direction: row; flex-wrap: wrap; justify-content: center; gap: 6px; margin-top: 2px; }
 .effect-stack { position: relative; display: inline-flex; width: 20px; height: 20px; align-items: center; justify-content: center; overflow: visible; padding: 0; border: 0; color: #fff; background: transparent; box-shadow: none; line-height: 1; }
 .battle-layout-board .combatant .effect-stack img { display: block; width: 20px; height: 20px; flex: 0 0 20px; object-fit: contain; image-rendering: pixelated; }
 .effect-stack b { position: absolute; right: -2px; bottom: -2px; color: #fff; background: transparent; font-size: 11px; font-weight: bold; line-height: 1; text-shadow: 1px 1px 2px #000; font-variant-numeric: tabular-nums; }
 .effect-tooltip { position: fixed; z-index: 1000; width: max-content; max-width: 220px; padding: 8px 10px; border: 1px solid #d97706; border-radius: 4px; color: #f8fafc; background: rgba(15, 23, 42, .95); box-shadow: 0 4px 12px rgba(0, 0, 0, .5); font-size: 12px; line-height: 1.45; white-space: pre-line; pointer-events: none; }
 .combat-feedback { position: fixed; z-index: 1200; width: 0; height: 0; pointer-events: none; }
-.combat-feedback-number { position: absolute; top: 0; left: 0; color: #fff; font-size: 28px; font-weight: 900; line-height: 1; text-shadow: 0 2px 3px #000, 1px 1px 2px #000; white-space: nowrap; animation: combat-number-rise .9s ease-out forwards; }
+.combat-feedback-number { position: absolute; top: 0; left: 0; color: #fff; font-size: 28px; font-weight: 900; line-height: 1; text-shadow: 0 2px 3px #000, 1px 1px 2px #000; white-space: nowrap; animation: combat-number-rise 1.35s ease-out forwards; }
 .combat-feedback-poison .combat-feedback-number { color: #166534; text-shadow: 0 2px 3px #000, 0 0 5px rgba(34, 197, 94, .6); }
 .combat-feedback-heal .combat-feedback-number { color: #bbf7d0; text-shadow: 0 2px 3px #000, 0 0 5px rgba(134, 239, 172, .7); }
 .combat-feedback-block .combat-feedback-number { color: #fef3c7; font-size: 20px; text-shadow: 0 2px 3px #000, 0 0 7px rgba(245, 158, 11, .8); }
 .combat-feedback-particle { position: absolute; top: 24px; left: 0; width: var(--particle-size); height: var(--particle-size); border-radius: 50%; opacity: 0; pointer-events: none; }
-.combat-feedback-particle-poison { background: radial-gradient(circle, rgba(74, 222, 128, .95), rgba(21, 128, 61, .72) 55%, rgba(20, 83, 45, 0)); filter: blur(1px); animation: poison-smoke .9s ease-out var(--particle-delay) forwards; }
-.combat-feedback-particle-heal { background: radial-gradient(circle, #fff7ad, #facc15 55%, rgba(250, 204, 21, 0)); box-shadow: 0 0 5px rgba(250, 204, 21, .8); animation: heal-spark .9s ease-out var(--particle-delay) forwards; }
+.combat-feedback-particle-poison { background: radial-gradient(circle, rgba(74, 222, 128, .95), rgba(21, 128, 61, .72) 55%, rgba(20, 83, 45, 0)); filter: blur(1px); animation: poison-smoke 1.3s ease-out var(--particle-delay) forwards; }
+.combat-feedback-particle-heal { background: radial-gradient(circle, #fff7ad, #facc15 55%, rgba(250, 204, 21, 0)); box-shadow: 0 0 5px rgba(250, 204, 21, .8); animation: heal-spark 1.3s ease-out var(--particle-delay) forwards; }
 @keyframes combat-number-rise { 0% { opacity: 0; transform: translate(-50%, 8px) scale(.8); } 18% { opacity: 1; transform: translate(-50%, 0) scale(1.08); } 100% { opacity: 0; transform: translate(-50%, -48px) scale(1); } }
 @keyframes poison-smoke { 0% { opacity: 0; transform: translate(-50%, -50%) scale(.35); } 18% { opacity: .9; } 100% { opacity: 0; transform: translate(var(--particle-x), calc(var(--particle-y) + 32px)) scale(1.35); } }
 @keyframes heal-spark { 0% { opacity: 0; transform: translate(-50%, -28px) scale(.5); } 20% { opacity: 1; } 100% { opacity: 0; transform: translate(var(--particle-x), var(--particle-y)) scale(.2); } }
@@ -306,6 +307,19 @@ h1, h2, h3, p { margin-top: 0; }
 .ranked-relic-card small { color: var(--muted); font-size: 9px; line-height: 1.4; }
 .ranked-relic-card input { accent-color: var(--gold); }
 .ranked-relic-card.is-locked { opacity: .48; cursor: default; }
+.pvp-chat { position: relative; overflow: hidden; width: min(1240px, calc(100% - 40px)); margin: 0 auto 36px; padding: 14px; border: 1px solid rgba(170, 210, 255, .35); background: linear-gradient(180deg, #0d1f33 0%, #12293f 55%, #1a3550 100%); }
+.pvp-chat-snow { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; }
+.pvp-chat > :not(canvas) { position: relative; z-index: 1; }
+.pvp-chat-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; color: #dff0ff; font-size: 11px; letter-spacing: .06em; }
+.pvp-chat-head small { color: #9fc4e6; }
+.pvp-chat-messages { height: 220px; overflow-y: auto; overscroll-behavior: contain; padding: 8px 10px; background: rgba(6, 16, 28, .45); scrollbar-width: thin; scrollbar-color: #8fb8e0 transparent; }
+.pvp-chat-message { margin-bottom: 8px; }
+.pvp-chat-message small { display: block; color: #9fc4e6; font-size: 9px; }
+.pvp-chat-message p { margin: 2px 0 0; color: #f1f7ff; font-size: 12px; line-height: 1.5; overflow-wrap: anywhere; }
+.pvp-chat-message.is-system p { color: var(--gold); }
+.pvp-chat-form { display: flex; gap: 8px; margin-top: 10px; }
+.pvp-chat-form input { flex: 1; min-width: 0; padding: 9px 12px; border: 1px solid rgba(170, 210, 255, .35); background: rgba(6, 16, 28, .7); color: #f1f7ff; }
+.pvp-chat-notice { min-height: 14px; margin: 6px 0 0; color: #ffb4a8; font-size: 10px; }
 .ranked-relic-card .relic-lock-label { color: var(--gold); }
 .pvp-lobby-toolbar, .pvp-section-heading, .pvp-room-header { display: flex; align-items: center; justify-content: space-between; gap: 14px; }
 .pvp-lobby-toolbar { margin-bottom: 20px; }
@@ -550,7 +564,9 @@ h1, h2, h3, p { margin-top: 0; }
 .battle-layout-board .combatant { display: flex; width: min(28%, 330px); flex-direction: column; align-items: center; }
 .battle-layout-board .combatant.player { margin-left: 2%; }
 .battle-layout-board .combatant.enemy { margin-right: 2%; }
+.battle-layout-board .monster-attack { margin-bottom: 8px; padding: 5px 10px; border: 1px solid rgba(244, 191, 107, .72); border-radius: 999px; color: #ffe3a3; background: rgba(20, 15, 10, .82); box-shadow: 0 2px 8px rgba(0, 0, 0, .55); font-size: 10px; font-weight: 800; letter-spacing: .4px; text-shadow: 0 1px 3px #000; white-space: nowrap; }
 .battle-layout-board .combatant h3 { margin: 8px 0; font-size: 13px; text-shadow: 0 2px 5px #000; }
+.battle-layout-board .combatant .health-line { width: 100%; margin-top: 5px; }
 .battle-layout-board .fighter-sprite { flex: 0 0 100px; margin: 36px auto 26px; }
 .battle-layout-board .monster-sprite { flex: 0 0 160px; margin-bottom: 0; }
 .battle-layout-board .combat-status { flex-wrap: wrap; }
@@ -593,8 +609,10 @@ h1, h2, h3, p { margin-top: 0; }
     .battle-layout-board .combatant.player, .battle-layout-board .combatant.enemy { margin-inline: 0; }
     .battle-layout-board .fighter-sprite { transform: scale(.82); transform-origin: center bottom; margin-block: 22px 14px; }
     .battle-layout-board .monster-sprite { transform: scaleX(-1) scale(.82); transform-origin: center bottom; margin-bottom: -24px; }
+    .battle-layout-board .monster-attack { margin-bottom: 5px; padding: 4px 7px; font-size: 8px; }
     .battle-layout-board .combatant h3 { font-size: 10px; }
-    .battle-layout-board .health-label { font-size: 8px; }
+    .battle-layout-board .health-label { gap: 6px; font-size: 8px; }
+    .battle-layout-board .health-label span:last-child { padding-left: 4px; }
     .effect-stack-row { gap: 4px; margin-top: 2px; }
     .effect-stack { width: 18px; height: 18px; padding: 0; border: 0; background: transparent; box-shadow: none; }
     .battle-layout-board .combatant .effect-stack img { width: 16px; height: 16px; flex-basis: 16px; }
@@ -613,6 +631,53 @@ h1, h2, h3, p { margin-top: 0; }
     .hand-fan .spire-card-description { min-height: 42px; padding-top: 11px; font-size: 9px; }
     .battle-end-turn { top: 52px; right: 10px; bottom: auto; }
     .battle-end-turn .secondary-button { min-width: 100px; min-height: 41px; padding-inline: 9px; font-size: 10px; }
+}
+
+.mailbox-menu-item { position: relative; }
+.mailbox-menu-item > span:first-child { font-size: 16px; }
+.mailbox-unread-badge { display: inline-grid; min-width: 22px; height: 22px; place-items: center; margin-left: auto; padding: 0 6px; border: 1px solid #fff0b0; border-radius: 50%; color: #fff8df !important; background: #b83232; box-shadow: 0 0 12px rgba(255, 66, 66, .7); font: 900 12px Arial, sans-serif !important; animation: mailbox-badge-bounce .8s ease-in-out infinite alternate; }
+@keyframes mailbox-badge-bounce { from { transform: translateY(0) scale(1); } to { transform: translateY(-4px) scale(1.12); } }
+.mailbox-topline { display: flex; width: min(1240px, calc(100% - 40px)); align-items: end; justify-content: space-between; gap: 18px; margin: 0 auto; padding: 34px 0 20px; border-bottom: 1px solid var(--line); }
+.mailbox-topline h1 { margin: 0; font: 600 30px 'Times New Roman', Times, serif; }
+.mailbox-instructions { width: min(1240px, calc(100% - 40px)); margin: 18px auto; padding: 13px 16px; border-left: 3px solid var(--gold); color: #e7dfc9; background: rgba(36, 48, 41, .7); font-size: 13px; line-height: 1.6; }
+.mailbox-layout { display: grid; width: min(1240px, calc(100% - 40px)); grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr); gap: 18px; margin: 0 auto; }
+.mail-panel { min-width: 0; padding: 20px; border: 1px solid var(--line); background: rgba(18, 29, 27, .92); box-shadow: 0 8px 26px rgba(0, 0, 0, .2); }
+.mail-panel h2 { margin: 0; color: var(--gold); font: 600 19px 'Times New Roman', Times, serif; }
+.mailbox-compose { display: flex; flex-direction: column; gap: 9px; }
+.mailbox-compose h2 { margin-bottom: 8px; }
+.mailbox-compose label { display: grid; gap: 6px; color: var(--muted); font-size: 11px; }
+.mail-fixed-field, .mailbox-compose input, .mailbox-compose textarea { width: 100%; padding: 10px 11px; border: 1px solid rgba(202, 179, 112, .23); border-radius: 2px; color: var(--ink); background: rgba(6, 12, 12, .76); font-size: 13px; }
+.mail-fixed-field { display: block; color: #e9d59c; }
+.mailbox-compose input:focus, .mailbox-compose textarea:focus { outline: 1px solid var(--gold); }
+.mailbox-compose textarea { min-height: 145px; resize: vertical; line-height: 1.5; }
+.mailbox-compose button { align-self: flex-start; margin-top: 5px; }
+.mailbox-inbox { display: flex; flex-direction: column; gap: 12px; }
+.mailbox-heading { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.mailbox-message-list { display: grid; max-height: 420px; gap: 8px; overflow-y: auto; padding-right: 3px; }
+.mailbox-message-card { display: grid; gap: 5px; padding: 12px; border: 1px solid rgba(202, 179, 112, .2); color: var(--ink); background: rgba(5, 11, 11, .65); text-align: left; }
+.mailbox-message-card:hover, .mailbox-message-card.has-unread { border-color: var(--gold); background: rgba(42, 49, 37, .82); }
+.mailbox-message-card small, .mailbox-message-status { color: var(--muted); font-size: 10px; }
+.mailbox-message-card.has-unread .mailbox-message-status { color: #ffaaa0; font-weight: 800; }
+.mailbox-message-subject { overflow: hidden; font-size: 14px; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
+.mailbox-empty, .mailbox-pending { margin: 0; padding: 18px 10px; color: var(--muted); font-size: 12px; line-height: 1.6; }
+.mailbox-message-detail { padding: 15px; border-top: 1px solid var(--line); background: rgba(6, 12, 12, .58); }
+.mailbox-detail-heading { display: flex; align-items: start; justify-content: space-between; gap: 12px; }
+.mailbox-detail-heading .eyebrow { margin-bottom: 6px; }
+.mailbox-detail-heading h2 { color: var(--ink); }
+.mailbox-detail-heading > span { flex: 0 0 auto; color: var(--gold); font-size: 11px; }
+.mailbox-detail-label { margin: 12px 0 5px; color: var(--gold); font-size: 11px; font-weight: 700; }
+.mailbox-detail-body { margin: 0; color: #e1e6df; font-size: 13px; line-height: 1.65; white-space: pre-wrap; overflow-wrap: anywhere; }
+.mailbox-reply { margin-top: 14px; padding: 12px; border-left: 2px solid var(--green); background: rgba(45, 93, 69, .16); }
+.mailbox-reply small { display: block; margin-top: 9px; color: #a7d7b8; font-size: 10px; }
+.mailbox-notice-panel { max-height: min(80vh, 650px); overflow-y: auto; }
+.mailbox-notice-content { color: #e1e6df; font-size: 14px; line-height: 1.7; white-space: pre-wrap; overflow-wrap: anywhere; }
+#mailbox-status { width: min(1240px, calc(100% - 40px)); margin: 10px auto 28px; }
+@media (max-width: 760px) {
+    .mailbox-topline { align-items: start; }
+    .mailbox-topline h1 { font-size: 23px; }
+    .mailbox-layout { grid-template-columns: 1fr; }
+    .mailbox-compose, .mailbox-inbox { padding: 15px; }
+    .mailbox-message-list { max-height: 300px; }
 }
 
 /* Guide */

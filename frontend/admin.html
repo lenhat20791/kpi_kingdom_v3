@@ -375,6 +375,11 @@
                 <i class="fas fa-comments w-6 text-center"></i> Chat & Kiểm Soát
             </button>
 
+            <button onclick="switchTab('scholar-mail')" data-tab="scholar-mail"
+                class="nav-item w-full text-left px-6 py-3 transition border-l-4 border-transparent text-gray-300 hover:bg-gray-700 hover:text-white hover:border-amber-400">
+                <i class="fa-solid fa-envelope w-6 text-center"></i> Thư từ học giả
+            </button>
+
             <button onclick="switchTab('arena')" data-tab="arena" 
                 class="nav-item w-full text-left px-6 py-3 transition border-l-4 border-transparent text-gray-300 hover:bg-gray-700 hover:text-white hover:border-blue-500">
                 <i class="fa-solid fa-swords w-6 text-center"></i> Lôi đài
@@ -2010,6 +2015,28 @@
             </div>
         </div>
 
+        <div id="tab-scholar-mail" class="tab-content hidden max-w-7xl mx-auto">
+            <header class="mb-6">
+                <h2 class="text-2xl font-bold text-white"><i class="fa-solid fa-envelope-open-text mr-2 text-amber-400"></i>Thư từ học giả</h2>
+                <p class="mt-2 text-sm text-gray-400">Tiếp nhận góp ý, báo lỗi, phản hồi người chơi và gửi pack quà trực tiếp vào Kho đồ.</p>
+            </header>
+            <div class="grid grid-cols-1 xl:grid-cols-5 gap-5">
+                <section class="xl:col-span-2 bg-gray-800 border border-gray-700 rounded-xl p-4">
+                    <div class="flex items-center justify-between mb-3">
+                        <h3 class="font-bold text-amber-300">Hộp thư đến</h3>
+                        <button onclick="loadScholarMailbox()" class="text-xs px-3 py-1.5 rounded bg-gray-700 hover:bg-gray-600">Làm mới</button>
+                    </div>
+                    <div id="scholar-mail-list" class="space-y-2 max-h-[70vh] overflow-y-auto">
+                        <p class="text-sm text-gray-400">Chọn tab để tải thư.</p>
+                    </div>
+                </section>
+                <section id="scholar-mail-detail" class="xl:col-span-3 bg-gray-800 border border-gray-700 rounded-xl p-5 min-h-64">
+                    <p class="text-sm text-gray-400">Chọn một thư để xem nội dung và thao tác phản hồi.</p>
+                </section>
+            </div>
+            <p id="scholar-mail-status" class="mt-4 text-sm text-gray-300" aria-live="polite"></p>
+        </div>
+
         <div id="tab-chat" class="tab-content hidden h-full flex flex-col gap-4">
     
             <div class="bg-black border-4 border-gray-700 rounded-lg w-full relative overflow-hidden shadow-2xl flex flex-col h-[50vh]">
@@ -2093,6 +2120,135 @@
         let currentBossDrops = [];
         let chatSocket = null;
         let currentSTMatchId = null
+        let currentScholarMessageId = null;
+        let currentScholarMessage = null;
+
+        function escapeScholarMailHtml(value) {
+            return String(value ?? '').replace(/[&<>"']/g, character => ({
+                '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+            })[character]);
+        }
+
+        async function scholarMailboxRequest(path, options = {}) {
+            const token = localStorage.getItem('access_token');
+            const headers = { 'Authorization': `Bearer ${token}`, ...(options.headers || {}) };
+            if (options.body) headers['Content-Type'] = 'application/json';
+            const response = await fetch(`/api/study-spire/mailbox${path}`, { ...options, headers });
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok) throw new Error(data.detail || `Lỗi máy chủ (${response.status})`);
+            return data;
+        }
+
+        function renderScholarMailList(messages) {
+            const list = document.getElementById('scholar-mail-list');
+            if (!messages.length) {
+                list.innerHTML = '<p class="text-sm text-gray-400 p-3">Chưa có thư góp ý hoặc báo lỗi.</p>';
+                return;
+            }
+            list.innerHTML = messages.map(message => `
+                <button type="button" data-scholar-message="${escapeScholarMailHtml(message.message_id)}"
+                    class="w-full text-left p-3 rounded border ${message.is_read ? 'border-gray-700 bg-gray-900/50' : 'border-amber-500 bg-amber-950/30'} hover:border-amber-300">
+                    <span class="flex justify-between gap-2 text-sm font-bold text-white"><span class="truncate">${escapeScholarMailHtml(message.subject)}</span><span class="text-[10px] ${message.is_read ? 'text-gray-500' : 'text-amber-300'}">${message.is_read ? 'Đã đọc' : 'MỚI'}</span></span>
+                    <span class="block mt-1 text-xs text-gray-400">${escapeScholarMailHtml(message.sender_name)} · Khối ${escapeScholarMailHtml(message.sender_grade)}</span>
+                    <span class="block mt-1 text-[10px] text-gray-500">${new Date(message.created_at).toLocaleString('vi-VN')}</span>
+                </button>`).join('');
+            list.querySelectorAll('[data-scholar-message]').forEach(button => {
+                button.addEventListener('click', () => openScholarMessage(button.dataset.scholarMessage));
+            });
+        }
+
+        async function loadScholarMailbox() {
+            const status = document.getElementById('scholar-mail-status');
+            status.textContent = 'Đang tải thư...';
+            try {
+                const result = await scholarMailboxRequest('/admin/messages');
+                renderScholarMailList(result.messages || []);
+                status.textContent = '';
+                status.className = 'mt-4 text-sm text-gray-300';
+            } catch (error) {
+                status.textContent = error.message;
+                status.className = 'mt-4 text-sm text-red-300';
+            }
+        }
+
+        async function openScholarMessage(messageId) {
+            try {
+                currentScholarMessage = await scholarMailboxRequest(`/admin/messages/${encodeURIComponent(messageId)}/open`, { method: 'POST' });
+                currentScholarMessageId = messageId;
+                renderScholarMailDetail();
+                await loadScholarMailbox();
+            } catch (error) {
+                const status = document.getElementById('scholar-mail-status');
+                status.textContent = error.message;
+                status.className = 'mt-4 text-sm text-red-300';
+            }
+        }
+
+        function renderScholarMailDetail() {
+            const detail = document.getElementById('scholar-mail-detail');
+            const message = currentScholarMessage;
+            if (!message) return;
+            detail.innerHTML = `
+                <p class="text-[10px] tracking-widest text-amber-300 uppercase">Thư góp ý · ${new Date(message.created_at).toLocaleString('vi-VN')}</p>
+                <h3 class="mt-2 text-xl font-bold text-white">${escapeScholarMailHtml(message.subject)}</h3>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4 p-3 rounded bg-gray-900/70 text-sm">
+                    <p><span class="text-gray-400">Người gửi:</span> <strong class="text-amber-200">${escapeScholarMailHtml(message.sender_name)}</strong></p>
+                    <p><span class="text-gray-400">Khối lớp:</span> <strong class="text-white">${escapeScholarMailHtml(message.sender_grade)}</strong></p>
+                </div>
+                <h4 class="mt-5 text-xs font-bold uppercase text-gray-400">Nội dung thư</h4>
+                <p class="mt-2 whitespace-pre-wrap break-words text-sm leading-6 text-gray-100">${escapeScholarMailHtml(message.body)}</p>
+                ${message.admin_reply ? `<div class="mt-5 border-l-2 border-emerald-500 pl-3"><h4 class="text-xs font-bold uppercase text-emerald-300">Phản hồi đã gửi</h4><p class="mt-2 whitespace-pre-wrap break-words text-sm text-gray-200">${escapeScholarMailHtml(message.admin_reply)}</p></div>` : ''}
+                ${message.gift_sent_at ? `<p class="mt-4 text-sm text-emerald-300">🎁 Đã tặng ${escapeScholarMailHtml(message.gift_pack_name || message.gift_pack_id || 'pack')} vào Kho đồ người chơi.</p>` : ''}
+                <div class="mt-6 border-t border-gray-700 pt-4">
+                    <label for="scholar-mail-reply" class="block mb-2 text-xs font-bold text-gray-300">Phản hồi người chơi (không bắt buộc)</label>
+                    <textarea id="scholar-mail-reply" maxlength="5000" rows="4" class="w-full rounded border border-gray-600 bg-gray-900 p-3 text-sm text-white outline-none focus:border-amber-400" placeholder="Soạn phản hồi; chỉ gửi khi bấm nút bên dưới">${message.admin_reply ? escapeScholarMailHtml(message.admin_reply) : ''}</textarea>
+                    <div class="flex flex-wrap gap-2 mt-3">
+                        <button id="scholar-mail-send-reply" type="button" class="rounded bg-blue-700 px-4 py-2 text-sm font-bold text-white hover:bg-blue-600">GỬI PHẢN HỒI</button>
+                        ${message.gift_sent_at ? '<button type="button" disabled class="rounded bg-gray-700 px-4 py-2 text-sm font-bold text-gray-400">ĐÃ TẶNG PACK</button>' : '<button id="scholar-mail-gift" type="button" class="rounded bg-emerald-700 px-4 py-2 text-sm font-bold text-white hover:bg-emerald-600">🎁 TẶNG PACK NGẪU NHIÊN</button>'}
+                    </div>
+                    <p class="mt-2 text-[11px] text-gray-500">Nút tặng quà sẽ gửi một pack bài ngẫu nhiên thẳng vào Kho đồ và tự gửi lời cảm ơn mặc định cho người chơi.</p>
+                </div>`;
+            document.getElementById('scholar-mail-send-reply').addEventListener('click', sendScholarMailReply);
+            document.getElementById('scholar-mail-gift')?.addEventListener('click', giftScholarMailPack);
+        }
+
+        async function sendScholarMailReply() {
+            const replyText = document.getElementById('scholar-mail-reply').value.trim();
+            if (!replyText) {
+                document.getElementById('scholar-mail-status').textContent = 'Hãy nhập nội dung phản hồi trước khi gửi.';
+                return;
+            }
+            try {
+                currentScholarMessage = await scholarMailboxRequest(`/admin/messages/${encodeURIComponent(currentScholarMessageId)}/reply`, {
+                    method: 'POST', body: JSON.stringify({ reply_text: replyText })
+                });
+                renderScholarMailDetail();
+                await loadScholarMailbox();
+                const status = document.getElementById('scholar-mail-status');
+                status.textContent = 'Đã gửi phản hồi vào hòm thư của người chơi.';
+                status.className = 'mt-4 text-sm text-emerald-300';
+            } catch (error) {
+                const status = document.getElementById('scholar-mail-status');
+                status.textContent = error.message;
+                status.className = 'mt-4 text-sm text-red-300';
+            }
+        }
+
+        async function giftScholarMailPack() {
+            if (!window.confirm('Tặng một pack bài ngẫu nhiên cho người chơi này?')) return;
+            try {
+                currentScholarMessage = await scholarMailboxRequest(`/admin/messages/${encodeURIComponent(currentScholarMessageId)}/gift`, { method: 'POST' });
+                renderScholarMailDetail();
+                await loadScholarMailbox();
+                const status = document.getElementById('scholar-mail-status');
+                status.textContent = `Đã chuyển ${currentScholarMessage.gift_pack_name} vào Kho đồ và gửi lời cảm ơn.`;
+                status.className = 'mt-4 text-sm text-emerald-300';
+            } catch (error) {
+                const status = document.getElementById('scholar-mail-status');
+                status.textContent = error.message;
+                status.className = 'mt-4 text-sm text-red-300';
+            }
+        }
 
         // --- HÀM CHUYỂN TAB ĐÃ SỬA LỖI (ĐỒNG BỘ CSS & TAILWIND) ---
         function switchTab(tabName) {
@@ -2182,6 +2338,9 @@
                     break;
                 case 'chat':
                     if (typeof initAdminChat === 'function') initAdminChat();
+                    break;
+                case 'scholar-mail':
+                    if (typeof loadScholarMailbox === 'function') loadScholarMailbox();
                     break;
                 case 'gradebook': 
                     console.log("Tab Sổ Điểm đã sẵn sàng");

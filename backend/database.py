@@ -27,6 +27,7 @@ def migrate_study_spire_schema(database_engine=None):
             "grade": "INTEGER NOT NULL DEFAULT 6",
             "class_name": "TEXT",
         },
+        "questionbank": {"source_key": "TEXT"},
         "studydeck": {
             "state_version": "INTEGER NOT NULL DEFAULT 1",
             "must_remain_full": "BOOLEAN NOT NULL DEFAULT 0",
@@ -60,6 +61,10 @@ def migrate_study_spire_schema(database_engine=None):
                 connection.exec_driver_sql(
                     f'CREATE INDEX IF NOT EXISTS "ix_{table_name}_player_id" ON "{table_name}" ("player_id")'
                 )
+        if "questionbank" in available_tables:
+            connection.exec_driver_sql(
+                'CREATE INDEX IF NOT EXISTS "ix_questionbank_source_key" ON "questionbank" ("source_key")'
+            )
 
 # Hàm cấp phát session chuẩn cho FastAPI 
 def get_db():
@@ -359,6 +364,7 @@ class QuestionBank(SQLModel, table=True):
     correct_answer: str                   # Đáp án đúng (A, B, C, hoặc D)
     explanation: str = Field(default="")
     grade: int = Field(default=6, index=True)
+    source_key: Optional[str] = Field(default=None, index=True)
 
 class ArenaMatch(SQLModel, table=True):
     """Quản lý thông tin trận đấu"""
@@ -872,6 +878,22 @@ class StudyRunHistory(SQLModel, table=True):
     outcome: str = Field(index=True)
     summary_json: str = Field(default="{}", sa_column=Column(Text, nullable=False))
     ended_at: datetime = Field(default_factory=datetime.now)
+
+
+class StudyMailboxMessage(SQLModel, table=True):
+    message_id: str = Field(default_factory=lambda: uuid.uuid4().hex, primary_key=True)
+    player_id: int = Field(foreign_key="player.id", index=True)
+    sender_name: str
+    sender_grade: int
+    subject: str
+    body: str = Field(sa_column=Column(Text, nullable=False))
+    admin_reply: Optional[str] = Field(default=None, sa_column=Column(Text, nullable=True))
+    admin_read_at: Optional[datetime] = Field(default=None)
+    admin_reply_at: Optional[datetime] = Field(default=None)
+    player_read_at: Optional[datetime] = Field(default=None)
+    gift_pack_id: Optional[str] = Field(default=None)
+    gift_sent_at: Optional[datetime] = Field(default=None)
+    created_at: datetime = Field(default_factory=datetime.now, index=True)
 
 
 class StudyPlayerRelic(SQLModel, table=True):

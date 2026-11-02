@@ -159,16 +159,16 @@ class StudySpireApiTests(unittest.TestCase):
         self.assertEqual(sum(card["image_url"].endswith("kiem.png") for card in starter_deck["cards"]), 5)
         self.assertEqual(sum(card["image_url"].endswith("khien.png") for card in starter_deck["cards"]), 5)
 
-    def test_only_grades_with_enough_valid_questions_can_start(self):
+    def test_available_grades_come_from_classroom_json_sources(self):
         catalog = self.client.get("/api/study-spire/catalog")
         self.assertEqual(catalog.status_code, 200, catalog.text)
-        self.assertEqual(catalog.json()["available_grades"], [6])
+        self.assertEqual(catalog.json()["available_grades"], [6, 7])
 
-        unavailable = self.client.post("/api/study-spire/run/start", json={
+        other_grade = self.client.post("/api/study-spire/run/start", json={
             "grade": 7,
-            "idempotency_key": "start-unavailable-grade",
+            "idempotency_key": "start-other-grade",
         })
-        self.assertEqual(unavailable.status_code, 422)
+        self.assertEqual(other_grade.status_code, 403)
         with Session(self.engine) as session:
             self.assertEqual(len(session.exec(select(StudyActiveRun)).all()), 0)
 

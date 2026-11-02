@@ -8,11 +8,11 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=Cinzel:wght@500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/css/study_spire.css?v=19">
+    <link rel="stylesheet" href="/css/study_spire.css?v=22">
     <script defer src="/frontend/js/study_spire_animations.js?v=2"></script>
     <script defer src="/frontend/js/study_spire_cards.js?v=5"></script>
-    <script defer src="/frontend/js/study_spire_pvp.js?v=5"></script>
-    <script defer src="/frontend/js/study_spire.js?v=25"></script>
+    <script defer src="/frontend/js/study_spire_pvp.js?v=6"></script>
+    <script defer src="/frontend/js/study_spire.js?v=30"></script>
 </head>
 <body class="entry-screen-active">
     <div class="page-grain" aria-hidden="true"></div>
@@ -39,6 +39,7 @@
                     <button id="resume-run" class="start-menu-item hidden" type="button"><span>03</span> Tiếp tục hành trình</button>
                     <button class="start-menu-item" type="button" data-entry-action="pvp"><span>⚔</span> Đấu bài PvP</button>
                     <button class="start-menu-item" type="button" data-entry-action="ranked"><span>🏆</span> Thách đấu xếp hạng</button>
+                    <button id="open-mailbox" class="start-menu-item mailbox-menu-item" type="button"><span>✉</span> Hòm thư Góp ý - Báo lỗi <b id="mailbox-unread-badge" class="mailbox-unread-badge hidden" aria-label="Có thư mới">1</b></button>
                     <button class="start-menu-item" type="button" data-entry-action="guide"><span>?</span> Hướng dẫn</button>
                 </nav>
                 <p id="entry-status" class="inline-status" aria-live="polite"></p>
@@ -99,9 +100,38 @@
                 <button class="deck-tab active" role="tab" aria-selected="true" data-deck-tab="deck">Bộ bài <span id="deck-count">0 / 20</span></button>
                 <button class="deck-tab" role="tab" aria-selected="false" data-deck-tab="cards">Kho bài</button>
                 <button class="deck-tab" role="tab" aria-selected="false" data-deck-tab="packs">Kho đồ <span id="pack-count">0</span></button>
+                <button class="deck-tab" role="tab" aria-selected="false" data-deck-tab="relics">Kho relic</button>
             </div>
             <div id="deck-content" class="deck-content"></div>
             <p id="deck-status" class="inline-status" aria-live="polite"></p>
+        </section>
+        <section id="screen-mailbox" class="screen hidden">
+            <div class="mailbox-topline">
+                <div>
+                    <p class="eyebrow">HỌC GIẢ ĐẠI CHIẾN · HÒM THƯ</p>
+                    <h1>Hòm thư Góp ý - Báo lỗi</h1>
+                </div>
+                <button id="mailbox-back" class="secondary-button" type="button">← MENU GAME</button>
+            </div>
+            <p class="mailbox-instructions">Đây là nơi để bạn góp ý xây dựng tính năng mới trong game và báo cáo những lỗi game bạn phát hiện được. Thư sẽ được gửi đến admin.</p>
+            <div class="mailbox-layout">
+                <form id="mailbox-compose" class="mail-panel mailbox-compose">
+                    <h2>✉ Soạn thư mới</h2>
+                    <label>Người gửi <span id="mailbox-sender" class="mail-fixed-field"></span></label>
+                    <label>Người nhận <span class="mail-fixed-field">Admin</span></label>
+                    <label for="mailbox-subject">Tiêu đề</label>
+                    <input id="mailbox-subject" name="subject" maxlength="120" required placeholder="Góp ý hoặc báo lỗi">
+                    <label for="mailbox-body">Nội dung</label>
+                    <textarea id="mailbox-body" name="body" maxlength="5000" rows="7" required placeholder="Mô tả góp ý hoặc lỗi bạn gặp phải..."></textarea>
+                    <button class="primary-button" type="submit">GỬI THƯ <span>→</span></button>
+                </form>
+                <div class="mail-panel mailbox-inbox">
+                    <div class="mailbox-heading"><h2>Thư đã gửi</h2><button id="mailbox-refresh" class="secondary-button compact" type="button">LÀM MỚI</button></div>
+                    <div id="mailbox-message-list" class="mailbox-message-list"></div>
+                    <article id="mailbox-message-detail" class="mailbox-message-detail hidden"></article>
+                </div>
+            </div>
+            <p id="mailbox-status" class="inline-status" aria-live="polite"></p>
         </section>
         <section id="screen-pvp" class="screen hidden">
             <div class="pvp-topline">
@@ -113,6 +143,16 @@
             </div>
             <div id="pvp-content" class="pvp-content"></div>
             <p id="pvp-status" class="inline-status" aria-live="polite"></p>
+            <section class="pvp-chat" aria-label="Khung chat PvP">
+                <canvas id="pvp-chat-snow" class="pvp-chat-snow" aria-hidden="true"></canvas>
+                <div class="pvp-chat-head"><strong>❄ CHAT CHUNG · TẤT CẢ CÁC KHỐI</strong><small id="pvp-chat-state">Chưa kết nối</small></div>
+                <div id="pvp-chat-messages" class="pvp-chat-messages" aria-live="polite"></div>
+                <form id="pvp-chat-form" class="pvp-chat-form" autocomplete="off">
+                    <input id="pvp-chat-input" maxlength="300" placeholder="Nhập tin nhắn…" aria-label="Tin nhắn">
+                    <button class="primary-button compact" type="submit">GỬI</button>
+                </form>
+                <p id="pvp-chat-notice" class="pvp-chat-notice" aria-live="polite"></p>
+            </section>
         </section>
 
         <section id="screen-guide" class="screen hidden">
@@ -128,7 +168,7 @@
                     <button class="guide-tab active" role="tab" aria-selected="true" data-guide-tab="overview"><span>01</span> Tổng quan</button>
                     <button class="guide-tab" role="tab" aria-selected="false" data-guide-tab="pve"><span>02</span> Vượt ải (PvE)</button>
                     <button class="guide-tab" role="tab" aria-selected="false" data-guide-tab="rooms"><span>03</span> Các loại phòng</button>
-                    <button class="guide-tab" role="tab" aria-selected="false" data-guide-tab="battle"><span>04</span> Cách đánh bài</button>
+                    <button class="guide-tab" role="tab" aria-selected="false" data-guide-tab="battle"><span>04</span> Cách chơi</button>
                     <button class="guide-tab" role="tab" aria-selected="false" data-guide-tab="keywords"><span>05</span> Hiệu ứng</button>
                     <button class="guide-tab" role="tab" aria-selected="false" data-guide-tab="deck"><span>06</span> Xây bộ bài</button>
                     <button class="guide-tab" role="tab" aria-selected="false" data-guide-tab="cards"><span>07</span> Kiếm bài mới</button>
@@ -154,13 +194,15 @@
                             <li><b>Xây dựng bộ bài</b>: quản lý bộ bài, kho bài và mở pack.</li>
                             <li><b>Tiếp tục hành trình</b>: chỉ hiện khi bạn đang có hành trình dở dang.</li>
                             <li><b>Đấu bài PvP</b>: tạo hoặc vào phòng đấu với người chơi khác.</li>
-                            <li><b>Thách đấu xếp hạng</b>: leo bảng xếp hạng và chọn relic mang theo.</li>
+                            <li><b>Thách đấu xếp hạng</b>: leo bảng xếp hạng. Relic mang theo được chọn ở <b>Xây dựng bộ bài → Kho relic</b>.</li>
                         </ul>
                     </article>
 
                     <article class="guide-panel hidden" data-guide-panel="pve">
                         <h2>Vượt ải (PvE)</h2>
                         <p>Mỗi hành trình gồm nhiều <b>ải</b>, mỗi ải gồm nhiều <b>tầng</b>. Ở cuối ải luôn có một <b>Boss</b>.</p>
+                        <h3>Chọn đúng khối lớp</h3>
+                        <div class="guide-callout"><strong>Hãy chọn đúng khối lớp của bạn khi bắt đầu hành trình.</strong> Câu hỏi trắc nghiệm và bài gõ lại nội dung lấy từ kho kiến thức riêng của từng khối (khối 6 hoặc khối 7), nên chọn đúng khối thì bạn mới gặp kiến thức phù hợp với chương trình đang học. Khối lớp được gán khi tài khoản được tạo từ danh sách lớp; học sinh chỉ bắt đầu được hành trình ở khối của mình.</div>
                         <h3>Cấu trúc một ải</h3>
                         <ul>
                             <li><b>Ải 1 có 10 tầng.</b> Mỗi ải sau thêm 1 tầng, tối đa 15 tầng.</li>
@@ -198,15 +240,39 @@
                     </article>
 
                     <article class="guide-panel hidden" data-guide-panel="battle">
-                        <h2>Cách đánh bài</h2>
+                        <h2>Cách chơi</h2>
                         <p>Trận đấu diễn ra theo lượt. Mục tiêu: đưa HP đối thủ về 0 trước khi HP của bạn về 0.</p>
+                        <h3>Nhìn màn hình trận đấu</h3>
+                        <ul>
+                            <li><b>Quả cầu TRÍ TUỆ</b> (góc dưới): số Trí tuệ còn lại / tối đa trong lượt này.</li>
+                            <li><b>Các lá bài trên tay</b> xếp thành hình quạt ở dưới cùng. Mỗi lá hiện số Trí tuệ cần để đánh.</li>
+                            <li><b>RÚT</b> là số bài còn trong chồng rút, <b>BỎ</b> là số bài đã dùng. Khi chồng rút hết, chồng bỏ được xáo lại để rút tiếp.</li>
+                            <li><b>HP</b> và các hiệu ứng (Khiên, Độc...) của hai bên hiện cạnh nhân vật. Quái luôn báo trước sát thương của đòn tiếp theo.</li>
+                            <li>Nút <b>☰</b> ở góc trên mở menu trận: tiếp tục, xem bộ bài, hoặc lưu và thoát.</li>
+                        </ul>
                         <h3>Mỗi lượt của bạn</h3>
                         <div class="guide-flow">
-                            <div class="guide-step"><b>✦</b><strong>3 Trí tuệ</strong><small>Mỗi lượt bạn có 3 Trí tuệ (mana) để đánh bài</small></div>
+                            <div class="guide-step"><b>✦</b><strong>3 Trí tuệ</strong><small>Đầu mỗi lượt Trí tuệ được hồi đầy về 3</small></div>
                             <div class="guide-step"><b>▧</b><strong>Rút 4 lá</strong><small>Đầu mỗi lượt bạn rút bài lên tay</small></div>
-                            <div class="guide-step"><b>↯</b><strong>Đánh bài</strong><small>Bấm lá bài để dùng, mỗi lá tốn Trí tuệ</small></div>
+                            <div class="guide-step"><b>↯</b><strong>Đánh bài</strong><small>Bấm vào lá bài để dùng, mỗi lá tốn Trí tuệ</small></div>
                             <div class="guide-step"><b>⏎</b><strong>Kết thúc lượt</strong><small>Bài còn lại bị bỏ, quái ra đòn</small></div>
                         </div>
+                        <h3>Cách ra bài từng bước</h3>
+                        <ol>
+                            <li>Xem số <b>Trí tuệ</b> đang có và số Trí tuệ ghi trên từng lá bài.</li>
+                            <li><b>Bấm vào một lá bài</b> trên tay để đánh. Hiệu ứng được áp dụng ngay, lá bài chuyển sang chồng BỎ và Trí tuệ bị trừ theo giá của lá đó.</li>
+                            <li>Lá nào có giá <b>cao hơn số Trí tuệ còn lại</b> sẽ bị mờ và không thể bấm.</li>
+                            <li>Tiếp tục đánh các lá khác nếu còn đủ Trí tuệ.</li>
+                            <li>Khi xong, bấm <b>KẾT THÚC LƯỢT</b> để chuyển lượt cho quái.</li>
+                        </ol>
+                        <h3>Tính toán Trí tuệ hợp lý</h3>
+                        <ul>
+                            <li>Mỗi lượt chỉ có <b>3 Trí tuệ</b> (một số relic có thể cộng thêm). Trí tuệ không dồn sang lượt sau, nên dùng càng hết càng lợi.</li>
+                            <li>Nhìn cả bàn tay trước khi đánh. Ví dụ với 3 Trí tuệ: một lá giá 2 và một lá giá 1 dùng được hết; còn một lá giá 3 sẽ dùng hết cả lượt.</li>
+                            <li>Ưu tiên lá giá rẻ trước nếu chúng giúp rút thêm bài hoặc tạo hiệu ứng cho các lá sau.</li>
+                            <li>Đừng đánh ngay lá mạnh nhất nếu không đủ Trí tuệ để đánh thêm lá cần thiết khác, như lá phòng thủ.</li>
+                        </ul>
+                        <div class="guide-callout"><strong>Hết Trí tuệ thì phải kết thúc lượt.</strong> Khi Trí tuệ về 0 (hoặc không còn lá nào đủ Trí tuệ để đánh), các lá còn lại bị mờ và bạn không thể ra thêm bài. Lúc đó hãy bấm <b>KẾT THÚC LƯỢT</b>. Quái sẽ ra đòn, rồi sang lượt mới bạn được hồi Trí tuệ và rút bài.</div>
                         <h3>Các loại bài</h3>
                         <div class="guide-grid">
                             <div class="guide-card"><strong>Tấn công</strong><p>Gây sát thương lên đối thủ. Khiên của đối thủ đỡ sát thương trước, phần còn lại mới trừ vào HP.</p></div>
@@ -296,7 +362,7 @@
                         <h3>Cách dùng relic</h3>
                         <ul>
                             <li><b>Trong PvE:</b> relic bạn đang sở hữu tự động có hiệu lực.</li>
-                            <li><b>Trong PvP và xếp hạng:</b> bạn tự chọn các relic mang theo ở màn hình <b>Thách đấu xếp hạng → Chọn relic mang vào PvP</b>, rồi bấm <b>LƯU LOADOUT</b>. Không giới hạn số relic được mang.</li>
+                            <li><b>Trong PvP và xếp hạng:</b> bạn tự chọn các relic mang theo ở <b>Xây dựng bộ bài → tab Kho relic</b>, tích chọn relic đã mở khóa rồi bấm <b>LƯU LOADOUT</b>. Không giới hạn số relic được mang.</li>
                         </ul>
                         <div class="guide-callout"><strong>Công bằng.</strong> Ai bỏ nhiều công sức vượt ải thì có nhiều relic hơn. Đó là phần thưởng cho sự chăm chỉ của bạn.</div>
                         <h3>Danh sách 19 relic</h3>
@@ -344,7 +410,7 @@
                         <h3>Vì sao bộ bài đã lưu quan trọng?</h3>
                         <div class="guide-callout"><strong>Khi bạn lưu bộ bài, đó cũng là bộ bài để bảo vệ hạng của bạn.</strong> Người khác thách đấu bạn sẽ đối đầu với một bot dùng bộ bài đó. Hãy xây một bộ bài đủ mạnh cả khi tấn công lẫn khi phòng thủ.</div>
                         <h3>Relic trong xếp hạng</h3>
-                        <p>Loadout relic bạn lưu được dùng cho cả xếp hạng và phòng PvP. Bạn có thể chọn bao nhiêu relic tùy thích, miễn là đã mở khóa.</p>
+                        <p>Loadout relic bạn lưu ở <b>Xây dựng bộ bài → Kho relic</b> được dùng cho cả xếp hạng và phòng PvP. Bạn có thể chọn bao nhiêu relic tùy thích, miễn là đã mở khóa. Màn xếp hạng không còn phần chọn relic.</p>
                     </article>
 
                     <article class="guide-panel hidden" data-guide-panel="faq">
@@ -381,6 +447,14 @@
                 <h2 id="result-title">Kết quả</h2>
                 <div id="result-details"></div>
                 <button id="return-home" class="primary-button" type="button">VỀ SẢNH CHÍNH <span>→</span></button>
+            </div>
+        </div>
+        <div id="mailbox-notice-modal" class="result-modal hidden" role="dialog" aria-modal="true" aria-labelledby="mailbox-notice-title">
+            <div class="result-panel mailbox-notice-panel">
+                <p class="eyebrow">THƯ MỚI TỪ ADMIN</p>
+                <h2 id="mailbox-notice-title">Phản hồi hòm thư</h2>
+                <p id="mailbox-notice-content" class="mailbox-notice-content"></p>
+                <button id="mailbox-notice-close" class="primary-button" type="button">ĐÃ HIỂU</button>
             </div>
         </div>
 

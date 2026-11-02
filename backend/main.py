@@ -48,6 +48,7 @@ from routes.study_game_api import router as study_spire_router
 from routes.study_pvp_api import router as study_pvp_router
 from routes.study_pvp_api import router as study_pvp_router
 from routes.study_ranked_api import router as study_ranked_router
+from routes.study_mailbox_api import router as study_mailbox_router
 from routes.auth import get_password_hash
 from game_logic.level import add_exp_to_player
 
@@ -196,6 +197,7 @@ app.include_router(study_spire_router)
 app.include_router(study_pvp_router)
 app.include_router(study_pvp_router)
 app.include_router(study_ranked_router)
+app.include_router(study_mailbox_router)
 # --- CẤU HÌNH ĐƯỜNG DẪN FILE (Phiên bản Tuyệt Đối - Chống Lỗi) ---
 
 # 1. Lấy đường dẫn tuyệt đối của file main.py đang chạy

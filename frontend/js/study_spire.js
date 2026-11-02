@@ -1,6 +1,6 @@
 (() => {
     const API = "/api/study-spire";
-    const state = { run: null, deck: null, inventory: null, catalog: null, profile: null, deckTab: "deck", deckReadOnly: false, pendingPackReward: null, pendingDrawVfx: null, spriteAnimator: null, monsterAnimator: null, actionLocked: false };
+    const state = { run: null, deck: null, inventory: null, catalog: null, profile: null, mailboxMessages: [], deckTab: "deck", deckReadOnly: false, pendingPackReward: null, pendingDrawVfx: null, spriteAnimator: null, monsterAnimator: null, actionLocked: false };
     const token = localStorage.getItem("access_token") || localStorage.getItem("token");
     const username = localStorage.getItem("kpi_username") || localStorage.getItem("username") || "";
     const pendingResolutionStorageKey = `study_spire_pending_resolution:${username}`;
@@ -233,6 +233,97 @@
         return data;
     }
 
+    function renderMailboxMessages() {
+        const list = byId("mailbox-message-list");
+        if (!state.mailboxMessages.length) {
+            list.innerHTML = `<p class="mailbox-empty">Bạn chưa gửi thư nào. Hãy gửi góp ý hoặc báo lỗi để admin tiếp nhận.</p>`;
+            return;
+        }
+        list.innerHTML = state.mailboxMessages.map((message) => `
+            <button type="button" class="mailbox-message-card ${message.has_unread_reply ? "has-unread" : ""}" data-mailbox-message="${escapeHtml(message.message_id)}">
+                <span class="mailbox-message-subject">${escapeHtml(message.subject)}</span>
+                <small>${new Date(message.created_at).toLocaleString("vi-VN")}</small>
+                <span class="mailbox-message-status">${message.has_unread_reply ? "● Có thư phản hồi mới" : message.admin_reply ? "Đã có phản hồi" : "Đang chờ admin"}</span>
+            </button>`).join("");
+        list.querySelectorAll("[data-mailbox-message]").forEach((button) => {
+            button.addEventListener("click", () => openMailboxMessage(button.dataset.mailboxMessage));
+        });
+    }
+
+    function updateMailboxUnreadBadge(count) {
+        const badge = byId("mailbox-unread-badge");
+        badge.textContent = String(count);
+        badge.classList.toggle("hidden", count < 1);
+        badge.setAttribute("aria-label", count === 1 ? "Có 1 thư mới" : `Có ${count} thư mới`);
+    }
+
+    async function refreshMailbox() {
+        const result = await api("/mailbox/messages");
+        state.mailboxMessages = result.messages || [];
+        updateMailboxUnreadBadge(Number(result.unread_count || 0));
+        renderMailboxMessages();
+    }
+
+    async function refreshMailboxUnreadCount() {
+        const result = await api("/mailbox/unread-count");
+        updateMailboxUnreadBadge(Number(result.unread_count || 0));
+    }
+
+    async function openMailbox() {
+        showScreen("screen-mailbox");
+        byId("mailbox-sender").textContent = `${state.profile?.name || username} · Khối ${state.profile?.grade || ""}`.trim();
+        byId("mailbox-message-detail").classList.add("hidden");
+        try {
+            await refreshMailbox();
+            setStatus("mailbox-status", "");
+        } catch (error) {
+            setStatus("mailbox-status", error.message, "error");
+        }
+    }
+
+    async function openMailboxMessage(messageId) {
+        const previous = state.mailboxMessages.find((message) => message.message_id === messageId);
+        try {
+            const message = await api(`/mailbox/messages/${encodeURIComponent(messageId)}/open`, { method: "POST" });
+            await refreshMailbox();
+            const detail = byId("mailbox-message-detail");
+            detail.innerHTML = `<div class="mailbox-detail-heading"><div><p class="eyebrow">THƯ ĐÃ GỬI · ${new Date(message.created_at).toLocaleString("vi-VN")}</p><h2>${escapeHtml(message.subject)}</h2></div><span>Khối ${escapeHtml(message.sender_grade)}</span></div>
+                <p class="mailbox-detail-label">Nội dung thư</p><p class="mailbox-detail-body">${escapeHtml(message.body)}</p>
+                ${message.admin_reply ? `<div class="mailbox-reply"><p class="mailbox-detail-label">Phản hồi từ admin</p><p class="mailbox-detail-body">${escapeHtml(message.admin_reply)}</p>${message.gift_sent_at ? `<small>🎁 Pack quà đã được chuyển thẳng vào Kho đồ của bạn.</small>` : ""}</div>` : `<p class="mailbox-pending">Admin chưa phản hồi thư này.</p>`}`;
+            detail.classList.remove("hidden");
+            detail.scrollIntoView({ behavior: "smooth", block: "nearest" });
+            if (previous?.has_unread_reply && message.admin_reply) {
+                byId("mailbox-notice-content").textContent = message.admin_reply;
+                byId("mailbox-notice-modal").classList.remove("hidden");
+            }
+        } catch (error) {
+            setStatus("mailbox-status", error.message, "error");
+        }
+    }
+
+    async function submitMailboxMessage(event) {
+        event.preventDefault();
+        const form = byId("mailbox-compose");
+        const submitButton = form.querySelector('button[type="submit"]');
+        submitButton.disabled = true;
+        try {
+            await api("/mailbox/messages", {
+                method: "POST",
+                body: JSON.stringify({
+                    subject: byId("mailbox-subject").value,
+                    body: byId("mailbox-body").value,
+                }),
+            });
+            form.reset();
+            await refreshMailbox();
+            setStatus("mailbox-status", "Đã gửi thư đến admin.", "success");
+        } catch (error) {
+            setStatus("mailbox-status", error.message, "error");
+        } finally {
+            submitButton.disabled = false;
+        }
+    }
+
     function setStatus(elementId, message, type = "") {
         const element = byId(elementId);
         element.textContent = message || "";
@@ -247,6 +338,7 @@
         setStatus("entry-status", "");
         setStatus("run-status", "");
         setStatus("deck-status", "");
+        if (byId("mailbox-status")) setStatus("mailbox-status", "");
     }
 
     function setRun(run) {
@@ -437,7 +529,7 @@
         }
 
         document.body.appendChild(burst);
-        window.setTimeout(() => burst.remove(), 1000);
+        window.setTimeout(() => burst.remove(), 1500);
     }
 
     function spawnBlockedPopup(target) {
@@ -453,7 +545,7 @@
         label.textContent = "Chặn đòn";
         popup.appendChild(label);
         document.body.appendChild(popup);
-        window.setTimeout(() => popup.remove(), 1000);
+        window.setTimeout(() => popup.remove(), 1500);
     }
 
     function estimateEndTurnFeedback(battle) {
@@ -498,6 +590,7 @@
         const node = state.run.map_graph.nodes[state.run.current_node_id];
         const background = enemy.arena_background || "/assets/background/hg.png";
         const monsterType = enemy.sprite_set || ["Rat", "Bat", "Slime", "Mimic"][(node.floor - 1) % 4];
+        const enemyAttack = Math.max(0, Number(battle.next_intent?.damage || enemy.attack || 0) + Number(enemy.strength || 0));
         const resolving = battle.phase === "RESOLVING";
         const content = byId("run-content");
         content.innerHTML = `
@@ -515,7 +608,7 @@
                     </header>
                     <div class="combatants">
                         <div class="combatant player"><div id="player-sprite" class="fighter-sprite" data-animation="${player.hp <= 0 ? "death" : "idle"}" role="img" aria-label="Nhà thám hiểm"></div><h3>${escapeHtml(state.profile?.name || username || "Nhà thám hiểm")}</h3>${healthBar("HP NGƯỜI CHƠI", player.hp, player.hp_max, "player")}${renderEffectIndicators(player)}</div>
-                        <div class="combatant enemy"><div id="monster-sprite" class="monster-sprite" data-animation="${enemy.hp <= 0 ? "death" : "idle"}" role="img" aria-label="${escapeHtml(enemy.name || "Quái vật")}"></div><h3>${escapeHtml(enemy.name || "Quái vật")}</h3>${healthBar("HP QUÁI", enemy.hp, enemy.max_hp)}${renderEffectIndicators(enemy)}</div>
+                        <div class="combatant enemy"><div class="monster-attack" aria-label="Sức tấn công của quái: ${enemyAttack}">⚔ TẤN CÔNG: ${enemyAttack}</div><div id="monster-sprite" class="monster-sprite" data-animation="${enemy.hp <= 0 ? "death" : "idle"}" role="img" aria-label="${escapeHtml(enemy.name || "Quái vật")}"></div><h3>${escapeHtml(enemy.name || "Quái vật")}</h3>${healthBar("HP QUÁI", enemy.hp, enemy.max_hp)}${renderEffectIndicators(enemy)}</div>
                     </div>
                     <div class="battle-piles">
                         <div class="battle-pile draw-pile"><span class="pile-symbol">▧</span><b>${battle.draw_pile.length}</b><small>RÚT</small></div>
@@ -580,7 +673,11 @@
         try {
             const active = await api("/run/active");
             if (!active.run) throw new Error("Không tìm thấy tiến trình đang lưu.");
-            window.location.href = "/player_dashboard.html";
+            state.run = active.run;
+            byId("battle-menu-modal").classList.add("hidden");
+            byId("start-run").classList.add("hidden");
+            byId("resume-run").classList.remove("hidden");
+            showScreen("screen-entry");
         } catch (error) {
             setStatus("battle-menu-status", error.message, "error");
         }
@@ -921,6 +1018,10 @@
             bindCardPreviewHandlers(content);
             return;
         }
+        if (state.deckTab === "relics") {
+            renderRelicVault(content);
+            return;
+        }
         if (state.deckTab === "packs") {
             content.innerHTML = state.inventory.packs.length ? `<div class="pack-grid">${state.inventory.packs.map((pack) => `<article class="pack-card"><div><p class="eyebrow">${escapeHtml(pack.subject)}</p><h3>${escapeHtml(pack.name)}</h3></div><p>${pack.quantity} pack trong kho</p><button class="primary-button" data-open-pack="${escapeHtml(pack.pack_id)}" data-pack-version="${pack.state_version}">MỞ PACK <span>→</span></button></article>`).join("")}</div>` : `<p class="inline-status">Kho pack đang trống.</p>`;
             content.querySelectorAll("[data-open-pack]").forEach((button) => button.addEventListener("click", () => openPack(button.dataset.openPack, Number(button.dataset.packVersion))));
@@ -936,6 +1037,34 @@
         content.querySelectorAll("[data-add-card]").forEach((button) => button.addEventListener("click", () => changeDeck(button.dataset.addCard, true)));
         bindCardPreviewHandlers(content);
         byId("save-deck").addEventListener("click", saveDeck);
+    }
+
+    async function renderRelicVault(content, relicData = null) {
+        content.innerHTML = `<p class="inline-status">Đang tải kho relic…</p>`;
+        try {
+            const data = relicData || await api("/relics");
+            if (state.deckTab !== "relics") return;
+            const cards = data.relics.map((relic) => `<label class="ranked-relic-card ${relic.owned ? "" : "is-locked"}">
+                <img src="${escapeHtml(relic.image_url)}" alt="" loading="lazy">
+                <span><strong>${escapeHtml(relic.name)}</strong><small>${escapeHtml(relic.description)}</small>${relic.owned ? "" : `<small class="relic-lock-label">Chưa mở khóa</small>`}</span>
+                ${relic.owned ? `<input type="checkbox" data-relic-id="${escapeHtml(relic.id)}" ${relic.equipped ? "checked" : ""} aria-label="Trang bị ${escapeHtml(relic.name)}">` : ""}
+            </label>`).join("");
+            content.innerHTML = `<section class="ranked-relic-loadout"><div class="ranked-panel-heading"><div><p class="eyebrow">KHO RELIC · ${data.owned_count}/${data.total_count} ĐÃ MỞ</p><h2>Chọn relic mang vào PvP</h2></div><button class="primary-button compact" id="save-relic-loadout" type="button">LƯU LOADOUT</button></div>
+                <p>Relic được mở khóa vĩnh viễn khi hạ boss. Loadout đã lưu được dùng cho cả thách đấu xếp hạng và phòng PvP; không giới hạn số relic được chọn.</p>
+                <div class="ranked-relic-grid">${cards}</div></section>`;
+            byId("save-relic-loadout").addEventListener("click", async () => {
+                const relicIds = [...content.querySelectorAll("[data-relic-id]:checked")].map((input) => input.dataset.relicId);
+                try {
+                    const updated = await api("/relics/loadout", { method: "PUT", body: JSON.stringify({ relic_ids: relicIds }) });
+                    await renderRelicVault(content, updated);
+                    setStatus("deck-status", "Đã lưu loadout relic PvP.", "success");
+                } catch (error) {
+                    setStatus("deck-status", error.message, "error");
+                }
+            });
+        } catch (error) {
+            content.innerHTML = `<p class="inline-status error">${escapeHtml(error.message)}</p>`;
+        }
     }
 
     function changeDeck(instanceId, add) {
@@ -1018,6 +1147,29 @@
             returnToGameMenu();
         });
         byId("start-run").addEventListener("click", openStartRunDialog);
+        byId("open-mailbox").addEventListener("click", openMailbox);
+        byId("mailbox-back").addEventListener("click", () => showScreen("screen-entry"));
+        byId("mailbox-refresh").addEventListener("click", async () => {
+            try {
+                await refreshMailbox();
+                setStatus("mailbox-status", "Đã làm mới hòm thư.", "success");
+            } catch (error) {
+                setStatus("mailbox-status", error.message, "error");
+            }
+        });
+        byId("mailbox-compose").addEventListener("submit", submitMailboxMessage);
+        byId("mailbox-notice-close").addEventListener("click", () => byId("mailbox-notice-modal").classList.add("hidden"));
+        const refreshUnreadWhenVisible = () => {
+            if (document.hidden) return;
+            refreshMailboxUnreadCount().catch((error) => {
+                if (!byId("screen-entry").classList.contains("hidden")) {
+                    setStatus("entry-status", `Không kiểm tra được thư phản hồi: ${error.message}`, "error");
+                }
+            });
+        };
+        window.setInterval(refreshUnreadWhenVisible, 30000);
+        window.addEventListener("focus", refreshUnreadWhenVisible);
+        document.addEventListener("visibilitychange", refreshUnreadWhenVisible);
         byId("confirm-start-run").addEventListener("click", startRun);
         byId("cancel-start-run").addEventListener("click", () => byId("start-run-modal").classList.add("hidden"));
         byId("start-run-modal").addEventListener("click", (event) => {
@@ -1066,10 +1218,20 @@
             } catch (error) {
                 setStatus("entry-status", `Không tải được hồ sơ người chơi: ${error.message}`, "error");
             }
+            try {
+                await refreshMailbox();
+            } catch (error) {
+                setStatus("entry-status", `Không kiểm tra được thư phản hồi: ${error.message}`, "error");
+            }
             state.catalog = await api("/catalog");
             const gradeSelect = byId("grade-select");
             const availableGrades = state.catalog.available_grades || [];
             gradeSelect.innerHTML = availableGrades.map((grade) => `<option value="${grade}">Khối ${grade}</option>`).join("");
+            const playerGrade = Number(state.profile?.grade);
+            if (availableGrades.includes(playerGrade)) {
+                gradeSelect.value = String(playerGrade);
+                gradeSelect.disabled = state.profile.role !== "admin";
+            }
             if (!availableGrades.length) {
                 byId("start-run").disabled = true;
                 setStatus("entry-status", "Ngân hàng câu hỏi hiện chưa đủ dữ liệu cho một khối học.", "error");

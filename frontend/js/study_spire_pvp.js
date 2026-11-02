@@ -35,20 +35,6 @@
         return data;
     }
 
-    async function relicApi(path, options = {}) {
-        const response = await fetch(`/api/study-spire${path}`, {
-            ...options,
-            headers: {
-                ...(options.body ? { "Content-Type": "application/json" } : {}),
-                ...(token ? { Authorization: "Bearer " + token } : {}),
-                ...(options.headers || {}),
-            },
-        });
-        const data = await response.json().catch(() => ({}));
-        if (!response.ok) throw new Error(data.detail || data.message || `Máy chủ trả lỗi ${response.status}.`);
-        return data;
-    }
-
     function setStatus(message, kind = "") {
         const status = byId("pvp-status");
         status.textContent = message || "";
@@ -62,7 +48,7 @@
         return `${snapshot.match_id || snapshot.room.room_code}:${playerId}`;
     }
 
-    function renderRankedBoard(board, relicData) {
+    function renderRankedBoard(board) {
         const content = byId("pvp-content");
         const player = board.player;
         const ownRank = player.rank_position;
@@ -82,13 +68,6 @@
             <button class="secondary-button compact" type="button" data-rank-challenge="${entry.player_id}" ${canChallenge ? "" : "disabled"} title="${canChallenge ? "Thách đấu người ở hạng này" : isSelf ? "Đây là hạng của bạn" : "Chỉ có thể đấu ba người ngay phía trên"}>${isSelf ? "BẠN" : "THÁCH ĐẤU"}</button>
         </article>`;
         }).join("");
-        const relicCards = relicData.relics.map(relic => `<label class="ranked-relic-card ${relic.owned ? "" : "is-locked"}">
-            <img src="${escapeHtml(relic.image_url)}" alt="" loading="lazy">
-            <span><strong>${escapeHtml(relic.name)}</strong><small>${escapeHtml(relic.description)}</small>${relic.owned ? "" : `<small class="relic-lock-label">Chưa mở khóa</small>`}</span>
-            ${relic.owned
-                ? `<input type="checkbox" data-relic-id="${escapeHtml(relic.id)}" ${relic.equipped ? "checked" : ""} aria-label="Trang bị ${escapeHtml(relic.name)}">`
-                : ""}
-        </label>`).join("");
         const placement = board.placement_required
             ? `<section class="ranked-challenge-panel"><div class="ranked-panel-heading"><div><p class="eyebrow">BƯỚC KHỞI ĐẦU</p><h2>Trận phân hạng · ${player.placement_matches}/${board.placement_matches_required}</h2></div></div>
                 <p>Hoàn thành ${board.placement_matches_required} trận với bot dùng deck người chơi khác để vào bảng. ${board.placement_uses_score ? "Khi giai đoạn phân hạng đầu tiên còn diễn ra, số trận thắng quyết định thứ tự xuất phát; nếu bằng nhau, người hoàn thành trước đứng trên." : "Sau khi bảng xếp hạng đã bắt đầu, người mới vào bảng ở cuối danh sách."}</p>
@@ -102,25 +81,12 @@
             </section>`;
         content.innerHTML = `<div class="ranked-toolbar"><div><p class="eyebrow">HỌC GIẢ ĐẠI CHIẾN · LEADERBOARD</p><h2>Bảng xếp hạng</h2><p>Đang có ${board.ranked_player_count} người đã phân hạng · Hiển thị Top 20</p></div>
                 <button class="secondary-button compact" id="ranked-open-rooms" type="button">ĐẤU PHÒNG PvP</button></div>
-            <section class="ranked-relic-loadout"><div class="ranked-panel-heading"><div><p class="eyebrow">KHO RELIC · ${relicData.owned_count}/${relicData.total_count} ĐÃ MỞ</p><h2>Chọn relic mang vào PvP</h2></div><button class="primary-button compact" id="ranked-save-relics" type="button">LƯU LOADOUT</button></div>
-                <p>Relic được mở khóa vĩnh viễn khi hạ boss. Loadout đã lưu được dùng cho cả thách đấu xếp hạng và phòng PvP; không giới hạn số relic được chọn.</p>
-                <div class="ranked-relic-grid">${relicCards}</div></section>
             ${board.active_match_id ? `<div class="ranked-active-match"><span>Bạn có trận xếp hạng chưa hoàn tất.</span><button class="primary-button compact" id="ranked-resume" type="button">TIẾP TỤC</button></div>` : board.rank_locked_by_match ? `<div class="ranked-active-match"><span>Hạng của bạn đang được thách đấu. Bạn có thể xem bảng nhưng chưa thể mở trận leo hạng khác.</span></div>` : ""}
             <div class="ranked-layout"><section class="ranked-board"><div class="ranked-board-heading"><span>HẠNG</span><span>NGƯỜI CHƠI</span></div>${topRows || `<p class="pvp-empty-state">Chưa có người chơi hoàn thành phân hạng.</p>`}</section>${placement}</div>`;
         content.querySelectorAll("[data-rank-challenge]").forEach(button => button.addEventListener("click", () => startRankedMatch(Number(button.dataset.rankChallenge))));
         content.querySelector("#ranked-next-opponents")?.addEventListener("click", () => openRankedBoard(state.rankedBatch + 1));
         content.querySelector("#ranked-open-rooms")?.addEventListener("click", openRoomsLobby);
         content.querySelector("#ranked-resume")?.addEventListener("click", () => openRankedMatch(board.active_match_id));
-        content.querySelector("#ranked-save-relics")?.addEventListener("click", async () => {
-            const relicIds = [...content.querySelectorAll("[data-relic-id]:checked")].map(input => input.dataset.relicId);
-            try {
-                const updated = await relicApi("/relics/loadout", { method: "PUT", body: JSON.stringify({ relic_ids: relicIds }) });
-                renderRankedBoard(board, updated);
-                setStatus("Đã lưu loadout relic PvP.", "success");
-            } catch (error) {
-                setStatus(error.message, "error");
-            }
-        });
     }
 
     function stopPolling() {
@@ -395,11 +361,8 @@
         state.rankedBatch = batch;
         setStatus("");
         try {
-            const [board, relicData] = await Promise.all([
-                rankedApi(`/board?batch=${batch}`),
-                relicApi("/relics"),
-            ]);
-            renderRankedBoard(board, relicData);
+            const board = await rankedApi(`/board?batch=${batch}`);
+            renderRankedBoard(board);
         } catch (error) {
             byId("pvp-content").innerHTML = `<p class="inline-status error">${escapeHtml(error.message)}</p>`;
         }
@@ -504,9 +467,145 @@
         }
     }
 
+    const chat = { socket: null, retryTimer: null, wanted: false, seen: new Set() };
+
+    function appendChatMessage(message) {
+        const list = byId("pvp-chat-messages");
+        if (!list) return;
+        const system = message.role === "SYSTEM";
+        const item = document.createElement("div");
+        item.className = `pvp-chat-message${system ? " is-system" : ""}`;
+        const meta = document.createElement("small");
+        meta.textContent = `${message.player_name || "Ẩn danh"} · ${message.time || ""}`;
+        const body = document.createElement("p");
+        body.textContent = message.content;
+        item.append(meta, body);
+        const stick = list.scrollHeight - list.scrollTop - list.clientHeight < 60;
+        list.appendChild(item);
+        while (list.children.length > 80) list.firstElementChild.remove();
+        if (stick) list.scrollTop = list.scrollHeight;
+    }
+
+    function setChatState(text) {
+        const label = byId("pvp-chat-state");
+        if (label) label.textContent = text;
+    }
+
+    async function loadChatHistory() {
+        try {
+            const response = await fetch("/api/chat/history");
+            if (!response.ok) return;
+            const history = await response.json();
+            const list = byId("pvp-chat-messages");
+            if (list) list.innerHTML = "";
+            history.forEach(appendChatMessage);
+        } catch { /* lịch sử chỉ là phần phụ */ }
+    }
+
+    function connectChat() {
+        if (!token || !byId("pvp-chat-messages")) return;
+        if (chat.socket && chat.socket.readyState <= WebSocket.OPEN) return;
+        const protocol = window.location.protocol === "https:" ? "wss" : "ws";
+        const socket = new WebSocket(`${protocol}://${window.location.host}/api/chat/ws?token=${encodeURIComponent(token)}`);
+        chat.socket = socket;
+        setChatState("Đang kết nối…");
+        socket.onopen = () => setChatState("Đang trực tuyến");
+        socket.onmessage = (event) => {
+            let message;
+            try { message = JSON.parse(event.data); } catch { return; }
+            if (message.type === "error") {
+                const notice = byId("pvp-chat-notice");
+                if (notice) notice.textContent = message.content;
+            } else if (message.type === "chat") {
+                appendChatMessage(message);
+            }
+        };
+        socket.onclose = () => {
+            if (chat.socket === socket) chat.socket = null;
+            setChatState("Mất kết nối");
+            if (chat.wanted) chat.retryTimer = setTimeout(connectChat, 3000);
+        };
+    }
+
+    async function openChat() {
+        chat.wanted = true;
+        await loadChatHistory();
+        connectChat();
+    }
+
+    function closeChat() {
+        chat.wanted = false;
+        clearTimeout(chat.retryTimer);
+        if (chat.socket) chat.socket.close();
+        chat.socket = null;
+    }
+
+    function initChatForm() {
+        const form = byId("pvp-chat-form");
+        if (!form || form.dataset.bound) return;
+        form.dataset.bound = "1";
+        form.addEventListener("submit", (event) => {
+            event.preventDefault();
+            const input = byId("pvp-chat-input");
+            const text = input.value.trim();
+            const notice = byId("pvp-chat-notice");
+            if (!text) return;
+            if (!chat.socket || chat.socket.readyState !== WebSocket.OPEN) {
+                notice.textContent = "Chưa kết nối khung chat.";
+                connectChat();
+                return;
+            }
+            notice.textContent = "";
+            chat.socket.send(text.slice(0, 300));
+            input.value = "";
+        });
+    }
+
+    const snow = { raf: null, flakes: [] };
+
+    function startSnow() {
+        const canvas = byId("pvp-chat-snow");
+        if (!canvas || snow.raf || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+        const ctx = canvas.getContext("2d");
+        const resize = () => {
+            canvas.width = canvas.clientWidth;
+            canvas.height = canvas.clientHeight;
+        };
+        resize();
+        snow.flakes = Array.from({ length: 45 }, () => ({
+            x: Math.random() * canvas.width, y: Math.random() * canvas.height,
+            r: 1 + Math.random() * 2.2, speed: 0.25 + Math.random() * 0.55,
+            drift: Math.random() * Math.PI * 2, alpha: 0.35 + Math.random() * 0.5,
+        }));
+        const frame = () => {
+            if (canvas.width !== canvas.clientWidth || canvas.height !== canvas.clientHeight) resize();
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            for (const flake of snow.flakes) {
+                flake.y += flake.speed;
+                flake.drift += 0.01;
+                flake.x += Math.sin(flake.drift) * 0.35;
+                if (flake.y > canvas.height + 4) { flake.y = -4; flake.x = Math.random() * canvas.width; }
+                ctx.beginPath();
+                ctx.fillStyle = `rgba(255, 255, 255, ${flake.alpha})`;
+                ctx.arc(flake.x, flake.y, flake.r, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            snow.raf = requestAnimationFrame(frame);
+        };
+        snow.raf = requestAnimationFrame(frame);
+    }
+
+    function stopSnow() {
+        if (snow.raf) cancelAnimationFrame(snow.raf);
+        snow.raf = null;
+    }
+
     function openLobby() {
+        initChatForm();
+        startSnow();
+        openChat();
         return openRankedBoard(0);
     }
 
-    window.StudySpirePvp = { openLobby, close: stopPolling };
+    window.StudySpirePvp = { openLobby, close() { stopPolling(); closeChat(); stopSnow(); } };
 })();
