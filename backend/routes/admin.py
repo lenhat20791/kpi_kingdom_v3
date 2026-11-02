@@ -769,8 +769,12 @@ async def reset_season(db: Session = Depends(get_db)):
         db.exec(delete(StudyCardInstance))
         db.exec(delete(StudyPlayerPack))
 
-        # --- NHÓM 3: XÓA NGƯỜI CHƠI (GIỮ ADMIN) ---
-        statement = delete(Player).where(Player.role != "admin") # 
+        # --- NHÓM 3: XÓA NGƯỜI CHƠI (LUÔN GIỮ TÀI KHOẢN ADMIN HỆ THỐNG) ---
+        master_admin = db.exec(select(Player).where(Player.username == "admin")).first()
+        if master_admin and master_admin.role != "admin":
+            master_admin.role = "admin"
+            db.add(master_admin)
+        statement = delete(Player).where(Player.role != "admin", Player.username != "admin")
         db.exec(statement)
 
         # Admin giữ lại nhưng xóa sạch trang bị / tiến trình gắn với mùa cũ
@@ -785,7 +789,12 @@ async def reset_season(db: Session = Depends(get_db)):
 
         db.commit()
 
-        remaining = db.exec(select(func.count()).select_from(Player).where(Player.role != "admin")).one()
+        remaining = db.exec(
+            select(func.count()).select_from(Player).where(
+                Player.role != "admin",
+                Player.username != "admin",
+            )
+        ).one()
         if remaining:
             raise RuntimeError(f"Reset chưa sạch: còn {remaining} người chơi")
         return {

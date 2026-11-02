@@ -227,8 +227,8 @@
         });
         const data = await response.json().catch(() => ({}));
         if (!response.ok) {
-            if (response.status === 401) window.location.href = "/index.html";
-            throw new Error(data.detail || data.message || `Lỗi máy chủ (${response.status})`);
+            const suffix = response.status === 401 ? ` [401 ${path}] Phiên đăng nhập không hợp lệ, hãy đăng nhập lại.` : "";
+            throw new Error((data.detail || data.message || `Lỗi máy chủ (${response.status})`) + suffix);
         }
         return data;
     }

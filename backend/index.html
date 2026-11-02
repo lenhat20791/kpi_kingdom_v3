@@ -128,6 +128,44 @@
             font-weight: bold;
             text-shadow: 0 0 5px rgba(255, 0, 0, 0.5);
         }
+        .admin-destination-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 1000;
+            display: grid;
+            place-items: center;
+            padding: 20px;
+            background: rgba(15, 23, 42, .78);
+            backdrop-filter: blur(5px);
+        }
+        .admin-destination-overlay.hidden { display: none; }
+        .admin-destination-panel {
+            width: min(460px, 100%);
+            padding: 28px;
+            border: 2px solid #d4af37;
+            border-radius: 16px;
+            background: #fffcf4;
+            box-shadow: 0 24px 70px rgba(0, 0, 0, .45);
+            text-align: center;
+        }
+        .admin-destination-options { display: grid; gap: 12px; margin-top: 22px; }
+        .admin-destination-button {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            width: 100%;
+            padding: 15px;
+            border: 1px solid #d6bd73;
+            border-radius: 10px;
+            color: #422006;
+            background: #fff;
+            text-align: left;
+            transition: transform .15s, background .15s;
+        }
+        .admin-destination-button:hover { transform: translateY(-2px); background: #fffbeb; }
+        .admin-destination-button i { width: 28px; color: #a16207; font-size: 22px; text-align: center; }
+        .admin-destination-button strong, .admin-destination-button small { display: block; }
+        .admin-destination-button small { margin-top: 3px; color: #78716c; font-size: 11px; }
     </style>
 </head>
 <body class="min-h-screen flex flex-col">
@@ -188,7 +226,32 @@
         KPI Kingdom v3.0 &copy; 2024 | Designed for Heroes
     </footer>
 
+    <div id="adminDestinationDialog" class="admin-destination-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="adminDestinationTitle">
+        <section class="admin-destination-panel">
+            <div class="text-4xl mb-3">👑</div>
+            <h2 id="adminDestinationTitle" class="text-xl font-bold text-amber-900 fantasy-font">Chọn giao diện muốn truy cập</h2>
+            <p class="mt-2 text-sm text-amber-800">Bạn muốn vào game như người chơi hay mở trang điều khiển hệ thống?</p>
+            <div class="admin-destination-options">
+                <button id="adminChoosePlayer" class="admin-destination-button" type="button">
+                    <i class="fas fa-gamepad"></i>
+                    <span><strong>Vào giao diện người chơi</strong><small>Học Giả Đại Chiến · Sử dụng các tính năng game</small></span>
+                </button>
+                <button id="adminChooseAdmin" class="admin-destination-button" type="button">
+                    <i class="fas fa-sliders"></i>
+                    <span><strong>Vào giao diện admin</strong><small>Quản trị và điều khiển hệ thống</small></span>
+                </button>
+            </div>
+        </section>
+    </div>
+
     <script>
+        document.getElementById('adminChoosePlayer').addEventListener('click', () => {
+            window.location.assign('/study-spire.html');
+        });
+        document.getElementById('adminChooseAdmin').addEventListener('click', () => {
+            window.location.assign('/admin.html');
+        });
+
         // --- LOGIC 1: ĐĂNG NHẬP (Đã sửa lỗi phân quyền) ---
         document.getElementById('loginForm').addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -225,8 +288,8 @@
                     const role = data.user_info?.role;
 
                     if (role === 'admin') {
-                        alert("🫡 Chào sếp! Đang vào trang quản trị...");
-                        window.location.href = 'admin.html';
+                        document.getElementById('adminDestinationDialog').classList.remove('hidden');
+                        document.getElementById('adminChoosePlayer').focus();
                     } 
                     else {
                         // Học sinh vào thẳng Hành trình tri thức
