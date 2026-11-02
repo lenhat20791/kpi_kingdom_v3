@@ -988,9 +988,9 @@
         }
     }
 
-    async function openPvpLobby() {
+    async function openPvpLobby(mode = "ranked") {
         showScreen("screen-pvp");
-        await window.StudySpirePvp.openLobby();
+        await window.StudySpirePvp.openLobby(mode);
     }
 
     function renderDeck() {
@@ -1199,7 +1199,7 @@
         });
         document.querySelectorAll("[data-entry-action]").forEach((button) => button.addEventListener("click", () => {
             if (button.dataset.entryAction === "deck") return openDeck();
-            if (button.dataset.entryAction === "pvp" || button.dataset.entryAction === "ranked") return openPvpLobby();
+            if (button.dataset.entryAction === "pvp" || button.dataset.entryAction === "ranked") return openPvpLobby(button.dataset.entryAction);
             if (button.dataset.entryAction === "guide") return openGuide();
             byId("grade-select").focus();
         }));

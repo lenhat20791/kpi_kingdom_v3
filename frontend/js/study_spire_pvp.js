@@ -79,13 +79,11 @@
                 <div class="ranked-opponent-list">${opponentRows || (ownRank === 1 || board.rank_locked_by_match ? "" : `<p class="pvp-empty-state">Hiện chưa có đối thủ phía trên phù hợp.</p>`)}</div>
                 ${board.has_next_opponent_batch ? `<button class="secondary-button compact" id="ranked-next-opponents" type="button">ĐỔI NGƯỜI ↻</button>` : ""}
             </section>`;
-        content.innerHTML = `<div class="ranked-toolbar"><div><p class="eyebrow">HỌC GIẢ ĐẠI CHIẾN · LEADERBOARD</p><h2>Bảng xếp hạng</h2><p>Đang có ${board.ranked_player_count} người đã phân hạng · Hiển thị Top 20</p></div>
-                <button class="secondary-button compact" id="ranked-open-rooms" type="button">ĐẤU PHÒNG PvP</button></div>
+        content.innerHTML = `<div class="ranked-toolbar"><div><p class="eyebrow">HỌC GIẢ ĐẠI CHIẾN · LEADERBOARD</p><h2>Bảng xếp hạng</h2><p>Đang có ${board.ranked_player_count} người đã phân hạng · Hiển thị Top 20</p></div></div>
             ${board.active_match_id ? `<div class="ranked-active-match"><span>Bạn có trận xếp hạng chưa hoàn tất.</span><button class="primary-button compact" id="ranked-resume" type="button">TIẾP TỤC</button></div>` : board.rank_locked_by_match ? `<div class="ranked-active-match"><span>Hạng của bạn đang được thách đấu. Bạn có thể xem bảng nhưng chưa thể mở trận leo hạng khác.</span></div>` : ""}
             <div class="ranked-layout"><section class="ranked-board"><div class="ranked-board-heading"><span>HẠNG</span><span>NGƯỜI CHƠI</span></div>${topRows || `<p class="pvp-empty-state">Chưa có người chơi hoàn thành phân hạng.</p>`}</section>${placement}</div>`;
         content.querySelectorAll("[data-rank-challenge]").forEach(button => button.addEventListener("click", () => startRankedMatch(Number(button.dataset.rankChallenge))));
         content.querySelector("#ranked-next-opponents")?.addEventListener("click", () => openRankedBoard(state.rankedBatch + 1));
-        content.querySelector("#ranked-open-rooms")?.addEventListener("click", openRoomsLobby);
         content.querySelector("#ranked-resume")?.addEventListener("click", () => openRankedMatch(board.active_match_id));
     }
 
@@ -275,7 +273,7 @@
         } catch (error) {
             state.roomCode = null;
             setStatus(error.message, "error");
-            await openLobby();
+            await openRoomsLobby();
         }
     }
 
@@ -343,18 +341,19 @@
 
     async function leaveRoom(snapshot) {
         if (snapshot.spectator) {
-            await openLobby();
+            await openRoomsLobby();
             return;
         }
         if (snapshot.status === "ACTIVE" && !snapshot.spectator && !window.confirm("Rời trận đang đấu sẽ bị xử thua. Tiếp tục?")) return;
         try {
             await api(`/rooms/${encodeURIComponent(state.roomCode)}/leave`, { method: "POST" });
-            await openLobby();
+            await openRoomsLobby();
         } catch (error) { setStatus(error.message, "error"); }
     }
 
     async function openRankedBoard(batch = 0) {
         stopPolling();
+        setScreenTitle("Thách đấu xếp hạng");
         state.roomCode = null;
         state.rankedMatchId = null;
         state.spectator = false;
@@ -424,17 +423,17 @@
 
     async function openRoomsLobby() {
         stopPolling();
+        setScreenTitle("Đấu bài PvP");
         state.roomCode = null;
         state.rankedMatchId = null;
         state.spectator = false;
         setStatus("");
         const content = byId("pvp-content");
-        content.innerHTML = `<div class="pvp-lobby-toolbar"><div><h2>Sảnh chờ PvP</h2><p>Đấu theo lượt bằng deck Study Spire đã lưu.</p></div><div><button class="secondary-button compact" id="pvp-open-ranked">BẢNG XẾP HẠNG</button> <button class="primary-button" id="pvp-show-create">TẠO PHÒNG <span>＋</span></button></div></div>
+        content.innerHTML = `<div class="pvp-lobby-toolbar"><div><h2>Sảnh chờ PvP</h2><p>Đấu theo lượt bằng deck Study Spire đã lưu.</p></div><div><button class="primary-button" id="pvp-show-create">TẠO PHÒNG <span>＋</span></button></div></div>
             <form id="pvp-create-form" class="pvp-create-panel hidden"><label>Tên phòng<input id="pvp-room-name" maxlength="48" required placeholder="Ví dụ: Thử deck Sinh học"></label><label>Mật khẩu tùy chọn<input id="pvp-room-password" type="password" maxlength="64" placeholder="Để trống nếu phòng công khai"></label><label class="pvp-check-field"><input id="pvp-spectators-allowed" type="checkbox" checked> Cho phép quan chiến</label><div class="pvp-create-actions"><button type="button" class="secondary-button" id="pvp-cancel-create">HỦY</button><button type="submit" class="primary-button">TẠO PHÒNG <span>→</span></button></div></form>
             <form id="pvp-join-form" class="pvp-join-panel"><label for="pvp-join-code">Vào phòng bằng ID</label><input id="pvp-join-code" maxlength="6" placeholder="MÃ PHÒNG"><input id="pvp-join-password" type="password" maxlength="64" placeholder="Mật khẩu nếu có"><button class="secondary-button compact" type="submit">VÀO PHÒNG</button></form>
             <div class="pvp-section-heading"><h2>Phòng công khai</h2><button class="icon-button" id="pvp-refresh-lobby" type="button" aria-label="Tải lại phòng">↻</button></div><div class="pvp-room-grid" id="pvp-room-list"><p>Đang tải phòng…</p></div>`;
         byId("pvp-show-create").addEventListener("click", () => byId("pvp-create-form").classList.toggle("hidden"));
-        byId("pvp-open-ranked").addEventListener("click", () => openRankedBoard(0));
         byId("pvp-cancel-create").addEventListener("click", () => byId("pvp-create-form").classList.add("hidden"));
         byId("pvp-create-form").addEventListener("submit", createRoom);
         byId("pvp-join-form").addEventListener("submit", event => {
@@ -600,11 +599,16 @@
         snow.raf = null;
     }
 
-    function openLobby() {
+    function setScreenTitle(title) {
+        const heading = document.querySelector("#screen-pvp .pvp-topline h1");
+        if (heading) heading.textContent = title;
+    }
+
+    function openLobby(mode = "ranked") {
         initChatForm();
         startSnow();
         openChat();
-        return openRankedBoard(0);
+        return mode === "pvp" ? openRoomsLobby() : openRankedBoard(0);
     }
 
     window.StudySpirePvp = { openLobby, close() { stopPolling(); closeChat(); stopSnow(); } };
