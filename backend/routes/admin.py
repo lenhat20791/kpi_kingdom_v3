@@ -526,16 +526,30 @@ async def import_excel(
         col_team_origin = find_column(keywords_team)
         # Cột khối/lớp trong Excel (nếu có) sẽ ghi đè khối chọn trên giao diện
         col_grade_origin = next((col_map_raw[c] for c in normalized_cols if c.startswith('khoi') or c in ('lop', 'grade')), None)
+        col_class_origin = next((
+            col_map_raw[c] for c in normalized_cols
+            if 'lop' in c or c in ('class', 'classname', 'homeroom', 'section')
+        ), None)
 
         import re
         def parse_grade(val):
             m = re.search(r'[6-9]', str(val)) if pd.notna(val) else None
             return int(m.group()) if m else None
 
+        def parse_class_name(val):
+            if pd.isna(val):
+                return None
+            match = re.search(r'(?<!\d)([6-9])\s*[./-]\s*(\d{1,2})(?!\d)', str(val))
+            if not match:
+                return None
+            return f"{match.group(1)}.{int(match.group(2))}"
+
         print(f"✅ MAP CỘT: Tên=[{col_name_origin}] | User=[{col_user_origin}] | Tổ=[{col_team_origin}]")
 
         count_added = 0
         count_updated = 0
+        generated_username_occurrences = {}
+        used_generated_usernames = set()
         
         # 4. DUYỆT TỪNG DÒNG
         for index, row in df.iterrows():
@@ -544,26 +558,53 @@ async def import_excel(
             if pd.isna(full_name) or not str(full_name).strip():
                 continue
             full_name = str(full_name).strip()
-            row_grade = (parse_grade(row[col_grade_origin]) if col_grade_origin else None) or grade
+            class_source = col_class_origin or col_grade_origin
+            class_name = parse_class_name(row[class_source]) if class_source else None
+            row_grade = (
+                (parse_grade(row[col_grade_origin]) if col_grade_origin else None)
+                or (parse_grade(row[class_source]) if class_source else None)
+                or grade
+            )
             # --- LẤY/TẠO USERNAME ---
             if col_user_origin:
                 username = str(row[col_user_origin]).strip()
             else:
-                # 1. Tạo username gốc (Ví dụ: nguyenvanan)
                 base_username = generate_username(str(full_name))
-                username = base_username
-                # 2. Kiểm tra trùng lặp thông minh
-                # Nếu "nguyenvanan" đã có trong DB, thì đổi thành "nguyenvanan1", "nguyenvanan2"...
-                check_count = 1
-                while True:
-                    # Kiểm tra xem username này đã tồn tại chưa
-                    exists = db.exec(select(Player).where(Player.username == username)).first()
-                    if not exists:
-                        break # Chưa có -> Dùng luôn (Tên sạch)
-                    
-                    # Đã có -> Thêm số vào đuôi và kiểm tra lại
-                    username = f"{base_username}{check_count}"
-                    check_count += 1
+                occurrence = generated_username_occurrences.get(base_username, 0)
+                generated_username_occurrences[base_username] = occurrence + 1
+
+                matching_player = None
+                if class_name:
+                    matching_player = next(
+                        (
+                            player for player in db.exec(
+                                select(Player).where(
+                                    Player.full_name == full_name,
+                                    Player.class_name == class_name,
+                                )
+                            ).all()
+                            if player.username not in used_generated_usernames
+                        ),
+                        None,
+                    )
+                if matching_player:
+                    username = matching_player.username
+                else:
+                    candidate_count = occurrence
+                    username = base_username if candidate_count == 0 else f"{base_username}{candidate_count}"
+
+                    # Reuse a matching account on re-import, while retaining unique usernames for duplicate names.
+                    while True:
+                        exists = db.exec(select(Player).where(Player.username == username)).first()
+                        if (
+                            username not in used_generated_usernames
+                            and (exists is None or exists.full_name == full_name)
+                        ):
+                            break
+                        candidate_count += 1
+                        username = f"{base_username}{candidate_count}"
+
+                used_generated_usernames.add(username)
 
             # --- LẤY TỔ ---
             team_id = 0
@@ -596,6 +637,7 @@ async def import_excel(
                     
                     role="U3", # Mặc định là dân thường
                     grade=row_grade,
+                    class_name=class_name,
                     kpi=0, 
                     hp=0,
                     level=1,
@@ -608,6 +650,8 @@ async def import_excel(
                 # (Tránh việc import lại làm lính đang ở tổ này nhảy sang tổ khác)
                 existing_user.full_name = str(full_name)
                 existing_user.grade = row_grade
+                if class_name:
+                    existing_user.class_name = class_name
                 # existing_user.team_id = team_id # 👈 Bỏ dòng này đi, không cho update tổ từ Excel nữa
                 db.add(existing_user)
                 count_updated += 1

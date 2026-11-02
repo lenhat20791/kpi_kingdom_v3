@@ -1,19 +1,22 @@
 import asyncio
+from io import BytesIO
 import sys
 import unittest
 from pathlib import Path
 from threading import Lock
+from unittest.mock import patch
 
-from fastapi import FastAPI
-from sqlalchemy import event
-from sqlmodel import SQLModel, Session, create_engine
+import pandas as pd
+from fastapi import FastAPI, UploadFile
+from sqlalchemy import event, inspect
+from sqlmodel import SQLModel, Session, create_engine, select
 from starlette.requests import Request
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from database import Inventory, Item, Player
+from database import Inventory, Item, Player, migrate_study_spire_schema
 from main import check_engine_status
-from routes.admin import get_all_players_overview
+from routes.admin import get_all_players_overview, import_excel
 
 
 class RuntimeRegressionTests(unittest.TestCase):
@@ -58,6 +61,57 @@ class RuntimeRegressionTests(unittest.TestCase):
         ])
         self.assertEqual(by_username["beta"]["inventory"], [])
         self.assertEqual(select_count, 2)
+
+    def test_import_excel_preserves_class_and_extracts_grade(self):
+        workbook = BytesIO()
+        pd.DataFrame([{"Full Name": "Student Example", "Lớp": "6/2"}]).to_excel(
+            workbook,
+            index=False,
+        )
+        workbook.seek(0)
+
+        async def import_students():
+            with Session(self.engine) as session:
+                with patch("routes.admin.get_password_hash", return_value="hash"):
+                    first_result = await import_excel(
+                        UploadFile(filename="students.xlsx", file=BytesIO(workbook.getvalue())),
+                        grade=6,
+                        db=session,
+                    )
+                    second_result = await import_excel(
+                        UploadFile(filename="students.xlsx", file=BytesIO(workbook.getvalue())),
+                        grade=6,
+                        db=session,
+                    )
+                student = session.exec(
+                    select(Player).where(Player.username == "studentexample")
+                ).one()
+                students = session.exec(
+                    select(Player).where(Player.full_name == "Student Example")
+                ).all()
+                return first_result, second_result, student.grade, student.class_name, len(students)
+
+        first_result, second_result, grade, class_name, student_count = asyncio.run(import_students())
+
+        self.assertEqual(first_result["added"], 1)
+        self.assertEqual(second_result["added"], 0)
+        self.assertEqual(second_result["updated"], 1)
+        self.assertEqual(grade, 6)
+        self.assertEqual(class_name, "6.2")
+        self.assertEqual(student_count, 1)
+
+    def test_database_migration_adds_player_class_name_column(self):
+        legacy_engine = create_engine("sqlite://")
+        try:
+            with legacy_engine.begin() as connection:
+                connection.exec_driver_sql("CREATE TABLE player (id INTEGER PRIMARY KEY)")
+
+            migrate_study_spire_schema(legacy_engine)
+
+            columns = {column["name"] for column in inspect(legacy_engine).get_columns("player")}
+            self.assertIn("class_name", columns)
+        finally:
+            legacy_engine.dispose()
 
     def test_campaign_engine_status_reports_task_lifecycle(self):
         app = FastAPI()

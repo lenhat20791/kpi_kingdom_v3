@@ -12,7 +12,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 from sqlmodel import Session, select
 
-from database import Player, StudyRankedMatch, StudyRankedPlayer, get_db
+from database import Player, StudyRankedMatch, StudyRankedPlayer, get_db, player_display_name
 from game_logic.study_spire_pvp import create_pvp_battle_state, end_pvp_turn, play_pvp_card
 from game_logic.study_spire_relics import RELIC_BY_ID, pvp_loadout_ids
 from routes.auth import get_current_user
@@ -70,7 +70,7 @@ def _player_avatar(player: Player) -> str | None:
 def _player_summary(profile: StudyRankedPlayer, player: Player) -> dict[str, Any]:
     return {
         "player_id": player.id,
-        "name": player.full_name or player.username,
+        "name": player_display_name(player),
         "avatar_url": _player_avatar(player),
         "rank_position": profile.rank_position,
         "placement_matches": profile.placement_matches,
@@ -157,7 +157,7 @@ def _available_opponents(
         if ranked is None:
             output.append({
                 "player_id": player.id,
-                "name": player.full_name or player.username,
+                "name": player_display_name(player),
                 "avatar_url": _player_avatar(player),
                 "rank_position": None,
                 "placement_matches": 0,
@@ -216,6 +216,7 @@ def _match_snapshot(db: Session, match: StudyRankedMatch, viewer_id: int) -> dic
     players = []
     for player_key, seat in state["players"].items():
         player_id = int(player_key)
+        player = db.get(Player, player_id)
         hand = [
             {"instance_id": instance_id, **state["cards"][instance_id]}
             for instance_id in seat["hand"]
@@ -224,7 +225,7 @@ def _match_snapshot(db: Session, match: StudyRankedMatch, viewer_id: int) -> dic
         players.append({
             "player_id": player_id,
             "username": seat["username"],
-            "name": seat["name"],
+            "name": player_display_name(player) if player else seat["name"],
             "hp": seat["stats"]["hp"],
             "hp_max": seat["stats"]["hp_max"],
             "mana": seat["stats"]["mana"],
@@ -268,9 +269,9 @@ def _match_snapshot(db: Session, match: StudyRankedMatch, viewer_id: int) -> dic
             "room_code": "XH",
             "room_name": "Trận phân hạng" if match.match_type == "PLACEMENT" else "Trận leo hạng",
             "host_player_id": match.challenger_player_id,
-            "host_name": challenger.full_name or challenger.username,
+            "host_name": player_display_name(challenger),
             "guest_player_id": match.opponent_player_id,
-            "guest_name": opponent.full_name or opponent.username,
+            "guest_name": player_display_name(opponent),
         },
         "battle": {
             "turn_number": state["turn_number"],
@@ -470,11 +471,11 @@ def start_ranked_match(
     battle_state = create_pvp_battle_state(
         current_user.id,
         current_user.username,
-        current_user.full_name or current_user.username,
+        player_display_name(current_user),
         challenger_cards,
         opponent.id,
         opponent.username,
-        opponent.full_name or opponent.username,
+        player_display_name(opponent),
         opponent_cards,
         random.SystemRandom().randrange(0, 2**32),
         host_relic_ids=pvp_loadout_ids(db, current_user.id),

@@ -23,7 +23,10 @@ def create_db_and_tables():
 def migrate_study_spire_schema(database_engine=None):
     target_engine = database_engine or engine
     additions = {
-        "player": {"grade": "INTEGER NOT NULL DEFAULT 6"},
+        "player": {
+            "grade": "INTEGER NOT NULL DEFAULT 6",
+            "class_name": "TEXT",
+        },
         "studydeck": {
             "state_version": "INTEGER NOT NULL DEFAULT 1",
             "must_remain_full": "BOOLEAN NOT NULL DEFAULT 0",
@@ -79,6 +82,7 @@ class Player(SQLModel, table=True):
     full_name: str
     role: str = Field(default="student") # admin / student
     grade: int = Field(default=6, index=True)  # Khối lớp (6,7,8,9) -> quyết định bộ câu hỏi
+    class_name: Optional[str] = Field(default=None)
 
     # --- 2. CHỈ SỐ SỨC MẠNH (LEVEL UP SYSTEM) ---
     level: int = Field(default=1)
@@ -152,6 +156,13 @@ class Player(SQLModel, table=True):
     companion_slot_1: Optional[str] = Field(default=None)
     companion_slot_2: Optional[str] = Field(default=None)
     companion_slot_3: Optional[str] = Field(default=None)
+
+
+def player_display_name(player: Player) -> str:
+    name = player.full_name or player.username
+    return f"{name} {player.class_name}" if player.class_name else name
+
+
 # 4
 class Inventory(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)

@@ -113,6 +113,14 @@ class StudySpireApiTests(unittest.TestCase):
                 self.assertEqual(invalid.status_code, 400)
                 self.assertEqual(avatar_path.read_bytes(), second_bytes)
 
+    def test_profile_display_name_includes_imported_class(self):
+        self.current_user.class_name = "6.2"
+
+        profile = self.client.get("/api/study-spire/profile")
+
+        self.assertEqual(profile.status_code, 200, profile.text)
+        self.assertEqual(profile.json()["name"], "Spire Test 6.2")
+
     def test_start_run_is_idempotent_and_creates_starter_deck_once(self):
         response = self.client.post(
             "/api/study-spire/run/start",

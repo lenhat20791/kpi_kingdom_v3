@@ -24,6 +24,7 @@ from database import (
     StudyPvpActionLedger,
     StudyPvpRoom,
     get_db,
+    player_display_name,
 )
 from game_logic.study_spire import _ensure_battle_fields
 from game_logic.study_spire_pvp import create_pvp_battle_state, end_pvp_turn, play_pvp_card
@@ -103,7 +104,7 @@ def _get_room(db: Session, room_code: str) -> StudyPvpRoom:
 
 def _player_name(db: Session, player_id: int) -> str:
     player = db.get(Player, player_id)
-    return (player.full_name or player.username) if player else "Người chơi"
+    return player_display_name(player) if player else "Người chơi"
 
 
 def _room_summary(db: Session, room: StudyPvpRoom) -> dict[str, Any]:
@@ -198,7 +199,7 @@ def _commit_room_action(
     return result
 
 
-def _battle_snapshot(room: StudyPvpRoom, viewer_id: int) -> dict[str, Any]:
+def _battle_snapshot(db: Session, room: StudyPvpRoom, viewer_id: int) -> dict[str, Any]:
     state = _json(room.battle_state_json, {})
     if not state:
         return {"status": room.status, "battle": None, "can_act": False, "spectator": False}
@@ -220,7 +221,7 @@ def _battle_snapshot(room: StudyPvpRoom, viewer_id: int) -> dict[str, Any]:
         players.append({
             "player_id": player_id,
             "username": seat["username"],
-            "name": seat["name"],
+            "name": _player_name(db, player_id),
             "hp": seat["stats"]["hp"],
             "hp_max": seat["stats"]["hp_max"],
             "mana": seat["stats"]["mana"],
@@ -265,7 +266,7 @@ def _room_view(db: Session, room: StudyPvpRoom, viewer_id: int) -> dict[str, Any
     if room.status == "ACTIVE" and viewer_id not in {room.host_player_id, room.guest_player_id} and not room.spectators_allowed:
         raise HTTPException(status_code=403, detail="Phòng này không cho phép quan chiến.")
     viewer_role = "host" if viewer_id == room.host_player_id else "guest" if viewer_id == room.guest_player_id else "spectator" if room.status == "ACTIVE" else "visitor"
-    return {"room": summary, "viewer_role": viewer_role, **_battle_snapshot(room, viewer_id)}
+    return {"room": summary, "viewer_role": viewer_role, **_battle_snapshot(db, room, viewer_id)}
 
 
 def _start_battle(db: Session, room: StudyPvpRoom) -> dict[str, Any]:
@@ -280,11 +281,11 @@ def _start_battle(db: Session, room: StudyPvpRoom) -> dict[str, Any]:
     room.battle_state_json = json.dumps(create_pvp_battle_state(
         room.host_player_id,
         host.username,
-        host.full_name or host.username,
+        player_display_name(host),
         host_cards,
         room.guest_player_id,
         guest.username,
-        guest.full_name or guest.username,
+        player_display_name(guest),
         guest_cards,
         secrets.randbits(32),
         host_relic_ids=pvp_loadout_ids(db, room.host_player_id),

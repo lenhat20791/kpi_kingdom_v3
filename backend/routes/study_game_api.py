@@ -33,6 +33,7 @@ from database import (
     StudyRunHistory,
     QuestionBank,
     get_db,
+    player_display_name,
 )
 from game_logic.study_spire import (
     create_battle_state,
@@ -194,7 +195,7 @@ def _study_player_profile(player: Player) -> dict[str, Any]:
         avatar_url = f"/assets/images/avatars/study_spire/{avatar_path.name}?v={avatar_path.stat().st_mtime_ns}"
     return {
         "player_id": player.id,
-        "name": player.full_name or player.username,
+        "name": player_display_name(player),
         "username": player.username,
         "avatar_url": avatar_url,
     }

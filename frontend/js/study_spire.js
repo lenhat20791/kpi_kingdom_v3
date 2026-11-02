@@ -514,7 +514,7 @@
                         </div>
                     </header>
                     <div class="combatants">
-                        <div class="combatant player"><div id="player-sprite" class="fighter-sprite" data-animation="${player.hp <= 0 ? "death" : "idle"}" role="img" aria-label="Nhà thám hiểm"></div><h3>${escapeHtml(username || "Nhà thám hiểm")}</h3>${healthBar("HP NGƯỜI CHƠI", player.hp, player.hp_max, "player")}${renderEffectIndicators(player)}</div>
+                        <div class="combatant player"><div id="player-sprite" class="fighter-sprite" data-animation="${player.hp <= 0 ? "death" : "idle"}" role="img" aria-label="Nhà thám hiểm"></div><h3>${escapeHtml(state.profile?.name || username || "Nhà thám hiểm")}</h3>${healthBar("HP NGƯỜI CHƠI", player.hp, player.hp_max, "player")}${renderEffectIndicators(player)}</div>
                         <div class="combatant enemy"><div id="monster-sprite" class="monster-sprite" data-animation="${enemy.hp <= 0 ? "death" : "idle"}" role="img" aria-label="${escapeHtml(enemy.name || "Quái vật")}"></div><h3>${escapeHtml(enemy.name || "Quái vật")}</h3>${healthBar("HP QUÁI", enemy.hp, enemy.max_hp)}${renderEffectIndicators(enemy)}</div>
                     </div>
                     <div class="battle-piles">
@@ -1002,18 +1002,20 @@
             return;
         }
         byId("header-player").textContent = username;
-        byId("back-to-dashboard").addEventListener("click", () => {
+        const returnToGameMenu = () => {
             if (!byId("screen-deck").classList.contains("hidden") && deckExitIsBlocked()) {
                 showDeckLockReminder();
                 return;
             }
-            window.location.href = "/player_dashboard.html";
+            if (!byId("screen-pvp").classList.contains("hidden")) window.StudySpirePvp.close();
+            showScreen("screen-entry");
+        };
+        byId("back-to-dashboard").addEventListener("click", () => {
+            returnToGameMenu();
         });
         document.querySelector(".brand")?.addEventListener("click", (event) => {
-            if (!byId("screen-deck").classList.contains("hidden") && deckExitIsBlocked()) {
-                event.preventDefault();
-                showDeckLockReminder();
-            }
+            event.preventDefault();
+            returnToGameMenu();
         });
         byId("start-run").addEventListener("click", openStartRunDialog);
         byId("confirm-start-run").addEventListener("click", startRun);
@@ -1058,6 +1060,12 @@
         document.querySelectorAll("[data-deck-tab]").forEach((button) => button.addEventListener("click", () => { state.deckTab = button.dataset.deckTab; renderDeck(); }));
         byId("entry-video").addEventListener("error", () => byId("entry-video").classList.add("hidden"));
         try {
+            try {
+                state.profile = await api("/profile");
+                byId("header-player").textContent = state.profile.name || username;
+            } catch (error) {
+                setStatus("entry-status", `Không tải được hồ sơ người chơi: ${error.message}`, "error");
+            }
             state.catalog = await api("/catalog");
             const gradeSelect = byId("grade-select");
             const availableGrades = state.catalog.available_grades || [];
