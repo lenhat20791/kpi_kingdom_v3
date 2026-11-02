@@ -8875,6 +8875,8 @@
                 const data = JSON.parse(event.data);
                 if (data.type === 'chat') {
                     appendMessage(data);
+                } else if (data.type === 'clear') {
+                    document.getElementById('chat-messages').innerHTML = '';
                 } else if (data.type === 'error') {
                     alert("⚠️ " + data.content); // Báo lỗi (ví dụ Spam)
                 }

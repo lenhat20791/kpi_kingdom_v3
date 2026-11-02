@@ -2048,6 +2048,7 @@
                 <div class="bg-gray-900 p-2 flex gap-2 border-t border-gray-700 z-30 relative">
                     <input type="text" id="chat-input" class="flex-1 bg-gray-800 text-white border border-gray-600 rounded px-3 focus:outline-none focus:border-yellow-500" placeholder="Admin chat...">
                     <button onclick="sendChatMessage()" class="bg-yellow-600 text-black font-bold px-6 rounded hover:bg-yellow-500">GỬI</button>
+                    <button onclick="clearChatHistory()" class="bg-red-700 text-white font-bold px-4 rounded hover:bg-red-600" title="Xóa toàn bộ lịch sử chat">🗑️ XÓA CHAT</button>
                 </div>
             </div>
 
@@ -5920,6 +5921,7 @@
                 chatSocket.onmessage = (event) => {
                     const data = JSON.parse(event.data);
                     if (data.type === 'chat') appendMessage(data);
+                    if (data.type === 'clear') document.getElementById('chat-messages').innerHTML = '';
                     
                     // Nếu là cảnh báo hệ thống -> Tự động reload log vi phạm
                     if (data.role === 'SYSTEM') loadWarningLogs();
@@ -6081,6 +6083,19 @@
                     alert("❌ Lỗi: " + data.detail);
                 }
             } catch (e) { alert("Lỗi kết nối!"); }
+        }
+
+        async function clearChatHistory() {
+            if (!confirm("Xóa TOÀN BỘ lịch sử chat hiện tại của người chơi? Hành động này không thể hoàn tác.")) return;
+            try {
+                const res = await fetch('/api/chat/admin/clear-history', { method: 'DELETE' });
+                const data = await res.json();
+                if (!res.ok || !data.success) throw new Error(data.detail || "Lỗi xóa chat");
+                document.getElementById('chat-messages').innerHTML = '';
+                alert(`Đã xóa ${data.deleted} tin nhắn.`);
+            } catch (e) {
+                alert("❌ " + e.message);
+            }
         }
 
         // 5. Thêm Từ khóa Cấm

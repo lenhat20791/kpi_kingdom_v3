@@ -1146,6 +1146,35 @@
             event.preventDefault();
             returnToGameMenu();
         });
+        const cpModal = byId("change-password-modal");
+        const cpStatus = byId("cp-status");
+        byId("open-change-password").addEventListener("click", () => {
+            byId("change-password-form").reset();
+            cpStatus.textContent = "";
+            cpModal.classList.remove("hidden");
+        });
+        byId("cp-cancel").addEventListener("click", () => cpModal.classList.add("hidden"));
+        byId("change-password-form").addEventListener("submit", async (event) => {
+            event.preventDefault();
+            const oldPassword = byId("cp-old").value;
+            const newPassword = byId("cp-new").value;
+            if (newPassword.length < 6) { cpStatus.textContent = "Mật khẩu mới phải có ít nhất 6 ký tự."; return; }
+            if (newPassword !== byId("cp-confirm").value) { cpStatus.textContent = "Mật khẩu nhập lại không khớp."; return; }
+            if (newPassword === oldPassword) { cpStatus.textContent = "Mật khẩu mới phải khác mật khẩu cũ."; return; }
+            try {
+                const response = await fetch("/api/change-password", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+                    body: JSON.stringify({ old_password: oldPassword, new_password: newPassword })
+                });
+                const data = await response.json().catch(() => ({}));
+                if (!response.ok) throw new Error(data.detail || "Không thể đổi mật khẩu.");
+                cpModal.classList.add("hidden");
+                setStatus("entry-status", "Đổi mật khẩu thành công!", "success");
+            } catch (error) {
+                cpStatus.textContent = error.message;
+            }
+        });
         byId("start-run").addEventListener("click", openStartRunDialog);
         byId("open-mailbox").addEventListener("click", openMailbox);
         byId("mailbox-back").addEventListener("click", () => showScreen("screen-entry"));

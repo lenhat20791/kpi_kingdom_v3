@@ -4,6 +4,7 @@ from sqlalchemy import desc, delete, text
 from database import get_db, ChatLog, Player, ChatBan, ChatKeyword, ChatWarningLog, player_display_name
 from datetime import datetime, timedelta
 import json
+import re
 import jwt 
 from routes.auth import SECRET_KEY, ALGORITHM 
 
@@ -41,6 +42,17 @@ spam_tracker = {}
 # Hàm lấy giờ VN
 def get_vn_time():
     return (datetime.utcnow() + timedelta(hours=7)).strftime("%Y-%m-%d %H:%M:%S")
+
+def find_banned_keyword(content: str, keyword: str):
+    """Trả về đoạn chữ khớp trong tin nhắn (đúng từng chữ, dấu thanh, dấu câu; không nằm giữa một từ khác), hoặc None."""
+    keyword = (keyword or "").strip()
+    if not keyword:
+        return None
+    match = re.search(r"(?<!\w)" + re.escape(keyword) + r"(?!\w)", content, flags=re.IGNORECASE)
+    return match.group(0) if match else None
+
+def contains_banned_keyword(content: str, keyword: str) -> bool:
+    return find_banned_keyword(content, keyword) is not None
 
 def check_ban_and_spam(player_id: int, db: Session) -> tuple[bool, str]:
     now = datetime.now()
@@ -108,11 +120,8 @@ async def websocket_endpoint(websocket: WebSocket, token: str = Query(...), db: 
 
             # 2. KIỂM TRA TỪ KHÓA CẤM (Keyword Filter)
             keywords = db.query(ChatKeyword).all()
-            violation_detected = False
-            for k in keywords:
-                if k.word.lower() in content.lower():
-                    violation_detected = True
-                    break
+            violation_word = next((m for m in (find_banned_keyword(content, k.word) for k in keywords) if m), None)
+            violation_detected = violation_word is not None
             
             # Chuẩn bị tin nhắn
             msg_data = {
@@ -138,7 +147,7 @@ async def websocket_endpoint(websocket: WebSocket, token: str = Query(...), db: 
                     "player_id": 0, # ID 0 là System
                     "player_name": "⚠️ HỆ THỐNG",
                     "role": "SYSTEM",
-                    "content": f"[{player_display_name(player)}] đã có ngôn từ không chuẩn mực, xin chú ý! Nếu tái phạm sẽ bị cấm chat 12h.",
+                    "content": f'[{player_display_name(player)}] đã phát ngôn "{violation_word}", đây là ngôn từ không chuẩn mực, xin chú ý! Nếu tái phạm sẽ bị cấm chat 12h.',
                     "time": datetime.now().strftime("%H:%M")
                 }
                 await manager.broadcast(warning_msg)
@@ -191,6 +200,14 @@ def ban_player(target_id: int, hours: int, reason: str, db: Session = Depends(ge
     
     db.commit()
     return {"success": True, "message": f"Đã cấm chat {target.full_name} trong {hours}h"}
+
+# API Admin xóa toàn bộ lịch sử chat hiện tại
+@router.delete("/admin/clear-history")
+async def clear_chat_history(db: Session = Depends(get_db)):
+    deleted = db.query(ChatLog).delete()
+    db.commit()
+    await manager.broadcast({"type": "clear"})
+    return {"success": True, "deleted": deleted}
 
 # API Lấy lịch sử (Giữ nguyên)
 @router.get("/history")

@@ -12,7 +12,7 @@
     <script defer src="/frontend/js/study_spire_animations.js?v=3"></script>
     <script defer src="/frontend/js/study_spire_cards.js?v=5"></script>
     <script defer src="/frontend/js/study_spire_pvp.js?v=8"></script>
-    <script defer src="/frontend/js/study_spire.js?v=32"></script>
+    <script defer src="/frontend/js/study_spire.js?v=33"></script>
 </head>
 <body class="entry-screen-active">
     <div class="page-grain" aria-hidden="true"></div>
@@ -41,10 +41,26 @@
                     <button class="start-menu-item" type="button" data-entry-action="ranked"><span>🏆</span> Thách đấu xếp hạng</button>
                     <button id="open-mailbox" class="start-menu-item mailbox-menu-item" type="button"><span>✉</span> Hòm thư Góp ý - Báo lỗi <b id="mailbox-unread-badge" class="mailbox-unread-badge hidden" aria-label="Có thư mới">1</b></button>
                     <button class="start-menu-item" type="button" data-entry-action="guide"><span>?</span> Hướng dẫn</button>
+                    <button id="open-change-password" class="start-menu-item" type="button"><span>🔑</span> Đổi mật khẩu</button>
                 </nav>
                 <p id="entry-status" class="inline-status" aria-live="polite"></p>
             </div>
         </section>
+
+        <div id="change-password-modal" class="result-modal hidden" role="dialog" aria-modal="true" aria-labelledby="change-password-title">
+            <form id="change-password-form" class="result-panel start-run-panel">
+                <p class="eyebrow">TÀI KHOẢN</p>
+                <h2 id="change-password-title">Đổi mật khẩu</h2>
+                <label class="grade-control"><span>Mật khẩu cũ</span><input id="cp-old" type="password" autocomplete="current-password" required></label>
+                <label class="grade-control"><span>Mật khẩu mới (tối thiểu 6 ký tự)</span><input id="cp-new" type="password" autocomplete="new-password" minlength="6" required></label>
+                <label class="grade-control"><span>Nhập lại mật khẩu mới</span><input id="cp-confirm" type="password" autocomplete="new-password" minlength="6" required></label>
+                <p id="cp-status" class="inline-status" aria-live="polite"></p>
+                <div class="start-run-actions">
+                    <button id="cp-cancel" class="secondary-button" type="button">HỦY</button>
+                    <button class="primary-button" type="submit">ĐỔI MẬT KHẨU</button>
+                </div>
+            </form>
+        </div>
 
         <div id="start-run-modal" class="result-modal hidden" role="dialog" aria-modal="true" aria-labelledby="start-run-title">
             <div class="result-panel start-run-panel">
