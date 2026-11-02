@@ -106,6 +106,7 @@
             this.element = element;
             this.monsterType = MONSTER_PROFILES[monsterType] ? monsterType : "Rat";
             this.profile = MONSTER_PROFILES[this.monsterType];
+            this.element.dataset.monster = this.monsterType;
             if (initialAnimation === "death") this.playDeath();
             else this.setAnimation(initialAnimation);
         }

@@ -568,7 +568,15 @@ h1, h2, h3, p { margin-top: 0; }
 .battle-layout-board .combatant h3 { margin: 8px 0; font-size: 13px; text-shadow: 0 2px 5px #000; }
 .battle-layout-board .combatant .health-line { width: 100%; margin-top: 5px; }
 .battle-layout-board .fighter-sprite { flex: 0 0 100px; margin: 36px auto 26px; }
-.battle-layout-board .monster-sprite { flex: 0 0 160px; margin-bottom: 0; }
+.battle-layout-board .combatant.enemy { --monster-scale: 1; --monster-base: 1; --monster-foot: 59px; --monster-art: 43px; --monster-lift: 22px; }
+.battle-layout-board .combatant.enemy:has([data-monster="Bat"]) { --monster-foot: 32px; --monster-art: 99px; }
+.battle-layout-board .combatant.enemy:has([data-monster="Mimic"]) { --monster-foot: 70px; --monster-art: 32px; }
+.battle-layout-board .combatant.enemy:has([data-monster="Slime"]) { --monster-foot: 74px; --monster-art: 20px; }
+.battle-layout-board .combatant.enemy:has([data-monster]:not([data-monster="Rat"])) { --monster-scale: 2; }
+@media (max-height: 820px) { .battle-layout-board .combatant.enemy:has([data-monster]:not([data-monster="Rat"])) { --monster-scale: 1.6; } }
+@media (max-height: 700px) { .battle-layout-board .combatant.enemy:has([data-monster]:not([data-monster="Rat"])) { --monster-scale: 1.3; } }
+.battle-layout-board .monster-sprite { flex: 0 0 160px; margin-bottom: 0; transform: translateY(calc(var(--monster-foot) * var(--monster-scale) * var(--monster-base) - var(--monster-lift))) scaleX(-1) scale(calc(var(--monster-scale) * var(--monster-base))); transform-origin: center bottom; }
+.battle-layout-board .combatant.enemy .monster-attack { transform: translateY(calc(154px - var(--monster-lift) - var(--monster-art) * var(--monster-scale) * var(--monster-base))); }
 .battle-layout-board .combat-status { flex-wrap: wrap; }
 .battle-mana { position: absolute; z-index: 10; bottom: 112px; left: 27px; display: flex; flex-direction: column; align-items: center; gap: 4px; }
 .mana-orb { display: grid; width: 69px; height: 69px; place-items: center; border: 4px solid #e5c178; border-radius: 50%; color: #fff4d8; background: radial-gradient(circle at 32% 25%, #ffdb6d, #df701f 50%, #822b37 82%); box-shadow: 0 3px 8px #070a0c, inset 0 0 0 2px rgba(255, 242, 191, .4); font: 800 25px 'Times New Roman', Times, serif; text-shadow: 0 2px 3px #5b231f; }
@@ -608,7 +616,9 @@ h1, h2, h3, p { margin-top: 0; }
     .battle-layout-board .combatant { width: 47%; }
     .battle-layout-board .combatant.player, .battle-layout-board .combatant.enemy { margin-inline: 0; }
     .battle-layout-board .fighter-sprite { transform: scale(.82); transform-origin: center bottom; margin-block: 22px 14px; }
-    .battle-layout-board .monster-sprite { transform: scaleX(-1) scale(.82); transform-origin: center bottom; margin-bottom: -24px; }
+    .battle-layout-board .combatant.enemy { --monster-base: .82; --monster-lift: 14px; }
+    .battle-layout-board .combatant.enemy:has([data-monster]:not([data-monster="Rat"])) { --monster-scale: 1.25; }
+    .battle-layout-board .monster-sprite { margin-bottom: -24px; }
     .battle-layout-board .monster-attack { margin-bottom: 5px; padding: 4px 7px; font-size: 8px; }
     .battle-layout-board .combatant h3 { font-size: 10px; }
     .battle-layout-board .health-label { gap: 6px; font-size: 8px; }
@@ -726,3 +736,9 @@ h1, h2, h3, p { margin-top: 0; }
     .guide-tab { white-space: nowrap; }
     .guide-body { max-height: none; padding: 14px; }
 }
+
+/* Font dễ đọc tiếng Việt có dấu cho các nút và menu */
+button, .start-menu-item, .battle-end-turn .secondary-button, .hud-icon-button, .hud-floor, .hud-stat {
+    font-family: 'Be Vietnam Pro', 'Segoe UI', Roboto, Arial, sans-serif;
+}
+.start-menu-item, .battle-end-turn .secondary-button { letter-spacing: .2px; }
